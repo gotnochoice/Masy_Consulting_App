@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  EMPLOYEE
+  MASY_OPS
+  CLIENT
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  OFFBOARDED
+}
+
+model ClientOrg {
+  id        String     @id @default(cuid())
+  name      String
+  status    String     @default("active")
+  employees Employee[]
+  users     User[]
+  createdAt DateTime   @default(now())
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  role         Role
+  clientOrgId  String?
+  clientOrg    ClientOrg? @relation(fields: [clientOrgId], references: [id])
+  employeeId   String?    @unique
+  employee     Employee?  @relation(fields: [employeeId], references: [id])
+  createdAt    DateTime   @default(now())
+}
+
+model Employee {
+  id          String         @id @default(cuid())
+  clientOrgId String
+  clientOrg   ClientOrg      @relation(fields: [clientOrgId], references: [id])
+  name        String
+  roleTitle   String
+  status      EmployeeStatus @default(ACTIVE)
+  startDate   DateTime
+  email       String
+  user        User?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  targetType String
+  targetId   String
+  timestamp  DateTime @default(now())
+}
