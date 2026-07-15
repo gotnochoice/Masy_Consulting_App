@@ -6,7 +6,13 @@ export default async function OpsLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <DashboardHeader roleLabel="Masy HR Ops" />
+      <DashboardHeader
+        roleLabel="Masy HR Ops"
+        nav={[
+          { label: "Employees", href: "/ops/employees" },
+          { label: "Attendance", href: "/ops/attendance" },
+        ]}
+      />
       <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
     </div>
   );

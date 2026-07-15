@@ -44,17 +44,31 @@ model User {
 }
 
 model Employee {
-  id          String         @id @default(cuid())
-  clientOrgId String
-  clientOrg   ClientOrg      @relation(fields: [clientOrgId], references: [id])
-  name        String
-  roleTitle   String
-  status      EmployeeStatus @default(ACTIVE)
-  startDate   DateTime
-  email       String
-  user        User?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id                String             @id @default(cuid())
+  clientOrgId       String
+  clientOrg         ClientOrg          @relation(fields: [clientOrgId], references: [id])
+  name              String
+  roleTitle         String
+  status            EmployeeStatus     @default(ACTIVE)
+  startDate         DateTime
+  email             String
+  user              User?
+  attendanceRecords AttendanceRecord[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model AttendanceRecord {
+  id         String    @id @default(cuid())
+  employeeId String
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  date       DateTime  @db.Date
+  clockIn    DateTime
+  clockOut   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([employeeId, date])
 }
 
 model AuditLog {

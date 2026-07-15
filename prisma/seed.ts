@@ -12,6 +12,7 @@ async function hash(password: string) {
 async function main() {
   await db.auditLog.deleteMany();
   await db.user.deleteMany();
+  await db.attendanceRecord.deleteMany();
   await db.employee.deleteMany();
   await db.clientOrg.deleteMany();
 
