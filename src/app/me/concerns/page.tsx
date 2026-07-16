@@ -27,7 +27,7 @@ export default async function MyConcernsPage() {
         </p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper p-6">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Raise a concern</h2>
         <form action={submitConcern} className="space-y-4">
           <div>
@@ -38,7 +38,7 @@ export default async function MyConcernsPage() {
         </form>
       </div>
 
-      <div className="overflow-hidden rounded-card border border-border bg-paper">
+      <div className="overflow-hidden rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>

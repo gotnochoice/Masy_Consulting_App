@@ -23,7 +23,7 @@ export function Sidebar({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="w-60 shrink-0 overflow-y-auto border-r border-border bg-paper px-3 py-4">
+    <nav className="w-60 shrink-0 overflow-y-auto border-r border-border bg-paper shadow-sm px-3 py-4">
       <ul className="space-y-1">
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

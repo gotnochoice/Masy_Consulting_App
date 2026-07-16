@@ -1,6 +1,6 @@
 export function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-card border border-border bg-paper">
+    <div className="rounded-card border border-border bg-paper shadow-sm">
       <div className="border-b border-border px-5 py-4">
         <h2 className="text-sm font-semibold text-ink">{title}</h2>
       </div>

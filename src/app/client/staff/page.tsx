@@ -17,7 +17,7 @@ export default async function ClientStaffPage() {
         <p className="text-sm text-slate">Read-only. Reach out to your Masy HR contact for changes.</p>
       </div>
 
-      <div className="overflow-hidden rounded-card border border-border bg-paper">
+      <div className="overflow-hidden rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-indigo-tint">
             <tr>

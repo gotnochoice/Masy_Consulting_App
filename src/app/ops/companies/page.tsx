@@ -19,7 +19,7 @@ export default async function OpsCompaniesPage() {
         <p className="text-sm text-slate">Every client organization on the platform.</p>
       </div>
 
-      <div className="overflow-hidden rounded-card border border-border bg-paper">
+      <div className="overflow-hidden rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -58,10 +58,10 @@ export default async function OpsCompaniesPage() {
         </table>
       </div>
 
-      <div className="rounded-card border border-border bg-paper p-6">
+      <div className="max-w-md rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Add company</h2>
         <form action={createCompany} className="flex items-end gap-3">
-          <div className="flex-1 max-w-sm">
+          <div className="flex-1">
             <label className={labelClass} htmlFor="name">Company name</label>
             <input id="name" name="name" required className={inputClass} />
           </div>

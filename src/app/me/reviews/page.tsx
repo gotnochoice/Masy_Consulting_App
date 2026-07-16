@@ -25,7 +25,7 @@ export default async function MyReviewsPage() {
         <p className="text-sm text-slate">Masy reviews every submission before anything reaches your employer.</p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper p-6">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Submit a self-assessment</h2>
         <form action={submitReview} className="space-y-4">
           <div className="max-w-xs">
@@ -42,7 +42,7 @@ export default async function MyReviewsPage() {
 
       <div className="space-y-3">
         {reviews.map((review) => (
-          <div key={review.id} className="rounded-card border border-border bg-paper p-5">
+          <div key={review.id} className="rounded-card border border-border bg-paper shadow-sm p-5">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-sm font-medium text-ink">{review.cycle}</p>
               <ReviewStatusBadge status={review.status} />
@@ -52,7 +52,7 @@ export default async function MyReviewsPage() {
           </div>
         ))}
         {reviews.length === 0 && (
-          <p className="rounded-card border border-border bg-paper px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
             No reviews submitted yet.
           </p>
         )}

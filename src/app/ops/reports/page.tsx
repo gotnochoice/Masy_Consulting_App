@@ -105,7 +105,7 @@ export default async function OpsReportsPage({
         />
       </div>
 
-      <div className="rounded-card border border-border bg-paper p-6">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Masy notes for this month</h2>
         <form action={saveReportNotes} className="space-y-4">
           <input type="hidden" name="clientOrgId" value={selectedOrgId} />

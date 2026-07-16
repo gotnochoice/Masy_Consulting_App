@@ -20,7 +20,7 @@ export default async function ClientLeavePage() {
         <p className="text-sm text-slate">Approve or decline leave for your team — the one action you take directly.</p>
       </div>
 
-      <div className="overflow-hidden rounded-card border border-border bg-paper">
+      <div className="overflow-hidden rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-indigo-tint">
             <tr>

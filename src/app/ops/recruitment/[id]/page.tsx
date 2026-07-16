@@ -43,7 +43,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         <p className="text-sm text-slate">{role.clientOrg.name}</p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper p-5">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-5">
         <form action={updateRoleStageWithId} className="flex items-end gap-3">
           <div>
             <label className={labelClass} htmlFor="stage">Role stage</label>
@@ -62,7 +62,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         {role.candidates.map((candidate) => {
           const updateStageWithIds = updateCandidateStage.bind(null, candidate.id, role.id);
           return (
-            <div key={candidate.id} className="rounded-card border border-border bg-paper p-5">
+            <div key={candidate.id} className="rounded-card border border-border bg-paper shadow-sm p-5">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-medium text-ink">{candidate.name}</p>
                 <CandidateStageBadge stage={candidate.stage} />
@@ -82,13 +82,13 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           );
         })}
         {role.candidates.length === 0 && (
-          <p className="rounded-card border border-border bg-paper px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
             No candidates yet.
           </p>
         )}
       </div>
 
-      <div className="rounded-card border border-border bg-paper p-6">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Add candidate</h2>
         <form action={addCandidateWithId} className="space-y-4">
           <div className="max-w-sm">

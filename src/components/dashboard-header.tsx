@@ -5,7 +5,7 @@ type NavItem = { label: string; href: string };
 
 export function DashboardHeader({ roleLabel, nav }: { roleLabel: string; nav: NavItem[] }) {
   return (
-    <header className="flex items-center justify-between border-b border-border bg-paper px-6 py-4">
+    <header className="flex items-center justify-between border-b border-border bg-paper shadow-sm px-6 py-4">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo text-sm font-bold text-white">

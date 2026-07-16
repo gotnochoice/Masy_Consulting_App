@@ -23,7 +23,7 @@ export default async function OpsRecruitmentPage() {
         <p className="text-sm text-slate">Open roles and candidate pipelines across every client organization.</p>
       </div>
 
-      <div className="overflow-hidden rounded-card border border-border bg-paper">
+      <div className="overflow-hidden rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -57,14 +57,14 @@ export default async function OpsRecruitmentPage() {
         </table>
       </div>
 
-      <div className="rounded-card border border-border bg-paper p-6">
+      <div className="max-w-xl rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Open a role</h2>
         <form action={createRole} className="flex items-end gap-4">
-          <div className="max-w-xs flex-1">
+          <div className="flex-1">
             <label className={labelClass} htmlFor="title">Role title</label>
             <input id="title" name="title" required className={inputClass} />
           </div>
-          <div className="max-w-xs flex-1">
+          <div className="flex-1">
             <label className={labelClass} htmlFor="clientOrgId">Organization</label>
             <select id="clientOrgId" name="clientOrgId" required defaultValue="" className={inputClass}>
               <option value="" disabled>Select organization</option>

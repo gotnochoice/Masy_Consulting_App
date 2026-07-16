@@ -27,7 +27,7 @@ export default async function OpsAttendancePage() {
         <p className="text-sm text-slate">Rollup across all client organizations. Most recent 100 records.</p>
       </div>
 
-      <div className="overflow-hidden rounded-card border border-border bg-paper">
+      <div className="overflow-hidden rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -65,7 +65,7 @@ export default async function OpsAttendancePage() {
         </table>
       </div>
 
-      <div className="rounded-card border border-border bg-paper p-6">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-1 text-sm font-semibold text-ink">Add or correct a record</h2>
         <p className="mb-4 text-xs text-slate">
           Use this when an employee forgot to clock in/out, or a day is missing entirely. To fix an existing day, use

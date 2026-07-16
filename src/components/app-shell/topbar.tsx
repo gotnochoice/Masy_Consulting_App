@@ -3,7 +3,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 
 export function Topbar({ userLabel }: { userLabel: string }) {
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-paper px-6">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-paper shadow-sm px-6">
       <div className="flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo text-sm font-bold text-white">
           M
