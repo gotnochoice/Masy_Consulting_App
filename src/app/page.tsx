@@ -9,7 +9,7 @@ export default async function Home() {
 
   switch (session.user.role) {
     case "MASY_OPS":
-      redirect("/ops/employees");
+      redirect("/ops/overview");
     case "CLIENT":
       redirect("/client/staff");
     case "EMPLOYEE":

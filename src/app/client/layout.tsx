@@ -5,7 +5,7 @@ export default async function ClientLayout({ children }: { children: React.React
   await requireRole("CLIENT");
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-paper-2">
       <DashboardHeader
         roleLabel="Client"
         nav={[
@@ -13,7 +13,7 @@ export default async function ClientLayout({ children }: { children: React.React
           { label: "Attendance", href: "/client/attendance" },
         ]}
       />
-      <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-4xl px-6 py-10">{children}</main>
     </div>
   );
 }

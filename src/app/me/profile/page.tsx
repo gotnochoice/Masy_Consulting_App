@@ -14,35 +14,35 @@ export default async function MyProfilePage() {
 
   if (!employee) {
     return (
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-slate">
         No profile found yet. Contact your Masy HR contact.
       </p>
     );
   }
 
   return (
-    <div className="max-w-md rounded-lg border border-neutral-200 bg-white p-6">
-      <h1 className="mb-4 text-lg font-semibold text-neutral-900">My profile</h1>
+    <div className="max-w-md rounded-card border border-border bg-paper p-6">
+      <h1 className="mb-4 text-lg font-bold text-ink">My profile</h1>
       <dl className="space-y-3 text-sm">
         <div className="flex justify-between">
-          <dt className="text-neutral-500">Name</dt>
-          <dd className="text-neutral-900">{employee.name}</dd>
+          <dt className="text-slate">Name</dt>
+          <dd className="font-medium text-ink">{employee.name}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-neutral-500">Role</dt>
-          <dd className="text-neutral-900">{employee.roleTitle}</dd>
+          <dt className="text-slate">Role</dt>
+          <dd className="font-medium text-ink">{employee.roleTitle}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-neutral-500">Organization</dt>
-          <dd className="text-neutral-900">{employee.clientOrg.name}</dd>
+          <dt className="text-slate">Organization</dt>
+          <dd className="font-medium text-ink">{employee.clientOrg.name}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-neutral-500">Status</dt>
+          <dt className="text-slate">Status</dt>
           <dd><StatusBadge status={employee.status} /></dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-neutral-500">Start date</dt>
-          <dd className="text-neutral-900">{employee.startDate.toLocaleDateString()}</dd>
+          <dt className="text-slate">Start date</dt>
+          <dd className="font-mono text-xs text-ink">{employee.startDate.toLocaleDateString()}</dd>
         </div>
       </dl>
     </div>

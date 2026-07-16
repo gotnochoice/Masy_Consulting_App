@@ -1,9 +1,9 @@
 import type { EmployeeStatus } from "@/generated/prisma/client";
 
 const STYLES: Record<EmployeeStatus, string> = {
-  ACTIVE: "bg-green-50 text-green-700 ring-green-600/20",
-  ON_LEAVE: "bg-amber-50 text-amber-700 ring-amber-600/20",
-  OFFBOARDED: "bg-neutral-100 text-neutral-600 ring-neutral-500/20",
+  ACTIVE: "bg-indigo-tint text-indigo",
+  ON_LEAVE: "bg-orange-light/40 text-orange",
+  OFFBOARDED: "bg-paper-2 text-slate border border-border",
 };
 
 const LABELS: Record<EmployeeStatus, string> = {
@@ -15,7 +15,7 @@ const LABELS: Record<EmployeeStatus, string> = {
 export function StatusBadge({ status }: { status: EmployeeStatus }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${STYLES[status]}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-xs font-medium ${STYLES[status]}`}
     >
       {LABELS[status]}
     </span>

@@ -1,4 +1,5 @@
 import type { ClientOrg, Employee } from "@/generated/prisma/client";
+import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 
 type Props = {
   orgs: Pick<ClientOrg, "id" | "name">[];
@@ -6,9 +7,6 @@ type Props = {
   action: (formData: FormData) => void | Promise<void>;
   submitLabel: string;
 };
-
-const inputClass = "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none";
-const labelClass = "mb-1 block text-sm font-medium text-neutral-700";
 
 export function EmployeeForm({ orgs, employee, action, submitLabel }: Props) {
   const startDateValue = employee ? employee.startDate.toISOString().slice(0, 10) : "";
@@ -56,10 +54,7 @@ export function EmployeeForm({ orgs, employee, action, submitLabel }: Props) {
           </div>
         )}
       </div>
-      <button
-        type="submit"
-        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-      >
+      <button type="submit" className={buttonClass}>
         {submitLabel}
       </button>
     </form>

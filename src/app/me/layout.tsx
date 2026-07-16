@@ -5,7 +5,7 @@ export default async function EmployeeLayout({ children }: { children: React.Rea
   await requireRole("EMPLOYEE");
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-paper-2">
       <DashboardHeader
         roleLabel="Employee"
         nav={[
@@ -13,7 +13,7 @@ export default async function EmployeeLayout({ children }: { children: React.Rea
           { label: "Attendance", href: "/me/attendance" },
         ]}
       />
-      <main className="mx-auto max-w-3xl px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-3xl px-6 py-10">{children}</main>
     </div>
   );
 }

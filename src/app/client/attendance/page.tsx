@@ -50,32 +50,40 @@ export default async function ClientAttendancePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-semibold text-neutral-900">Attendance — {monthLabel}</h1>
-        <p className="text-sm text-neutral-500">Read-only monthly summary for your team.</p>
+        <h1 className="text-2xl font-bold text-ink">Attendance — {monthLabel}</h1>
+        <p className="text-sm text-slate">Read-only monthly summary for your team.</p>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
-        <table className="min-w-full divide-y divide-neutral-200 text-sm">
-          <thead className="bg-neutral-50">
+      <div className="overflow-hidden rounded-card border border-border bg-paper">
+        <table className="min-w-full divide-y divide-border text-sm">
+          <thead className="bg-indigo-tint">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-neutral-500">Name</th>
-              <th className="px-4 py-2 text-left font-medium text-neutral-500">Days present</th>
-              <th className="px-4 py-2 text-left font-medium text-neutral-500">Total hours</th>
-              <th className="px-4 py-2 text-left font-medium text-neutral-500">Incomplete days</th>
+              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
+              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Days present</th>
+              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Total hours</th>
+              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Incomplete days</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-border">
             {rows.map((row) => (
               <tr key={row.employeeId}>
-                <td className="px-4 py-2 text-neutral-900">{row.name}</td>
-                <td className="px-4 py-2 text-neutral-600">{row.daysPresent}</td>
-                <td className="px-4 py-2 text-neutral-600">{(row.totalHoursMs / 3_600_000).toFixed(1)}h</td>
-                <td className="px-4 py-2 text-neutral-600">{row.incompleteDays > 0 ? row.incompleteDays : "—"}</td>
+                <td className="px-5 py-3 font-medium text-ink">{row.name}</td>
+                <td className="px-5 py-3 text-slate">{row.daysPresent}</td>
+                <td className="px-5 py-3 font-mono text-xs text-slate">{(row.totalHoursMs / 3_600_000).toFixed(1)}h</td>
+                <td className="px-5 py-3 text-slate">
+                  {row.incompleteDays > 0 ? (
+                    <span className="rounded-full bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
+                      {row.incompleteDays}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-neutral-500">
+                <td colSpan={4} className="px-5 py-6 text-center text-sm text-slate">
                   No attendance recorded yet this month.
                 </td>
               </tr>

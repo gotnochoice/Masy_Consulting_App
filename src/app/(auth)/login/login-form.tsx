@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { loginAction } from "./actions";
+import { inputClass, labelClass } from "@/lib/form-styles";
 
 export function LoginForm() {
   const [error, formAction, isPending] = useActionState(loginAction, undefined);
@@ -9,20 +10,13 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-4">
       <div>
-        <label htmlFor="email" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="email" className={labelClass}>
           Email
         </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-        />
+        <input id="email" name="email" type="email" required autoComplete="email" className={inputClass} />
       </div>
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="password" className={labelClass}>
           Password
         </label>
         <input
@@ -31,14 +25,14 @@ export function LoginForm() {
           type="password"
           required
           autoComplete="current-password"
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+          className={inputClass}
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-orange">{error}</p>}
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+        className="w-full rounded-btn bg-indigo px-3 py-2 text-sm font-medium text-white hover:bg-indigo-light disabled:opacity-50"
       >
         {isPending ? "Signing in..." : "Sign in"}
       </button>

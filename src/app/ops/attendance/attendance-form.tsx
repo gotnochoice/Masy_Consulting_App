@@ -1,3 +1,5 @@
+import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
+
 type EmployeeOption = {
   id: string;
   name: string;
@@ -17,9 +19,6 @@ type Props = {
   action: (formData: FormData) => void | Promise<void>;
   submitLabel: string;
 };
-
-const inputClass = "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none";
-const labelClass = "mb-1 block text-sm font-medium text-neutral-700";
 
 function toDateInput(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -81,10 +80,7 @@ export function AttendanceForm({ employees, record, action, submitLabel }: Props
           />
         </div>
       </div>
-      <button
-        type="submit"
-        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-      >
+      <button type="submit" className={buttonClass}>
         {submitLabel}
       </button>
     </form>

@@ -13,30 +13,30 @@ export default async function ClientStaffPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-semibold text-neutral-900">Your team</h1>
-        <p className="text-sm text-neutral-500">Read-only. Reach out to your Masy HR contact for changes.</p>
+        <h1 className="text-2xl font-bold text-ink">Your team</h1>
+        <p className="text-sm text-slate">Read-only. Reach out to your Masy HR contact for changes.</p>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
-        <table className="min-w-full divide-y divide-neutral-200 text-sm">
-          <thead className="bg-neutral-50">
+      <div className="overflow-hidden rounded-card border border-border bg-paper">
+        <table className="min-w-full divide-y divide-border text-sm">
+          <thead className="bg-indigo-tint">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-neutral-500">Name</th>
-              <th className="px-4 py-2 text-left font-medium text-neutral-500">Role</th>
-              <th className="px-4 py-2 text-left font-medium text-neutral-500">Status</th>
+              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
+              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Role</th>
+              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-border">
             {employees.map((employee) => (
               <tr key={employee.id}>
-                <td className="px-4 py-2 text-neutral-900">{employee.name}</td>
-                <td className="px-4 py-2 text-neutral-600">{employee.roleTitle}</td>
-                <td className="px-4 py-2"><StatusBadge status={employee.status} /></td>
+                <td className="px-5 py-3 font-medium text-ink">{employee.name}</td>
+                <td className="px-5 py-3 text-slate">{employee.roleTitle}</td>
+                <td className="px-5 py-3"><StatusBadge status={employee.status} /></td>
               </tr>
             ))}
             {employees.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-neutral-500">No staff on record yet.</td>
+                <td colSpan={3} className="px-5 py-6 text-center text-sm text-slate">No staff on record yet.</td>
               </tr>
             )}
           </tbody>

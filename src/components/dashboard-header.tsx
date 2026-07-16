@@ -5,15 +5,24 @@ type NavItem = { label: string; href: string };
 
 export function DashboardHeader({ roleLabel, nav }: { roleLabel: string; nav: NavItem[] }) {
   return (
-    <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4">
+    <header className="flex items-center justify-between border-b border-border bg-paper px-6 py-4">
       <div className="flex items-center gap-8">
-        <div>
-          <p className="text-sm font-semibold text-neutral-900">Masy Consulting HR</p>
-          <p className="text-xs text-neutral-500">{roleLabel}</p>
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo text-sm font-bold text-white">
+            M
+          </div>
+          <div>
+            <p className="text-sm font-bold text-indigo">Masy Consulting HR</p>
+            <p className="font-mono text-xs text-slate-light">{roleLabel}</p>
+          </div>
         </div>
         <nav className="flex gap-4">
           {nav.map((item) => (
-            <Link key={item.href} href={item.href} className="text-sm text-neutral-600 hover:text-neutral-900">
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-btn px-3 py-1.5 text-sm font-medium text-slate transition-colors hover:bg-indigo-tint hover:text-indigo"
+            >
               {item.label}
             </Link>
           ))}
