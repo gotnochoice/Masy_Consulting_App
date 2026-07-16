@@ -5,8 +5,13 @@ import { StatusBadge } from "@/components/status-badge";
 import { createEmployee } from "./actions";
 import { EmployeeForm } from "./employee-form";
 
-export default async function OpsEmployeesPage() {
+export default async function OpsEmployeesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ org?: string }>;
+}) {
   await requireRole("MASY_OPS");
+  const { org: defaultOrgId } = await searchParams;
 
   const [employees, orgs] = await Promise.all([
     db.employee.findMany({
@@ -61,7 +66,7 @@ export default async function OpsEmployeesPage() {
 
       <div className="rounded-card border border-border bg-paper p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Add employee</h2>
-        <EmployeeForm orgs={orgs} action={createEmployee} submitLabel="Add employee" />
+        <EmployeeForm orgs={orgs} defaultOrgId={defaultOrgId} action={createEmployee} submitLabel="Add employee" />
       </div>
     </div>
   );

@@ -11,6 +11,9 @@ export default async function EmployeeLayout({ children }: { children: React.Rea
         nav={[
           { label: "Profile", href: "/me/profile" },
           { label: "Attendance", href: "/me/attendance" },
+          { label: "Leave", href: "/me/leave" },
+          { label: "Reviews", href: "/me/reviews" },
+          { label: "Concerns", href: "/me/concerns" },
         ]}
       />
       <main className="mx-auto max-w-3xl px-6 py-10">{children}</main>

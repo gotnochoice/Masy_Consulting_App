@@ -11,6 +11,9 @@ export default async function ClientLayout({ children }: { children: React.React
         nav={[
           { label: "Staff", href: "/client/staff" },
           { label: "Attendance", href: "/client/attendance" },
+          { label: "Leave", href: "/client/leave" },
+          { label: "Reviews", href: "/client/reviews" },
+          { label: "Concerns", href: "/client/concerns" },
         ]}
       />
       <main className="mx-auto max-w-4xl px-6 py-10">{children}</main>

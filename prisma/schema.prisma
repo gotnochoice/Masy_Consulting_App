@@ -22,13 +22,54 @@ enum EmployeeStatus {
   OFFBOARDED
 }
 
+enum LeaveType {
+  ANNUAL
+  SICK
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
+enum ReviewStatus {
+  SUBMITTED
+  MASY_REVIEWED
+  RELEASED
+}
+
+enum ConcernVisibility {
+  RAW
+  MASY_REVIEWED
+  CLIENT_VISIBLE
+}
+
+enum RoleStage {
+  SOURCING
+  INTERVIEWING
+  OFFER
+  FILLED
+}
+
+enum CandidateStage {
+  SOURCING
+  INTERVIEWING
+  OFFER
+  FILLED
+  REJECTED
+}
+
 model ClientOrg {
-  id        String     @id @default(cuid())
-  name      String
-  status    String     @default("active")
-  employees Employee[]
-  users     User[]
-  createdAt DateTime   @default(now())
+  id                 String              @id @default(cuid())
+  name               String
+  status             String              @default("active")
+  employees          Employee[]
+  users              User[]
+  openRoles          OpenRole[]
+  monthlyReportNotes MonthlyReportNote[]
+  createdAt          DateTime            @default(now())
 }
 
 model User {
@@ -44,18 +85,22 @@ model User {
 }
 
 model Employee {
-  id                String             @id @default(cuid())
-  clientOrgId       String
-  clientOrg         ClientOrg          @relation(fields: [clientOrgId], references: [id])
-  name              String
-  roleTitle         String
-  status            EmployeeStatus     @default(ACTIVE)
-  startDate         DateTime
-  email             String
-  user              User?
-  attendanceRecords AttendanceRecord[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id                 String              @id @default(cuid())
+  clientOrgId        String
+  clientOrg          ClientOrg           @relation(fields: [clientOrgId], references: [id])
+  name               String
+  roleTitle          String
+  status             EmployeeStatus      @default(ACTIVE)
+  startDate          DateTime
+  email              String
+  leaveBalanceDays   Int                 @default(20)
+  user               User?
+  attendanceRecords  AttendanceRecord[]
+  leaveRequests      LeaveRequest[]
+  performanceReviews PerformanceReview[]
+  concerns           Concern[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 }
 
 model AttendanceRecord {
@@ -69,6 +114,76 @@ model AttendanceRecord {
   updatedAt  DateTime  @updatedAt
 
   @@unique([employeeId, date])
+}
+
+model LeaveRequest {
+  id         String      @id @default(cuid())
+  employeeId String
+  employee   Employee    @relation(fields: [employeeId], references: [id])
+  type       LeaveType
+  startDate  DateTime    @db.Date
+  endDate    DateTime    @db.Date
+  reason     String?
+  status     LeaveStatus @default(PENDING)
+  approverId String?
+  decidedAt  DateTime?
+  createdAt  DateTime    @default(now())
+}
+
+model PerformanceReview {
+  id             String       @id @default(cuid())
+  employeeId     String
+  employee       Employee     @relation(fields: [employeeId], references: [id])
+  cycle          String
+  selfAssessment String
+  masyNotes      String?
+  status         ReviewStatus @default(SUBMITTED)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Concern {
+  id             String            @id @default(cuid())
+  employeeId     String
+  employee       Employee          @relation(fields: [employeeId], references: [id])
+  content        String
+  visibility     ConcernVisibility @default(RAW)
+  curatedSummary String?
+  escalated      Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model OpenRole {
+  id          String      @id @default(cuid())
+  clientOrgId String
+  clientOrg   ClientOrg   @relation(fields: [clientOrgId], references: [id])
+  title       String
+  stage       RoleStage   @default(SOURCING)
+  candidates  Candidate[]
+  createdAt   DateTime    @default(now())
+}
+
+model Candidate {
+  id         String         @id @default(cuid())
+  openRoleId String
+  openRole   OpenRole       @relation(fields: [openRoleId], references: [id])
+  name       String
+  stage      CandidateStage @default(SOURCING)
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model MonthlyReportNote {
+  id          String    @id @default(cuid())
+  clientOrgId String
+  clientOrg   ClientOrg @relation(fields: [clientOrgId], references: [id])
+  month       DateTime  @db.Date
+  notes       String
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([clientOrgId, month])
 }
 
 model AuditLog {

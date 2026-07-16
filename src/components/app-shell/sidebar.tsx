@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Users, Clock } from "lucide-react";
+import { LayoutGrid, Users, Clock, Building2, CalendarDays, FileText, Briefcase, AlertTriangle, BarChart3 } from "lucide-react";
 
 const ICONS = {
   overview: LayoutGrid,
+  companies: Building2,
   employees: Users,
   attendance: Clock,
+  leave: CalendarDays,
+  reviews: FileText,
+  recruitment: Briefcase,
+  concerns: AlertTriangle,
+  reports: BarChart3,
 } as const;
 
 export type NavIconName = keyof typeof ICONS;

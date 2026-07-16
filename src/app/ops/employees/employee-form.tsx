@@ -4,11 +4,12 @@ import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 type Props = {
   orgs: Pick<ClientOrg, "id" | "name">[];
   employee?: Employee;
+  defaultOrgId?: string;
   action: (formData: FormData) => void | Promise<void>;
   submitLabel: string;
 };
 
-export function EmployeeForm({ orgs, employee, action, submitLabel }: Props) {
+export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel }: Props) {
   const startDateValue = employee ? employee.startDate.toISOString().slice(0, 10) : "";
 
   return (
@@ -36,7 +37,7 @@ export function EmployeeForm({ orgs, employee, action, submitLabel }: Props) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelClass} htmlFor="clientOrgId">Organization</label>
-          <select id="clientOrgId" name="clientOrgId" defaultValue={employee?.clientOrgId ?? ""} required className={inputClass}>
+          <select id="clientOrgId" name="clientOrgId" defaultValue={employee?.clientOrgId ?? defaultOrgId ?? ""} required className={inputClass}>
             <option value="" disabled>Select organization</option>
             {orgs.map((org) => (
               <option key={org.id} value={org.id}>{org.name}</option>
