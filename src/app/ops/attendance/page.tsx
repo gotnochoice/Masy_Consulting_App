@@ -27,7 +27,7 @@ export default async function OpsAttendancePage() {
         <p className="text-sm text-slate">Rollup across all client organizations. Most recent 100 records.</p>
       </div>
 
-      <div className="overflow-hidden rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>

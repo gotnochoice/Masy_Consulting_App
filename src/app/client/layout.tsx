@@ -16,7 +16,7 @@ export default async function ClientLayout({ children }: { children: React.React
           { label: "Concerns", href: "/client/concerns" },
         ]}
       />
-      <main className="mx-auto max-w-4xl px-6 py-10">{children}</main>
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">{children}</main>
     </div>
   );
 }
