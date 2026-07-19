@@ -26,7 +26,7 @@ export default async function OpsPulsePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Pulse</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Pulse</h1>
         <p className="text-sm text-slate">How employees say they&apos;re doing, across every client organization.</p>
       </div>
 

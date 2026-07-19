@@ -16,7 +16,7 @@ export default async function OpsReviewsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Performance reviews</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Performance reviews</h1>
         <p className="text-sm text-slate">Add your notes, then release the full review to the client.</p>
       </div>
 

@@ -34,15 +34,19 @@ export default async function OpsOverviewPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Admin Overview</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Admin Overview</h1>
         <p className="text-sm text-slate">{monthLabel} — everything at a glance.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total employees" value={employeeCount} icon={Users} />
-        <StatCard label="Client organizations" value={orgCount} icon={Building2} />
-        <StatCard label="Clocked in today" value={todayClockIns} icon={Clock} />
-        <StatCard label="Attendance flags this month" value={incompleteThisMonth} icon={AlertTriangle} tone="orange" />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-2">
+          <StatCard label="Total employees" value={employeeCount} icon={Users} size="large" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:col-span-3">
+          <StatCard label="Client organizations" value={orgCount} icon={Building2} />
+          <StatCard label="Clocked in today" value={todayClockIns} icon={Clock} />
+          <StatCard label="Attendance flags this month" value={incompleteThisMonth} icon={AlertTriangle} tone="orange" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -53,7 +57,7 @@ export default async function OpsOverviewPage() {
                 <p className="text-sm font-medium text-ink">{org.name}</p>
                 <p className="text-xs text-slate">{org._count.employees} employees</p>
               </div>
-              <span className="rounded-full bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+              <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
                 {org.status}
               </span>
             </div>
@@ -71,11 +75,11 @@ export default async function OpsOverviewPage() {
                 </p>
               </div>
               {record.clockOut ? (
-                <span className="rounded-full bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+                <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
                   Complete
                 </span>
               ) : (
-                <span className="rounded-full bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
+                <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
                   Open
                 </span>
               )}

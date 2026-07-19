@@ -14,7 +14,7 @@ export default async function ClientReviewsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Performance reviews</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Performance reviews</h1>
         <p className="text-sm text-slate">Reviewed and released by your Masy HR contact.</p>
       </div>
 

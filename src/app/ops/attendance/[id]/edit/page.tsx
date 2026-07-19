@@ -19,7 +19,7 @@ export default async function EditAttendanceRecordPage({ params }: { params: Pro
   return (
     <div className="max-w-lg space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Edit attendance record</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Edit attendance record</h1>
         <p className="text-sm text-slate">
           {record.employee.name} — {record.employee.clientOrg.name}
         </p>

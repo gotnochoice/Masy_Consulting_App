@@ -15,7 +15,7 @@ export default async function OpsLeavePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Leave requests</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Leave requests</h1>
         <p className="text-sm text-slate">Across all client organizations.</p>
       </div>
 

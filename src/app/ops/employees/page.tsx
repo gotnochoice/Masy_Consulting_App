@@ -25,7 +25,7 @@ export default async function OpsEmployeesPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Employee directory</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Employee directory</h1>
         <p className="text-sm text-slate">All staff across every client organization.</p>
       </div>
 
@@ -52,7 +52,7 @@ export default async function OpsEmployeesPage({
                 <td className="px-4 py-3 font-mono text-xs text-slate">{employee.startDate.toLocaleDateString()}</td>
                 <td className="px-4 py-3">
                   {employee.user ? (
-                    <span className="rounded-full bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+                    <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
                       Active
                     </span>
                   ) : (

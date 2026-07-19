@@ -21,7 +21,7 @@ export default async function MyReviewsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Performance reviews</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Performance reviews</h1>
         <p className="text-sm text-slate">Masy reviews every submission before anything reaches your employer.</p>
       </div>
 

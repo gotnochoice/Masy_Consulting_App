@@ -27,7 +27,7 @@ export default async function ClientPulsePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Team pulse</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Team pulse</h1>
         <p className="text-sm text-slate">
           A monthly average from short private check-ins with your team. Individual answers stay with Masy — this
           is trend only, and only shown once enough people have responded that no one answer stands out.

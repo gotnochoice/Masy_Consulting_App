@@ -31,7 +31,7 @@ export default async function OpsReportsPage({
   if (!selectedOrgId) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-ink">Reports</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Reports</h1>
         <p className="text-sm text-slate">Add a company before you can put together a report.</p>
       </div>
     );
@@ -71,7 +71,7 @@ export default async function OpsReportsPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Reports</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Reports</h1>
         <p className="text-sm text-slate">One shared template — what actually gets sent to each client.</p>
       </div>
 
@@ -93,16 +93,20 @@ export default async function OpsReportsPage({
 
       <p className="text-sm text-slate">{monthLabel(monthValue)}</p>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Attendance completion" value={`${attendancePct}%`} icon={Percent} />
-        <StatCard label="Leave days taken" value={leaveDaysTaken} icon={CalendarDays} />
-        <StatCard label="Reviews released" value={`${releasedReviews}/${reviews.length}`} icon={FileText} />
-        <StatCard
-          label="Concerns raised"
-          value={`${concernsTotal} (${concernsReleased} shared)`}
-          icon={AlertTriangle}
-          tone={concernsTotal > 0 ? "orange" : "indigo"}
-        />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-2">
+          <StatCard label="Attendance completion" value={`${attendancePct}%`} icon={Percent} size="large" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:col-span-3">
+          <StatCard label="Leave days taken" value={leaveDaysTaken} icon={CalendarDays} />
+          <StatCard label="Reviews released" value={`${releasedReviews}/${reviews.length}`} icon={FileText} />
+          <StatCard
+            label="Concerns raised"
+            value={`${concernsTotal} (${concernsReleased} shared)`}
+            icon={AlertTriangle}
+            tone={concernsTotal > 0 ? "orange" : "indigo"}
+          />
+        </div>
       </div>
 
       <div className="rounded-card border border-border bg-paper shadow-sm p-6">

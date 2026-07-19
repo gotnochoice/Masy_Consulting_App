@@ -50,7 +50,7 @@ export default async function ClientAttendancePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Attendance — {monthLabel}</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Attendance — {monthLabel}</h1>
         <p className="text-sm text-slate">Read-only monthly summary for your team.</p>
       </div>
 
@@ -72,7 +72,7 @@ export default async function ClientAttendancePage() {
                 <td className="px-5 py-3 font-mono text-xs text-slate">{(row.totalHoursMs / 3_600_000).toFixed(1)}h</td>
                 <td className="px-5 py-3 text-slate">
                   {row.incompleteDays > 0 ? (
-                    <span className="rounded-full bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
+                    <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
                       {row.incompleteDays}
                     </span>
                   ) : (

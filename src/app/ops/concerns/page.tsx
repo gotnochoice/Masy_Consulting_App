@@ -16,7 +16,7 @@ export default async function OpsConcernsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Concerns</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Concerns</h1>
         <p className="text-sm text-slate">
           Raw submissions stay here. Write a curated summary before releasing anything to a client — never the
           raw text, never identifying detail unless necessary.
@@ -38,7 +38,7 @@ export default async function OpsConcernsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {concern.escalated && (
-                    <span className="rounded-full bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
+                    <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
                       Escalated
                     </span>
                   )}

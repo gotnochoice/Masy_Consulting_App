@@ -39,7 +39,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">{role.title}</h1>
+        <h1 className="text-3xl font-extrabold text-ink">{role.title}</h1>
         <p className="text-sm text-slate">{role.clientOrg.name}</p>
       </div>
 

@@ -22,7 +22,7 @@ export default async function MyPulsePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Pulse check-in</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Pulse check-in</h1>
         <p className="text-sm text-slate">
           A quick, private read on how work is going. Masy sees this to spot patterns early — your employer only
           ever sees an aggregate trend, never your individual answers.

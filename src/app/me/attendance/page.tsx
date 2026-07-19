@@ -27,7 +27,7 @@ export default async function MyAttendancePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Attendance</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Attendance</h1>
         <p className="text-sm text-slate">Clock in when you start, clock out when you&apos;re done for the day.</p>
       </div>
 

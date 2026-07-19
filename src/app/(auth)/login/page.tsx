@@ -1,19 +1,18 @@
 import { LoginForm } from "./login-form";
+import { MasyLogo } from "@/components/masy-logo";
 
 export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-paper-2 px-4">
-      <div className="w-full max-w-sm rounded-card border border-border bg-paper shadow-sm p-8 shadow-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo text-base font-bold text-white">
-            M
+      <div className="w-full max-w-sm overflow-hidden rounded-card border border-border bg-paper shadow-sm">
+        <div className="h-1 bg-gradient-to-r from-orange to-indigo" />
+        <div className="p-8">
+          <div className="mb-6">
+            <MasyLogo className="text-xl" />
+            <p className="mt-1 text-sm text-slate">HR Platform — sign in to continue</p>
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-ink">Masy Consulting HR</h1>
-            <p className="text-sm text-slate">Sign in to continue</p>
-          </div>
+          <LoginForm />
         </div>
-        <LoginForm />
       </div>
     </main>
   );

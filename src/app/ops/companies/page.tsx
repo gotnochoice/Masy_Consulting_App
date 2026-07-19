@@ -19,7 +19,7 @@ export default async function OpsCompaniesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Companies</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Companies</h1>
         <p className="text-sm text-slate">Every client organization on the platform.</p>
       </div>
 
@@ -40,7 +40,7 @@ export default async function OpsCompaniesPage() {
                 <td className="px-4 py-3 font-medium text-ink">{org.name}</td>
                 <td className="px-4 py-3 text-slate">{org._count.employees}</td>
                 <td className="px-4 py-3">
-                  <span className="rounded-full bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+                  <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
                     {org.status}
                   </span>
                 </td>

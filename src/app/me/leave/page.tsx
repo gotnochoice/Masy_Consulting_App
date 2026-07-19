@@ -21,7 +21,7 @@ export default async function MyLeavePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Leave</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Leave</h1>
         <p className="text-sm text-slate">
           Balance: <span className="font-mono text-ink">{employee?.leaveBalanceDays ?? 0} days</span> remaining
         </p>

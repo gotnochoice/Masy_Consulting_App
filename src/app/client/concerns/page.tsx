@@ -29,7 +29,7 @@ export default async function ClientConcernsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Concerns</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Concerns</h1>
         <p className="text-sm text-slate">
           A summary view only — individual submissions go to your Masy HR contact, never straight to you. This
           keeps it safe for your team to raise things honestly.

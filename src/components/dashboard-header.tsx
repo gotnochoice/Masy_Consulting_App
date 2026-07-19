@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignOutButton } from "@/components/sign-out-button";
+import { MasyLogo } from "@/components/masy-logo";
 
 type NavItem = { label: string; href: string };
 
@@ -7,14 +8,9 @@ export function DashboardHeader({ roleLabel, nav }: { roleLabel: string; nav: Na
   return (
     <header className="flex flex-wrap items-center gap-x-8 gap-y-3 border-b border-border bg-paper shadow-sm px-4 py-3 sm:px-6 sm:py-4">
       <div className="flex flex-1 items-center justify-between gap-2 sm:flex-none sm:justify-start">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo text-sm font-bold text-white">
-            M
-          </div>
-          <div>
-            <p className="text-sm font-bold text-indigo">Masy Consulting HR</p>
-            <p className="font-mono text-xs text-slate-light">{roleLabel}</p>
-          </div>
+        <div>
+          <MasyLogo className="text-base" />
+          <p className="font-mono text-xs text-slate-light">{roleLabel}</p>
         </div>
         <div className="sm:hidden">
           <SignOutButton />

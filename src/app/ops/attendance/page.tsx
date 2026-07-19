@@ -23,7 +23,7 @@ export default async function OpsAttendancePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Attendance</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Attendance</h1>
         <p className="text-sm text-slate">Rollup across all client organizations. Most recent 100 records.</p>
       </div>
 

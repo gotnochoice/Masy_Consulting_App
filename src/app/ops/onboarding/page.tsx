@@ -14,7 +14,7 @@ export default async function OpsOnboardingPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Onboarding</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Onboarding</h1>
         <p className="text-sm text-slate">New hire checklists across every client organization.</p>
       </div>
 
@@ -30,7 +30,7 @@ export default async function OpsOnboardingPage() {
                   <p className="text-xs text-slate">{employee.clientOrg.name}</p>
                 </div>
                 <span
-                  className={`rounded-full px-2.5 py-0.5 font-mono text-xs font-medium ${
+                  className={`rounded-btn px-2.5 py-0.5 font-mono text-xs font-medium ${
                     done === total ? "bg-indigo-tint text-indigo" : "bg-orange-light/40 text-orange"
                   }`}
                 >

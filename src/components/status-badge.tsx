@@ -15,7 +15,7 @@ const LABELS: Record<EmployeeStatus, string> = {
 export function StatusBadge({ status }: { status: EmployeeStatus }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-xs font-medium ${STYLES[status]}`}
+      className={`inline-flex items-center rounded-btn px-2.5 py-0.5 font-mono text-xs font-medium ${STYLES[status]}`}
     >
       {LABELS[status]}
     </span>

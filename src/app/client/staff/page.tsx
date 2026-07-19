@@ -13,7 +13,7 @@ export default async function ClientStaffPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-ink">Your team</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Your team</h1>
         <p className="text-sm text-slate">Read-only. Reach out to your Masy HR contact for changes.</p>
       </div>
 

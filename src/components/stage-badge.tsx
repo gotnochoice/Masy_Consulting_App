@@ -24,7 +24,7 @@ const LABELS: Record<string, string> = {
 };
 
 function badgeClass(styles: string) {
-  return `inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-xs font-medium ${styles}`;
+  return `inline-flex items-center rounded-btn px-2.5 py-0.5 font-mono text-xs font-medium ${styles}`;
 }
 
 export function RoleStageBadge({ stage }: { stage: RoleStage }) {
