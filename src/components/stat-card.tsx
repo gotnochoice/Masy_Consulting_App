@@ -19,8 +19,7 @@ export function StatCard({
   const valueSize = size === "large" ? "text-4xl" : "text-2xl";
 
   return (
-    <div className="overflow-hidden rounded-card border border-border bg-paper shadow-sm">
-      <div className="h-1 bg-gradient-to-r from-orange to-indigo" />
+    <div className="rounded-card border border-border bg-paper shadow-sm">
       <div className="flex items-center gap-4 p-5">
         <div className={`flex ${iconSize} shrink-0 items-center justify-center rounded-xl ${iconClasses}`}>
           <Icon className={iconGlyph} strokeWidth={2} />
