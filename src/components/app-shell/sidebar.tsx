@@ -12,6 +12,8 @@ import {
   Briefcase,
   AlertTriangle,
   BarChart3,
+  ClipboardCheck,
+  Activity,
   X,
 } from "lucide-react";
 
@@ -25,6 +27,8 @@ const ICONS = {
   recruitment: Briefcase,
   concerns: AlertTriangle,
   reports: BarChart3,
+  onboarding: ClipboardCheck,
+  pulse: Activity,
 } as const;
 
 export type NavIconName = keyof typeof ICONS;

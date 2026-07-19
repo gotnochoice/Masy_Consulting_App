@@ -1,9 +1,11 @@
 "use server";
 
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
+import { generateTemporaryPassword } from "@/lib/password";
 
 const createSchema = z.object({
   name: z.string().min(1, "Company name is required"),
@@ -29,4 +31,49 @@ export async function createCompany(formData: FormData) {
   });
 
   revalidatePath("/ops/companies");
+}
+
+export type InviteClientState = { email: string; password: string } | { error: string } | undefined;
+
+const inviteSchema = z.object({
+  email: z.string().email("Valid email required"),
+});
+
+export async function inviteClientUser(
+  clientOrgId: string,
+  _prevState: InviteClientState,
+  formData: FormData,
+): Promise<InviteClientState> {
+  const session = await requireRole("MASY_OPS");
+
+  const parsed = inviteSchema.safeParse({ email: formData.get("email") });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid email" };
+  }
+
+  const existingUser = await db.user.findUnique({ where: { email: parsed.data.email } });
+  if (existingUser) {
+    return { error: "A login with that email already exists" };
+  }
+
+  const password = generateTemporaryPassword();
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  const user = await db.user.create({
+    data: { email: parsed.data.email, passwordHash, role: "CLIENT", clientOrgId },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "user.invite_client",
+      targetType: "User",
+      targetId: user.id,
+    },
+  });
+
+  // Deliberately no revalidatePath here: revalidating would immediately re-render this
+  // row from the server as "already has a login," wiping the one-time password display
+  // (InviteClientForm) before it's ever seen. The next real navigation picks up the change.
+  return { email: parsed.data.email, password };
 }

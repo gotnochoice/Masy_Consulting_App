@@ -13,6 +13,14 @@ async function main() {
   await db.auditLog.deleteMany();
   await db.user.deleteMany();
   await db.attendanceRecord.deleteMany();
+  await db.leaveRequest.deleteMany();
+  await db.performanceReview.deleteMany();
+  await db.concern.deleteMany();
+  await db.pulseCheckIn.deleteMany();
+  await db.onboardingTask.deleteMany();
+  await db.candidate.deleteMany();
+  await db.openRole.deleteMany();
+  await db.monthlyReportNote.deleteMany();
   await db.employee.deleteMany();
   await db.clientOrg.deleteMany();
 

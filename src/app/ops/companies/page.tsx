@@ -3,12 +3,16 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { createCompany } from "./actions";
+import { InviteClientForm } from "./invite-client-form";
 
 export default async function OpsCompaniesPage() {
   await requireRole("MASY_OPS");
 
   const orgs = await db.clientOrg.findMany({
-    include: { _count: { select: { employees: true } } },
+    include: {
+      _count: { select: { employees: true } },
+      users: { where: { role: "CLIENT" } },
+    },
     orderBy: { name: "asc" },
   });
 
@@ -26,6 +30,7 @@ export default async function OpsCompaniesPage() {
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Staff</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
+              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Client login</th>
               <th className="px-4 py-2.5" />
             </tr>
           </thead>
@@ -39,6 +44,13 @@ export default async function OpsCompaniesPage() {
                     {org.status}
                   </span>
                 </td>
+                <td className="px-4 py-3">
+                  {org.users.length > 0 ? (
+                    <span className="text-xs text-slate">{org.users[0].email}</span>
+                  ) : (
+                    <InviteClientForm clientOrgId={org.id} />
+                  )}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <Link
                     href={`/ops/employees?org=${org.id}`}
@@ -51,7 +63,7 @@ export default async function OpsCompaniesPage() {
             ))}
             {orgs.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate">No companies yet.</td>
+                <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate">No companies yet.</td>
               </tr>
             )}
           </tbody>

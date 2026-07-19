@@ -13,6 +13,7 @@ export default async function EmployeeLayout({ children }: { children: React.Rea
           { label: "Attendance", href: "/me/attendance" },
           { label: "Leave", href: "/me/leave" },
           { label: "Reviews", href: "/me/reviews" },
+          { label: "Pulse", href: "/me/pulse" },
           { label: "Concerns", href: "/me/concerns" },
         ]}
       />

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { StatusBadge } from "@/components/status-badge";
 import { createEmployee } from "./actions";
 import { EmployeeForm } from "./employee-form";
+import { InviteEmployeeForm } from "./invite-employee-form";
 
 export default async function OpsEmployeesPage({
   searchParams,
@@ -15,7 +16,7 @@ export default async function OpsEmployeesPage({
 
   const [employees, orgs] = await Promise.all([
     db.employee.findMany({
-      include: { clientOrg: true },
+      include: { clientOrg: true, user: true },
       orderBy: [{ clientOrg: { name: "asc" } }, { name: "asc" }],
     }),
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
@@ -37,6 +38,7 @@ export default async function OpsEmployeesPage({
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Start date</th>
+              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Login</th>
               <th className="px-4 py-2.5" />
             </tr>
           </thead>
@@ -48,6 +50,15 @@ export default async function OpsEmployeesPage({
                 <td className="px-4 py-3 text-slate">{employee.roleTitle}</td>
                 <td className="px-4 py-3"><StatusBadge status={employee.status} /></td>
                 <td className="px-4 py-3 font-mono text-xs text-slate">{employee.startDate.toLocaleDateString()}</td>
+                <td className="px-4 py-3">
+                  {employee.user ? (
+                    <span className="rounded-full bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+                      Active
+                    </span>
+                  ) : (
+                    <InviteEmployeeForm employeeId={employee.id} />
+                  )}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <Link href={`/ops/employees/${employee.id}/edit`} className="text-sm font-medium text-indigo hover:text-indigo-light">
                     Edit
@@ -57,7 +68,7 @@ export default async function OpsEmployeesPage({
             ))}
             {employees.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate">No employees yet.</td>
+                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate">No employees yet.</td>
               </tr>
             )}
           </tbody>

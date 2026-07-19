@@ -13,6 +13,7 @@ export default async function ClientLayout({ children }: { children: React.React
           { label: "Attendance", href: "/client/attendance" },
           { label: "Leave", href: "/client/leave" },
           { label: "Reviews", href: "/client/reviews" },
+          { label: "Pulse", href: "/client/pulse" },
           { label: "Concerns", href: "/client/concerns" },
         ]}
       />
