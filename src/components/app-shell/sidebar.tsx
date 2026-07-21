@@ -43,17 +43,17 @@ export function Sidebar({ items, open, onClose }: { items: NavItem[]; open: bool
         <div className="fixed inset-0 z-30 bg-ink/30 lg:hidden" onClick={onClose} aria-hidden="true" />
       )}
       <nav
-        className={`fixed inset-y-0 left-0 z-40 w-60 shrink-0 overflow-y-auto border-r border-border bg-paper px-3 py-4 shadow-sm transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-40 w-60 shrink-0 overflow-y-auto bg-indigo px-3 py-4 transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="mb-2 flex items-center justify-between lg:hidden">
-          <span className="text-sm font-semibold text-ink">Menu</span>
+          <span className="text-sm font-semibold text-white">Menu</span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="flex h-8 w-8 items-center justify-center rounded-btn text-slate hover:bg-paper-2 hover:text-ink"
+            className="flex h-8 w-8 items-center justify-center rounded-btn text-white/70 hover:bg-white/10 hover:text-white"
           >
             <X className="h-4 w-4" strokeWidth={2} />
           </button>
@@ -68,7 +68,7 @@ export function Sidebar({ items, open, onClose }: { items: NavItem[]; open: bool
                   href={item.href}
                   onClick={onClose}
                   className={`flex items-center gap-3 rounded-btn px-3 py-2 text-sm font-medium transition-colors ${
-                    active ? "bg-indigo text-white" : "text-slate hover:bg-paper-2 hover:text-ink"
+                    active ? "bg-white text-indigo" : "text-white/70 hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   <Icon className="h-4 w-4" strokeWidth={2} />

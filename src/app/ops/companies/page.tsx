@@ -23,7 +23,7 @@ export default async function OpsCompaniesPage() {
         <p className="text-sm text-slate">Every client organization on the platform.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)]">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -70,7 +70,7 @@ export default async function OpsCompaniesPage() {
         </table>
       </div>
 
-      <div className="max-w-md rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="max-w-md rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Add company</h2>
         <form action={createCompany} className="flex items-end gap-3">
           <div className="flex-1">

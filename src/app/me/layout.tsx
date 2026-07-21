@@ -5,7 +5,7 @@ export default async function EmployeeLayout({ children }: { children: React.Rea
   await requireRole("EMPLOYEE");
 
   return (
-    <div className="min-h-screen bg-paper-2">
+    <div className="min-h-screen bg-paper">
       <DashboardHeader
         roleLabel="Employee"
         nav={[
