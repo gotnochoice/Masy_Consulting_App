@@ -54,11 +54,23 @@ enum RoleStage {
 }
 
 enum CandidateStage {
-  SOURCING
+  APPLIED
+  SCREENING
   INTERVIEWING
   OFFER
-  FILLED
+  HIRED
   REJECTED
+}
+
+enum CandidateSource {
+  WEBSITE
+  MASY_SOURCED
+}
+
+enum QuestionType {
+  SHORT_TEXT
+  LONG_TEXT
+  LINK
 }
 
 model ClientOrg {
@@ -175,24 +187,56 @@ model Concern {
 }
 
 model OpenRole {
-  id          String      @id @default(cuid())
-  clientOrgId String
-  clientOrg   ClientOrg   @relation(fields: [clientOrgId], references: [id])
-  title       String
-  stage       RoleStage   @default(SOURCING)
-  candidates  Candidate[]
-  createdAt   DateTime    @default(now())
+  id                      String         @id @default(cuid())
+  clientOrgId             String
+  clientOrg               ClientOrg      @relation(fields: [clientOrgId], references: [id])
+  title                   String
+  slug                    String         @unique
+  description             String?
+  stage                   RoleStage      @default(SOURCING)
+  acceptingApplications   Boolean        @default(true)
+  questions               RoleQuestion[]
+  candidates              Candidate[]
+  createdAt               DateTime       @default(now())
+}
+
+model RoleQuestion {
+  id         String         @id @default(cuid())
+  openRoleId String
+  openRole   OpenRole       @relation(fields: [openRoleId], references: [id], onDelete: Cascade)
+  label      String
+  type       QuestionType   @default(SHORT_TEXT)
+  required   Boolean        @default(true)
+  order      Int            @default(0)
+  answers    CandidateAnswer[]
+  createdAt  DateTime       @default(now())
 }
 
 model Candidate {
-  id         String         @id @default(cuid())
+  id         String           @id @default(cuid())
   openRoleId String
-  openRole   OpenRole       @relation(fields: [openRoleId], references: [id])
+  openRole   OpenRole         @relation(fields: [openRoleId], references: [id])
   name       String
-  stage      CandidateStage @default(SOURCING)
+  email      String?
+  phone      String?
+  resumeLink String?
+  stage      CandidateStage   @default(APPLIED)
+  source     CandidateSource  @default(MASY_SOURCED)
   notes      String?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  answers    CandidateAnswer[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model CandidateAnswer {
+  id             String       @id @default(cuid())
+  candidateId    String
+  candidate      Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  roleQuestionId String
+  roleQuestion   RoleQuestion @relation(fields: [roleQuestionId], references: [id], onDelete: Cascade)
+  value          String
+
+  @@unique([candidateId, roleQuestionId])
 }
 
 model MonthlyReportNote {

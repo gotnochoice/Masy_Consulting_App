@@ -4,9 +4,11 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
+import { slugify } from "@/lib/slug";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
-const CANDIDATE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED", "REJECTED"] as const;
+const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
+const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK"] as const;
 
 const createRoleSchema = z.object({
   clientOrgId: z.string().min(1, "Company is required"),
@@ -24,7 +26,9 @@ export async function createRole(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid role data");
   }
 
-  const role = await db.openRole.create({ data: parsed.data });
+  const role = await db.openRole.create({
+    data: { ...parsed.data, slug: slugify(parsed.data.title) },
+  });
 
   await db.auditLog.create({
     data: {
@@ -50,8 +54,68 @@ export async function updateRoleStage(roleId: string, formData: FormData) {
   revalidatePath("/ops/recruitment");
 }
 
+export async function toggleAcceptingApplications(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const accepting = formData.get("acceptingApplications") === "true";
+  await db.openRole.update({ where: { id: roleId }, data: { acceptingApplications: accepting } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+const updateDescriptionSchema = z.object({
+  description: z.string().optional(),
+});
+
+export async function updateRoleDescription(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = updateDescriptionSchema.safeParse({ description: formData.get("description") || undefined });
+  if (!parsed.success) throw new Error("Invalid description");
+
+  await db.openRole.update({ where: { id: roleId }, data: { description: parsed.data.description } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+const addQuestionSchema = z.object({
+  label: z.string().min(1, "Question is required"),
+  type: z.enum(QUESTION_TYPES),
+  required: z.boolean(),
+});
+
+export async function addQuestion(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = addQuestionSchema.safeParse({
+    label: formData.get("label"),
+    type: formData.get("type"),
+    required: formData.get("required") === "on",
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid question");
+  }
+
+  const count = await db.roleQuestion.count({ where: { openRoleId: roleId } });
+
+  await db.roleQuestion.create({
+    data: { openRoleId: roleId, ...parsed.data, order: count },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function deleteQuestion(questionId: string, roleId: string) {
+  await requireRole("MASY_OPS");
+
+  await db.roleQuestion.delete({ where: { id: questionId } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
 const addCandidateSchema = z.object({
   name: z.string().min(1, "Candidate name is required"),
+  email: z.string().email("Enter a valid email").optional().or(z.literal("")),
   notes: z.string().optional(),
 });
 
@@ -60,6 +124,7 @@ export async function addCandidate(roleId: string, formData: FormData) {
 
   const parsed = addCandidateSchema.safeParse({
     name: formData.get("name"),
+    email: formData.get("email") || "",
     notes: formData.get("notes") || undefined,
   });
   if (!parsed.success) {
@@ -67,7 +132,14 @@ export async function addCandidate(roleId: string, formData: FormData) {
   }
 
   const candidate = await db.candidate.create({
-    data: { openRoleId: roleId, name: parsed.data.name, notes: parsed.data.notes },
+    data: {
+      openRoleId: roleId,
+      name: parsed.data.name,
+      email: parsed.data.email || undefined,
+      notes: parsed.data.notes,
+      source: "MASY_SOURCED",
+      stage: "APPLIED",
+    },
   });
 
   await db.auditLog.create({

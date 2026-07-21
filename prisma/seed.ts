@@ -1,6 +1,7 @@
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
+import { slugify } from "../src/lib/slug";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const db = new PrismaClient({ adapter });
@@ -61,10 +62,13 @@ async function main() {
   });
   credentials.push({ role: "MASY_OPS", org: "-", email: opsUser.email, password: opsPassword });
 
+  const createdOrgs: { id: string; name: string }[] = [];
+
   for (const orgData of orgs) {
     const org = await db.clientOrg.create({
       data: { name: orgData.name, status: "active" },
     });
+    createdOrgs.push(org);
 
     const clientPassword = "ClientView#2026";
     const clientUser = await db.user.create({
@@ -107,11 +111,47 @@ async function main() {
     }
   }
 
+  const sampleRole = await db.openRole.create({
+    data: {
+      clientOrgId: createdOrgs[0].id,
+      title: "Video Editor",
+      slug: slugify("Video Editor"),
+      description:
+        `${createdOrgs[0].name} is hiring a part-time video editor to cut short-form content for social media. Remote-friendly, flexible hours.`,
+      stage: "SOURCING",
+      questions: {
+        create: [
+          { label: "Link to your editing reel or portfolio", type: "LINK", required: true, order: 0 },
+          { label: "What editing software are you most comfortable with?", type: "SHORT_TEXT", required: true, order: 1 },
+          { label: "Tell us about a project you're proud of", type: "LONG_TEXT", required: false, order: 2 },
+        ],
+      },
+    },
+    include: { questions: true },
+  });
+
+  await db.candidate.create({
+    data: {
+      openRoleId: sampleRole.id,
+      name: "Yewande Okonkwo",
+      email: "yewande.editor@example.com",
+      resumeLink: "https://drive.google.com/example-portfolio",
+      source: "WEBSITE",
+      stage: "APPLIED",
+      answers: {
+        create: [
+          { roleQuestionId: sampleRole.questions[0].id, value: "https://vimeo.com/example-reel" },
+          { roleQuestionId: sampleRole.questions[1].id, value: "DaVinci Resolve and Premiere Pro" },
+        ],
+      },
+    },
+  });
+
   console.log("\nSeed complete. Demo credentials:\n");
   for (const c of credentials) {
     console.log(`  [${c.role}]${c.org !== "-" ? ` (${c.org})` : ""} ${c.email} / ${c.password}`);
   }
-  console.log("");
+  console.log(`\nSample public application form: /apply/${sampleRole.slug}\n`);
 }
 
 main()

@@ -8,13 +8,15 @@ import { createRole } from "./actions";
 export default async function OpsRecruitmentPage() {
   await requireRole("MASY_OPS");
 
-  const [roles, orgs] = await Promise.all([
+  const [roles, orgs, websiteCounts] = await Promise.all([
     db.openRole.findMany({
       include: { clientOrg: true, _count: { select: { candidates: true } } },
       orderBy: [{ clientOrg: { name: "asc" } }, { createdAt: "desc" }],
     }),
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
+    db.candidate.groupBy({ by: ["openRoleId"], where: { source: "WEBSITE" }, _count: { _all: true } }),
   ]);
+  const websiteCountByRole = new Map(websiteCounts.map((c) => [c.openRoleId, c._count._all]));
 
   return (
     <div className="space-y-8">
@@ -23,7 +25,7 @@ export default async function OpsRecruitmentPage() {
         <p className="text-sm text-slate">Open roles and candidate pipelines across every client organization.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)]">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -31,6 +33,7 @@ export default async function OpsRecruitmentPage() {
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Candidates</th>
+              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Applications</th>
               <th className="px-4 py-2.5" />
             </tr>
           </thead>
@@ -41,6 +44,13 @@ export default async function OpsRecruitmentPage() {
                 <td className="px-4 py-3 text-slate">{role.clientOrg.name}</td>
                 <td className="px-4 py-3"><RoleStageBadge stage={role.stage} /></td>
                 <td className="px-4 py-3 text-slate">{role._count.candidates}</td>
+                <td className="px-4 py-3 text-slate">
+                  {role.acceptingApplications ? (
+                    <span>{websiteCountByRole.get(role.id) ?? 0} online</span>
+                  ) : (
+                    <span className="text-slate-light">Closed</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <Link href={`/ops/recruitment/${role.id}`} className="text-sm font-medium text-indigo hover:text-indigo-light">
                     View pipeline
@@ -50,14 +60,14 @@ export default async function OpsRecruitmentPage() {
             ))}
             {roles.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate">No open roles yet.</td>
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate">No open roles yet.</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="max-w-xl rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="max-w-xl rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Open a role</h2>
         <form action={createRole} className="flex items-end gap-4">
           <div className="flex-1">
