@@ -31,7 +31,7 @@ export default async function MyAttendancePage() {
         <p className="text-sm text-slate">Clock in when you start, clock out when you&apos;re done for the day.</p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-6">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
         {!todayRecord && (
           <form action={clockIn}>
             <button type="submit" className={buttonClass}>
@@ -62,7 +62,7 @@ export default async function MyAttendancePage() {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)]">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>

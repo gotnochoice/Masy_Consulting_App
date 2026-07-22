@@ -24,7 +24,7 @@ export function CandidateCard({
   updateStage: (formData: FormData) => Promise<void>;
 }) {
   return (
-    <div className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-4">
+    <div className="rounded-card border border-border bg-paper shadow-sm p-4">
       <div className="mb-2 flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-ink">{candidate.name}</p>
         <CandidateSourceBadge source={candidate.source} />

@@ -71,7 +71,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         <p className="text-sm text-slate">{role.clientOrg.name}</p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-5 space-y-4">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-ink">Public application link</p>
@@ -111,7 +111,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         </form>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-5">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-5">
         <form action={updateRoleStageWithId} className="flex items-end gap-3">
           <div>
             <label className={labelClass} htmlFor="stage">Role stage</label>
@@ -125,7 +125,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         </form>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-6">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Application questions</h2>
         <p className="mb-4 text-sm text-slate">
           Shown to every applicant on the public form, in this order. Use these for anything specific to this role or
@@ -200,7 +200,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         </div>
       </div>
 
-      <div className="max-w-xl rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-6">
+      <div className="max-w-xl rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Add a candidate manually</h2>
         <p className="mb-4 text-sm text-slate">For candidates sourced outside the application link — referrals, LinkedIn outreach, etc.</p>
         <form action={addCandidateWithId} className="space-y-4">

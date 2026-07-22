@@ -52,13 +52,13 @@ export default async function ClientConcernsPage() {
 
       <div className="space-y-3">
         {released.map((concern) => (
-          <div key={concern.id} className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-5">
+          <div key={concern.id} className="rounded-card border border-border bg-paper shadow-sm p-5">
             <p className="text-sm text-ink">{concern.curatedSummary}</p>
             <p className="mt-2 font-mono text-xs text-slate-light">Updated {formatDateShort(concern.updatedAt)}</p>
           </div>
         ))}
         {released.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
             Nothing to share right now.
           </p>
         )}

@@ -29,7 +29,7 @@ export default async function MyPulsePage() {
         </p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-6">
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
         <form action={submitPulseCheckIn} className="space-y-4">
           <div>
             <label className={labelClass}>How are you feeling about work right now?</label>
@@ -56,7 +56,7 @@ export default async function MyPulsePage() {
 
       <div className="space-y-3">
         {checkIns.map((c) => (
-          <div key={c.id} className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-4">
+          <div key={c.id} className="rounded-card border border-border bg-paper shadow-sm p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-ink">
                 {c.score}/5 — {PULSE_SCORE_LABELS[c.score]}
@@ -67,7 +67,7 @@ export default async function MyPulsePage() {
           </div>
         ))}
         {checkIns.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
             No check-ins yet.
           </p>
         )}

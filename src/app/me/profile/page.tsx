@@ -21,7 +21,7 @@ export default async function MyProfilePage() {
   }
 
   return (
-    <div className="max-w-md rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-6">
+    <div className="max-w-md rounded-card border border-border bg-paper shadow-sm p-6">
       <h1 className="mb-4 text-lg font-bold text-ink">My profile</h1>
       <dl className="space-y-3 text-sm">
         <div className="flex justify-between">

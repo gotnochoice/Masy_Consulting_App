@@ -17,14 +17,14 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
   const submitWithSlug = submitApplication.bind(null, slug);
 
   return (
-    <main className="flex min-h-screen justify-center bg-indigo-tint px-4 py-12">
+    <main className="flex min-h-screen justify-center bg-paper-2 px-4 py-12">
       <div className="w-full max-w-lg">
         <div className="mb-6">
           <MasyLogo className="text-xl" />
           <p className="mt-1 text-sm text-slate">Recruitment handled by Masy Consulting on behalf of our client.</p>
         </div>
 
-        <div className="rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-8">
+        <div className="rounded-card border border-border bg-paper shadow-sm p-8">
           {!role.acceptingApplications ? (
             <div className="text-center">
               <h1 className="text-2xl font-extrabold text-ink">{role.title}</h1>

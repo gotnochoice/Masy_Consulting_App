@@ -8,7 +8,7 @@ export function SignOutButton({ light = false }: { light?: boolean }) {
         type="submit"
         aria-label="Sign out"
         className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
-          light ? "text-white/70 hover:bg-white/10 hover:text-white" : "text-indigo/70 hover:bg-paper hover:text-indigo"
+          light ? "text-white/70 hover:bg-white/10 hover:text-white" : "text-slate hover:bg-paper-2 hover:text-ink"
         }`}
       >
         <LogOut className="h-4 w-4" strokeWidth={2} />

@@ -20,7 +20,7 @@ export function AppShell({
       <Topbar userLabel={userLabel} onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar items={navItems} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <main className="flex-1 overflow-y-auto bg-paper px-4 py-6 sm:px-8 sm:py-8">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-paper-2 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
       </div>
     </div>
   );

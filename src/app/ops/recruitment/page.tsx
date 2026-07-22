@@ -25,7 +25,7 @@ export default async function OpsRecruitmentPage() {
         <p className="text-sm text-slate">Open roles and candidate pipelines across every client organization.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)]">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -67,7 +67,7 @@ export default async function OpsRecruitmentPage() {
         </table>
       </div>
 
-      <div className="max-w-xl rounded-card border border-border bg-paper shadow-[0_1px_2px_rgba(26,19,48,0.06),0_2px_10px_-4px_rgba(26,19,48,0.10)] p-6">
+      <div className="max-w-xl rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Open a role</h2>
         <form action={createRole} className="flex items-end gap-4">
           <div className="flex-1">
