@@ -69,7 +69,7 @@ export default async function OpsRecruitmentPage() {
 
       <div className="max-w-xl rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Open a role</h2>
-        <form action={createRole} className="flex items-end gap-4">
+        <form action={createRole} className="flex flex-wrap items-end gap-4">
           <div className="flex-1">
             <label className={labelClass} htmlFor="title">Role title</label>
             <input id="title" name="title" required className={inputClass} />

@@ -14,7 +14,7 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
 
   return (
     <form action={action} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className={labelClass} htmlFor="name">Name</label>
           <input id="name" name="name" defaultValue={employee?.name} required className={inputClass} />
@@ -24,7 +24,7 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
           <input id="roleTitle" name="roleTitle" defaultValue={employee?.roleTitle} required className={inputClass} />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className={labelClass} htmlFor="email">Email</label>
           <input id="email" name="email" type="email" defaultValue={employee?.email} required className={inputClass} />
@@ -34,7 +34,7 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
           <input id="startDate" name="startDate" type="date" defaultValue={startDateValue} required className={inputClass} />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className={labelClass} htmlFor="clientOrgId">Organization</label>
           <select id="clientOrgId" name="clientOrgId" defaultValue={employee?.clientOrgId ?? defaultOrgId ?? ""} required className={inputClass}>

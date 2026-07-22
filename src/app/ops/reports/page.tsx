@@ -75,7 +75,7 @@ export default async function OpsReportsPage({
         <p className="text-sm text-slate">One shared template — what actually gets sent to each client.</p>
       </div>
 
-      <form method="get" className="flex items-end gap-4">
+      <form method="get" className="flex flex-wrap items-end gap-4">
         <div>
           <label className={labelClass} htmlFor="org">Company</label>
           <select id="org" name="org" defaultValue={selectedOrgId} className={inputClass}>

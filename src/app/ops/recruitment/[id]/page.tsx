@@ -112,7 +112,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
       </div>
 
       <div className="rounded-card border border-border bg-paper shadow-sm p-5">
-        <form action={updateRoleStageWithId} className="flex items-end gap-3">
+        <form action={updateRoleStageWithId} className="flex flex-wrap items-end gap-3">
           <div>
             <label className={labelClass} htmlFor="stage">Role stage</label>
             <select id="stage" name="stage" defaultValue={role.stage} className={inputClass}>

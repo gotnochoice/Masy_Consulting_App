@@ -72,7 +72,7 @@ export default async function OpsCompaniesPage() {
 
       <div className="max-w-md rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Add company</h2>
-        <form action={createCompany} className="flex items-end gap-3">
+        <form action={createCompany} className="flex flex-wrap items-end gap-3">
           <div className="flex-1">
             <label className={labelClass} htmlFor="name">Company name</label>
             <input id="name" name="name" required className={inputClass} />
