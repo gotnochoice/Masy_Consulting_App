@@ -6,6 +6,7 @@ import { CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stag
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { CandidateCard } from "./candidate-card";
 import { CopyLinkButton } from "./copy-link-button";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import {
   updateRoleStage,
   addCandidate,
@@ -14,6 +15,8 @@ import {
   updateRoleDescription,
   addQuestion,
   deleteQuestion,
+  deleteCandidate,
+  clearAllCandidates,
 } from "../actions";
 
 const ROLE_STAGE_OPTIONS = [
@@ -58,6 +61,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const toggleAcceptingWithId = toggleAcceptingApplications.bind(null, role.id);
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
+  const clearAllWithId = clearAllCandidates.bind(null, role.id);
 
   const columns = CANDIDATE_STAGE_ORDER.map((stage) => ({
     stage,
@@ -79,6 +83,12 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           </div>
           <div className="flex items-center gap-2">
             <CopyLinkButton link={applyLink} />
+            <a
+              href={`/ops/recruitment/${role.id}/export`}
+              className="rounded-btn border border-border px-3 py-2 text-xs font-medium text-slate hover:text-ink"
+            >
+              Export CSV
+            </a>
             <form action={toggleAcceptingWithId}>
               <input type="hidden" name="acceptingApplications" value={role.acceptingApplications ? "false" : "true"} />
               <button
@@ -174,7 +184,18 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-ink">Pipeline</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-ink">Pipeline</h2>
+          {role.candidates.length > 0 && (
+            <ConfirmSubmitButton
+              action={clearAllWithId}
+              confirmMessage={`Delete all ${role.candidates.length} candidate(s) for this role? This can't be undone — export a CSV first if you want to keep a record.`}
+              className="text-xs font-medium text-slate hover:text-orange"
+            >
+              Clear all candidates
+            </ConfirmSubmitButton>
+          )}
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {columns.map(({ stage, candidates }) => (
             <div key={stage} className="space-y-3">
@@ -187,7 +208,15 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
               <div className="space-y-3">
                 {candidates.map((candidate) => {
                   const updateStageWithIds = updateCandidateStage.bind(null, candidate.id, role.id);
-                  return <CandidateCard key={candidate.id} candidate={candidate} updateStage={updateStageWithIds} />;
+                  const deleteWithIds = deleteCandidate.bind(null, candidate.id, role.id);
+                  return (
+                    <CandidateCard
+                      key={candidate.id}
+                      candidate={candidate}
+                      updateStage={updateStageWithIds}
+                      deleteCandidate={deleteWithIds}
+                    />
+                  );
                 })}
                 {candidates.length === 0 && (
                   <p className="rounded-card border border-dashed border-border px-3 py-4 text-center text-xs text-slate-light">

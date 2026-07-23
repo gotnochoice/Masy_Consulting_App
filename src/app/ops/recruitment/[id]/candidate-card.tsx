@@ -3,6 +3,7 @@
 import { CandidateSourceBadge, CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
 import type { CandidateStage } from "@/generated/prisma/client";
 import { inputClass } from "@/lib/form-styles";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
 type CandidateWithAnswers = {
   id: string;
@@ -19,9 +20,11 @@ type CandidateWithAnswers = {
 export function CandidateCard({
   candidate,
   updateStage,
+  deleteCandidate,
 }: {
   candidate: CandidateWithAnswers;
   updateStage: (formData: FormData) => Promise<void>;
+  deleteCandidate: (formData: FormData) => Promise<void>;
 }) {
   return (
     <div className="rounded-card border border-border bg-paper shadow-sm p-4">
@@ -76,6 +79,14 @@ export function CandidateCard({
           ))}
         </select>
       </form>
+
+      <ConfirmSubmitButton
+        action={deleteCandidate}
+        confirmMessage={`Delete ${candidate.name}? This can't be undone.`}
+        className="mt-2 text-xs font-medium text-slate-light hover:text-orange"
+      >
+        Delete
+      </ConfirmSubmitButton>
     </div>
   );
 }

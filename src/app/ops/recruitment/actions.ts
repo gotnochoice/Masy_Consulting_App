@@ -164,3 +164,19 @@ export async function updateCandidateStage(candidateId: string, roleId: string, 
 
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
+
+export async function deleteCandidate(candidateId: string, roleId: string) {
+  await requireRole("MASY_OPS");
+
+  await db.candidate.delete({ where: { id: candidateId } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function clearAllCandidates(roleId: string) {
+  await requireRole("MASY_OPS");
+
+  await db.candidate.deleteMany({ where: { openRoleId: roleId } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
