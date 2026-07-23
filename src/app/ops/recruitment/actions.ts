@@ -116,6 +116,8 @@ export async function deleteQuestion(questionId: string, roleId: string) {
 const addCandidateSchema = z.object({
   name: z.string().min(1, "Candidate name is required"),
   email: z.string().email("Enter a valid email").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  yearsExperience: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -125,6 +127,8 @@ export async function addCandidate(roleId: string, formData: FormData) {
   const parsed = addCandidateSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email") || "",
+    phone: formData.get("phone") || undefined,
+    yearsExperience: formData.get("yearsExperience") || undefined,
     notes: formData.get("notes") || undefined,
   });
   if (!parsed.success) {
@@ -136,6 +140,8 @@ export async function addCandidate(roleId: string, formData: FormData) {
       openRoleId: roleId,
       name: parsed.data.name,
       email: parsed.data.email || undefined,
+      phone: parsed.data.phone,
+      yearsExperience: parsed.data.yearsExperience,
       notes: parsed.data.notes,
       source: "MASY_SOURCED",
       stage: "APPLIED",

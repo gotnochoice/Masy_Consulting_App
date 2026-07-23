@@ -135,6 +135,8 @@ async function main() {
       openRoleId: sampleRole.id,
       name: "Yewande Okonkwo",
       email: "yewande.editor@example.com",
+      phone: "8012345678",
+      yearsExperience: "4 years",
       resumeLink: "https://drive.google.com/example-portfolio",
       source: "WEBSITE",
       stage: "APPLIED",

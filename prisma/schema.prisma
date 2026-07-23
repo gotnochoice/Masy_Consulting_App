@@ -213,19 +213,20 @@ model RoleQuestion {
 }
 
 model Candidate {
-  id         String           @id @default(cuid())
-  openRoleId String
-  openRole   OpenRole         @relation(fields: [openRoleId], references: [id])
-  name       String
-  email      String?
-  phone      String?
-  resumeLink String?
-  stage      CandidateStage   @default(APPLIED)
-  source     CandidateSource  @default(MASY_SOURCED)
-  notes      String?
-  answers    CandidateAnswer[]
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+  id              String            @id @default(cuid())
+  openRoleId      String
+  openRole        OpenRole          @relation(fields: [openRoleId], references: [id])
+  name            String
+  email           String?
+  phone           String?
+  yearsExperience String?
+  resumeLink      String?
+  stage           CandidateStage    @default(APPLIED)
+  source          CandidateSource   @default(MASY_SOURCED)
+  notes           String?
+  answers         CandidateAnswer[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }
 
 model CandidateAnswer {

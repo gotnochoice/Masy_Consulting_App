@@ -8,7 +8,8 @@ export type ApplyState = { error?: string; success?: boolean };
 const baseSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Enter a valid email"),
-  phone: z.string().optional(),
+  phone: z.string().min(1, "Phone is required"),
+  yearsExperience: z.string().min(1, "Years of experience is required"),
   resumeLink: z.string().url("Enter a full link, starting with https://").optional().or(z.literal("")),
 });
 
@@ -29,7 +30,8 @@ export async function submitApplication(slug: string, _prevState: ApplyState, fo
   const parsed = baseSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
-    phone: formData.get("phone") || undefined,
+    phone: formData.get("phone"),
+    yearsExperience: formData.get("yearsExperience"),
     resumeLink: formData.get("resumeLink") || "",
   });
   if (!parsed.success) {
@@ -52,6 +54,7 @@ export async function submitApplication(slug: string, _prevState: ApplyState, fo
       name: parsed.data.name,
       email: parsed.data.email,
       phone: parsed.data.phone,
+      yearsExperience: parsed.data.yearsExperience,
       resumeLink: parsed.data.resumeLink || undefined,
       source: "WEBSITE",
       stage: "APPLIED",

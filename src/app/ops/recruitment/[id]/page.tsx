@@ -242,6 +242,14 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             <input id="email" name="email" type="email" className={inputClass} />
           </div>
           <div>
+            <label className={labelClass} htmlFor="phone">Phone (optional)</label>
+            <input id="phone" name="phone" className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="yearsExperience">Years of experience (optional)</label>
+            <input id="yearsExperience" name="yearsExperience" placeholder="e.g. 3 years" className={inputClass} />
+          </div>
+          <div>
             <label className={labelClass} htmlFor="notes">Notes (optional)</label>
             <textarea id="notes" name="notes" rows={2} className={inputClass} />
           </div>

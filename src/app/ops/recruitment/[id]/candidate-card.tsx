@@ -10,6 +10,7 @@ type CandidateWithAnswers = {
   name: string;
   email: string | null;
   phone: string | null;
+  yearsExperience: string | null;
   resumeLink: string | null;
   notes: string | null;
   source: "WEBSITE" | "MASY_SOURCED";
@@ -34,6 +35,7 @@ export function CandidateCard({
       </div>
       {candidate.email && <p className="truncate text-xs text-slate">{candidate.email}</p>}
       {candidate.phone && <p className="text-xs text-slate">{candidate.phone}</p>}
+      {candidate.yearsExperience && <p className="text-xs text-slate">{candidate.yearsExperience} experience</p>}
       {candidate.resumeLink && (
         <a
           href={candidate.resumeLink}

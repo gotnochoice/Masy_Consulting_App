@@ -43,8 +43,12 @@ export function ApplyForm({
         <input id="email" name="email" type="email" required className={inputClass} />
       </div>
       <div>
-        <label className={labelClass} htmlFor="phone">Phone (optional)</label>
-        <input id="phone" name="phone" className={inputClass} />
+        <label className={labelClass} htmlFor="phone">Phone</label>
+        <input id="phone" name="phone" required className={inputClass} />
+      </div>
+      <div>
+        <label className={labelClass} htmlFor="yearsExperience">Years of experience in this kind of role</label>
+        <input id="yearsExperience" name="yearsExperience" required placeholder="e.g. 3 years" className={inputClass} />
       </div>
       <div>
         <label className={labelClass} htmlFor="resumeLink">Link to your CV / resume</label>
