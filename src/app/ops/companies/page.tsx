@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
+import { ResetPasswordForm } from "@/components/reset-password-form";
 import { createCompany } from "./actions";
 import { InviteClientForm } from "./invite-client-form";
 
@@ -46,7 +47,10 @@ export default async function OpsCompaniesPage() {
                 </td>
                 <td className="px-4 py-3">
                   {org.users.length > 0 ? (
-                    <span className="text-xs text-slate">{org.users[0].email}</span>
+                    <div className="flex items-center justify-end gap-3">
+                      <span className="text-xs text-slate">{org.users[0].email}</span>
+                      <ResetPasswordForm userId={org.users[0].id} />
+                    </div>
                   ) : (
                     <InviteClientForm clientOrgId={org.id} />
                   )}

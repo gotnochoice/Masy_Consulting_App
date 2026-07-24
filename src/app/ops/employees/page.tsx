@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { StatusBadge } from "@/components/status-badge";
+import { ResetPasswordForm } from "@/components/reset-password-form";
 import { createEmployee } from "./actions";
 import { EmployeeForm } from "./employee-form";
 import { InviteEmployeeForm } from "./invite-employee-form";
@@ -52,9 +53,12 @@ export default async function OpsEmployeesPage({
                 <td className="px-4 py-3 font-mono text-xs text-slate">{employee.startDate.toLocaleDateString()}</td>
                 <td className="px-4 py-3">
                   {employee.user ? (
-                    <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
-                      Active
-                    </span>
+                    <div className="flex items-center justify-end gap-3">
+                      <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+                        Active
+                      </span>
+                      <ResetPasswordForm userId={employee.user.id} />
+                    </div>
                   ) : (
                     <InviteEmployeeForm employeeId={employee.id} />
                   )}
