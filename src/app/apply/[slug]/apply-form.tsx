@@ -84,6 +84,11 @@ export function ApplyForm({
 
       {state.error && <p className="text-sm text-orange">{state.error}</p>}
 
+      <p className="text-xs text-slate-light">
+        By submitting this application, you agree that your information will be used only to evaluate you for this
+        role and shared with the hiring company. We won&apos;t use it for anything else.
+      </p>
+
       <button type="submit" disabled={isPending} className={`w-full ${buttonClass} disabled:opacity-50`}>
         {isPending ? "Submitting..." : "Submit application"}
       </button>

@@ -77,3 +77,42 @@ export async function inviteClientUser(
   // (InviteClientForm) before it's ever seen. The next real navigation picks up the change.
   return { email: parsed.data.email, password };
 }
+
+export async function deleteCompany(clientOrgId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  const org = await db.clientOrg.findUnique({
+    where: { id: clientOrgId },
+    include: { employees: { select: { id: true } }, openRoles: { select: { id: true } } },
+  });
+  if (!org) return;
+
+  const employeeIds = org.employees.map((e) => e.id);
+  const openRoleIds = org.openRoles.map((r) => r.id);
+
+  await db.$transaction([
+    db.attendanceRecord.deleteMany({ where: { employeeId: { in: employeeIds } } }),
+    db.leaveRequest.deleteMany({ where: { employeeId: { in: employeeIds } } }),
+    db.performanceReview.deleteMany({ where: { employeeId: { in: employeeIds } } }),
+    db.concern.deleteMany({ where: { employeeId: { in: employeeIds } } }),
+    db.pulseCheckIn.deleteMany({ where: { employeeId: { in: employeeIds } } }),
+    db.onboardingTask.deleteMany({ where: { employeeId: { in: employeeIds } } }),
+    db.candidate.deleteMany({ where: { openRoleId: { in: openRoleIds } } }),
+    db.openRole.deleteMany({ where: { clientOrgId } }),
+    db.user.deleteMany({ where: { clientOrgId } }),
+    db.employee.deleteMany({ where: { clientOrgId } }),
+    db.monthlyReportNote.deleteMany({ where: { clientOrgId } }),
+    db.clientOrg.delete({ where: { id: clientOrgId } }),
+  ]);
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "company.delete",
+      targetType: "ClientOrg",
+      targetId: clientOrgId,
+    },
+  });
+
+  revalidatePath("/ops/companies");
+}
