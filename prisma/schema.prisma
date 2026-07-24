@@ -259,3 +259,11 @@ model AuditLog {
   targetId   String
   timestamp  DateTime @default(now())
 }
+
+model ApplicationAttempt {
+  id        String   @id @default(cuid())
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+}

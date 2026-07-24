@@ -28,7 +28,7 @@ export function CandidateCard({
   deleteCandidate: (formData: FormData) => Promise<void>;
 }) {
   return (
-    <div className="rounded-card border border-border bg-paper shadow-sm p-4">
+    <div id={`candidate-${candidate.id}`} className="rounded-card border border-border bg-paper shadow-sm p-4 scroll-mt-4">
       <div className="mb-2 flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-ink">{candidate.name}</p>
         <CandidateSourceBadge source={candidate.source} />

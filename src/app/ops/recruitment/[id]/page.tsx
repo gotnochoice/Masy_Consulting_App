@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { getOrigin } from "@/lib/url";
 import { CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { CandidateCard } from "./candidate-card";
@@ -31,13 +31,6 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "LONG_TEXT", label: "Long answer" },
   { value: "LINK", label: "Link (portfolio, etc.)" },
 ];
-
-async function getOrigin() {
-  const h = await headers();
-  const host = h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
-}
 
 export default async function RolePipelinePage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole("MASY_OPS");
