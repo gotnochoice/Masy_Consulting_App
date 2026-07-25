@@ -6,6 +6,7 @@ import { CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stag
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { CandidateCard } from "./candidate-card";
 import { CopyLinkButton } from "./copy-link-button";
+import { SuggestQuestionsPanel } from "./suggest-questions-panel";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import {
   updateRoleStage,
@@ -134,6 +135,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           Shown to every applicant on the public form, in this order. Use these for anything specific to this role or
           client — a portfolio link, availability, relevant experience.
         </p>
+        <SuggestQuestionsPanel roleId={role.id} />
         <div className="mb-4 space-y-2">
           {role.questions.map((q) => {
             const deleteQuestionWithIds = deleteQuestion.bind(null, q.id, role.id);

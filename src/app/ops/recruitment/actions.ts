@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { slugify } from "@/lib/slug";
+import { suggestRoleQuestions, type SuggestedQuestion } from "@/lib/ai";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
 const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
@@ -109,6 +110,61 @@ export async function deleteQuestion(questionId: string, roleId: string) {
   await requireRole("MASY_OPS");
 
   await db.roleQuestion.delete({ where: { id: questionId } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export type SuggestQuestionsState = { suggestions: SuggestedQuestion[] } | { error: string } | undefined;
+
+// useActionState requires this exact (state, formData) signature, even though neither is read here.
+export async function suggestQuestionsForRole(
+  roleId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  prevState: SuggestQuestionsState,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  formData: FormData,
+): Promise<SuggestQuestionsState> {
+  await requireRole("MASY_OPS");
+
+  const role = await db.openRole.findUnique({ where: { id: roleId } });
+  if (!role) return { error: "Role not found" };
+
+  try {
+    const suggestions = await suggestRoleQuestions(role.title, role.description);
+    if (suggestions.length === 0) {
+      return { error: "Couldn't generate suggestions — try adding a role description first." };
+    }
+    return { suggestions };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Something went wrong generating suggestions." };
+  }
+}
+
+const suggestedQuestionsSchema = z.array(
+  z.object({
+    label: z.string().min(1),
+    type: z.enum(QUESTION_TYPES),
+    required: z.boolean(),
+  }),
+);
+
+export async function addSuggestedQuestions(roleId: string, questions: SuggestedQuestion[]) {
+  await requireRole("MASY_OPS");
+
+  const parsed = suggestedQuestionsSchema.safeParse(questions);
+  if (!parsed.success || parsed.data.length === 0) return;
+
+  const count = await db.roleQuestion.count({ where: { openRoleId: roleId } });
+
+  await db.roleQuestion.createMany({
+    data: parsed.data.map((q, i) => ({
+      openRoleId: roleId,
+      label: q.label,
+      type: q.type,
+      required: q.required,
+      order: count + i,
+    })),
+  });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
