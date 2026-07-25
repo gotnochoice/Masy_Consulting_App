@@ -98,12 +98,12 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
 
 export type InviteEmployeeState = { email: string; password: string } | { error: string } | undefined;
 
-// useActionState requires this exact (state, formData) signature, even though neither is read here.
+const invitePasswordSchema = z.string().trim().min(6, "Password must be at least 6 characters").optional().or(z.literal(""));
+
+// useActionState requires this exact (state, formData) signature.
 export async function inviteEmployeeUser(
   employeeId: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   prevState: InviteEmployeeState,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   formData: FormData,
 ): Promise<InviteEmployeeState> {
   const session = await requireRole("MASY_OPS");
@@ -114,7 +114,12 @@ export async function inviteEmployeeUser(
   const existingUser = await db.user.findUnique({ where: { email: employee.email } });
   if (existingUser) return { error: "A login with that email already exists" };
 
-  const password = generateTemporaryPassword();
+  const parsedPassword = invitePasswordSchema.safeParse(formData.get("password") || undefined);
+  if (!parsedPassword.success) {
+    return { error: parsedPassword.error.issues[0]?.message ?? "Invalid password" };
+  }
+
+  const password = parsedPassword.data || generateTemporaryPassword();
   const passwordHash = await bcrypt.hash(password, 10);
 
   const user = await db.user.create({

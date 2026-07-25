@@ -37,6 +37,7 @@ export type InviteClientState = { email: string; password: string } | { error: s
 
 const inviteSchema = z.object({
   email: z.string().email("Valid email required"),
+  password: z.string().trim().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
 });
 
 export async function inviteClientUser(
@@ -46,9 +47,12 @@ export async function inviteClientUser(
 ): Promise<InviteClientState> {
   const session = await requireRole("MASY_OPS");
 
-  const parsed = inviteSchema.safeParse({ email: formData.get("email") });
+  const parsed = inviteSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password") || undefined,
+  });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid email" };
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
   const existingUser = await db.user.findUnique({ where: { email: parsed.data.email } });
@@ -56,7 +60,7 @@ export async function inviteClientUser(
     return { error: "A login with that email already exists" };
   }
 
-  const password = generateTemporaryPassword();
+  const password = parsed.data.password || generateTemporaryPassword();
   const passwordHash = await bcrypt.hash(password, 10);
 
   const user = await db.user.create({

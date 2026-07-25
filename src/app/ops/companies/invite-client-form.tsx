@@ -28,6 +28,12 @@ export function InviteClientForm({ clientOrgId }: { clientOrgId: string }) {
         required
         className={`${inputClass} h-8 w-40 py-1 text-xs`}
       />
+      <input
+        type="text"
+        name="password"
+        placeholder="password (optional)"
+        className={`${inputClass} h-8 w-32 py-1 text-xs`}
+      />
       <button
         type="submit"
         disabled={isPending}
