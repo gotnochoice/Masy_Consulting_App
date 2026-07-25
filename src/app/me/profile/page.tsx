@@ -69,20 +69,20 @@ export default async function MyProfilePage() {
         <div className="rounded-card border border-border bg-paper shadow-sm p-6">
           <h2 className="mb-4 text-sm font-semibold text-ink">Your details</h2>
           <dl className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-slate">Role</dt>
-              <dd className="font-medium text-ink">{employee.roleTitle}</dd>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-slate">Role</dt>
+              <dd className="text-right font-medium text-ink">{employee.roleTitle}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-slate">Organization</dt>
-              <dd className="font-medium text-ink">{employee.clientOrg.name}</dd>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-slate">Organization</dt>
+              <dd className="text-right font-medium text-ink">{employee.clientOrg.name}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-slate">Status</dt>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-slate">Status</dt>
               <dd><StatusBadge status={employee.status} /></dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-slate">Start date</dt>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-slate">Start date</dt>
               <dd className="font-mono text-xs text-ink">{employee.startDate.toLocaleDateString()}</dd>
             </div>
           </dl>

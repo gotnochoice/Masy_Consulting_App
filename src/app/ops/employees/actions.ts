@@ -21,6 +21,7 @@ const createSchema = z.object(baseFields);
 const updateSchema = z.object({
   ...baseFields,
   status: z.enum(["ACTIVE", "ON_LEAVE", "OFFBOARDED"]),
+  leaveBalanceDays: z.coerce.number().int().min(0, "Leave balance can't be negative"),
 });
 
 export async function createEmployee(formData: FormData) {
@@ -70,6 +71,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     email: formData.get("email"),
     startDate: formData.get("startDate"),
     status: formData.get("status"),
+    leaveBalanceDays: formData.get("leaveBalanceDays"),
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid employee data");

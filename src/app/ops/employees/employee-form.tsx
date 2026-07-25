@@ -55,6 +55,23 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
           </div>
         )}
       </div>
+      {employee && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelClass} htmlFor="leaveBalanceDays">Leave balance (days)</label>
+            <input
+              id="leaveBalanceDays"
+              name="leaveBalanceDays"
+              type="number"
+              min="0"
+              step="1"
+              defaultValue={employee.leaveBalanceDays}
+              required
+              className={inputClass}
+            />
+          </div>
+        </div>
+      )}
       <button type="submit" className={buttonClass}>
         {submitLabel}
       </button>
