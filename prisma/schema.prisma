@@ -106,6 +106,7 @@ model Employee {
   startDate          DateTime
   email              String
   leaveBalanceDays   Int                 @default(20)
+  reviewQuestions    Json?
   user               User?
   attendanceRecords  AttendanceRecord[]
   leaveRequests      LeaveRequest[]
@@ -168,6 +169,7 @@ model PerformanceReview {
   employee       Employee     @relation(fields: [employeeId], references: [id])
   cycle          String
   selfAssessment String
+  responses      Json?
   masyNotes      String?
   status         ReviewStatus @default(SUBMITTED)
   createdAt      DateTime     @default(now())
