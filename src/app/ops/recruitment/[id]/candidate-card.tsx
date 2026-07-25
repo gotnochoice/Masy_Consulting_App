@@ -12,6 +12,8 @@ type CandidateWithAnswers = {
   phone: string | null;
   yearsExperience: string | null;
   resumeLink: string | null;
+  expectedPay: string | null;
+  howHeard: string | null;
   notes: string | null;
   source: "WEBSITE" | "MASY_SOURCED";
   stage: CandidateStage;
@@ -36,6 +38,7 @@ export function CandidateCard({
       {candidate.email && <p className="truncate text-xs text-slate">{candidate.email}</p>}
       {candidate.phone && <p className="text-xs text-slate">{candidate.phone}</p>}
       {candidate.yearsExperience && <p className="text-xs text-slate">{candidate.yearsExperience} experience</p>}
+      {candidate.expectedPay && <p className="text-xs text-slate">Expects {candidate.expectedPay}</p>}
       {candidate.resumeLink && (
         <a
           href={candidate.resumeLink}
@@ -47,12 +50,18 @@ export function CandidateCard({
         </a>
       )}
 
-      {(candidate.answers.length > 0 || candidate.notes) && (
+      {(candidate.answers.length > 0 || candidate.notes || candidate.howHeard) && (
         <details className="mt-2">
           <summary className="cursor-pointer text-xs font-medium text-slate hover:text-ink">
             View details
           </summary>
           <div className="mt-2 space-y-2">
+            {candidate.howHeard && (
+              <div>
+                <p className="text-xs font-medium text-slate-light">How they heard about it</p>
+                <p className="text-xs text-ink">{candidate.howHeard}</p>
+              </div>
+            )}
             {candidate.answers.map((a) => (
               <div key={a.id}>
                 <p className="text-xs font-medium text-slate-light">{a.roleQuestion.label}</p>

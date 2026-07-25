@@ -80,6 +80,28 @@ export function ApplyForm({
           <label className={labelClass} htmlFor="yearsExperience">Years of experience in this kind of role</label>
           <input id="yearsExperience" name="yearsExperience" required placeholder="e.g. 3 years" className={inputClass} />
         </div>
+        <div>
+          <label className={labelClass} htmlFor="expectedPay">Expected pay range</label>
+          <input
+            id="expectedPay"
+            name="expectedPay"
+            required
+            placeholder="e.g. ₦250,000 - ₦350,000/month"
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass} htmlFor="howHeard">How did you hear about this role?</label>
+          <select id="howHeard" name="howHeard" required defaultValue="" className={inputClass}>
+            <option value="" disabled>Select one</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Instagram / social media">Instagram / social media</option>
+            <option value="Job board">Job board</option>
+            <option value="Referral from someone">Referral from someone</option>
+            <option value="Masy Consulting website">Masy Consulting website</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
       </div>
 
       <div className="space-y-4 border-t border-border pt-6">

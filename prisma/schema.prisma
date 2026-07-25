@@ -221,6 +221,8 @@ model Candidate {
   phone           String?
   yearsExperience String?
   resumeLink      String?
+  expectedPay     String?
+  howHeard        String?
   stage           CandidateStage    @default(APPLIED)
   source          CandidateSource   @default(MASY_SOURCED)
   notes           String?

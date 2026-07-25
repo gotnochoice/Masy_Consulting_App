@@ -14,6 +14,8 @@ const baseSchema = z.object({
   phone: z.string().min(1, "Phone is required"),
   yearsExperience: z.string().min(1, "Years of experience is required"),
   resumeLink: z.string().url("Enter a full link, starting with https://").optional().or(z.literal("")),
+  expectedPay: z.string().min(1, "Expected pay range is required"),
+  howHeard: z.string().min(1, "Please tell us how you heard about this role"),
 });
 
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
@@ -55,6 +57,8 @@ export async function submitApplication(slug: string, _prevState: ApplyState, fo
     phone: formData.get("phone"),
     yearsExperience: formData.get("yearsExperience"),
     resumeLink: formData.get("resumeLink") || "",
+    expectedPay: formData.get("expectedPay"),
+    howHeard: formData.get("howHeard"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Please check your answers." };
@@ -78,6 +82,8 @@ export async function submitApplication(slug: string, _prevState: ApplyState, fo
       phone: parsed.data.phone,
       yearsExperience: parsed.data.yearsExperience,
       resumeLink: parsed.data.resumeLink || undefined,
+      expectedPay: parsed.data.expectedPay,
+      howHeard: parsed.data.howHeard,
       source: "WEBSITE",
       stage: "APPLIED",
       answers: { create: answers },
@@ -88,7 +94,8 @@ export async function submitApplication(slug: string, _prevState: ApplyState, fo
   await sendOpsNotification(
     `New application: ${role.title} at ${role.clientOrg.name}`,
     `${parsed.data.name} applied for ${role.title} (${role.clientOrg.name}).\n\n` +
-      `Email: ${parsed.data.email}\nPhone: ${parsed.data.phone}\nExperience: ${parsed.data.yearsExperience}\n\n` +
+      `Email: ${parsed.data.email}\nPhone: ${parsed.data.phone}\nExperience: ${parsed.data.yearsExperience}\n` +
+      `Expected pay: ${parsed.data.expectedPay}\nHeard about it via: ${parsed.data.howHeard}\n\n` +
       `View: ${origin}/ops/recruitment/${role.id}#candidate-${candidate.id}`,
   );
 
