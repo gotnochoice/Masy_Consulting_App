@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { getReviewQuestions } from "@/lib/review-questions";
@@ -47,4 +48,5 @@ export async function submitReview(formData: FormData) {
   });
 
   revalidatePath("/me/reviews");
+  redirect(`/me/reviews?done=${encodeURIComponent("Review submitted")}`);
 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { PULSE_SCORE_LABELS } from "@/lib/pulse";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
+import { SuccessBanner } from "@/components/success-banner";
 import { submitPulseCheckIn } from "./actions";
 
 export default async function MyPulsePage() {
@@ -30,6 +31,7 @@ export default async function MyPulsePage() {
       </div>
 
       <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <SuccessBanner />
         <form action={submitPulseCheckIn} className="space-y-4">
           <div>
             <label className={labelClass}>How are you feeling about work right now?</label>

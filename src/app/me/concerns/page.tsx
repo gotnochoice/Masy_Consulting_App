@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
+import { SuccessBanner } from "@/components/success-banner";
 import { submitConcern } from "./actions";
 
 export default async function MyConcernsPage() {
@@ -28,6 +29,7 @@ export default async function MyConcernsPage() {
       </div>
 
       <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <SuccessBanner />
         <h2 className="mb-4 text-sm font-semibold text-ink">Raise a concern</h2>
         <form action={submitConcern} className="space-y-4">
           <div>

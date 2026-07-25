@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { leaveDaysBetween, formatDateShort } from "@/lib/leave";
 import { LeaveStatusBadge } from "@/components/leave-status-badge";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
+import { SuccessBanner } from "@/components/success-banner";
 import { requestLeave } from "./actions";
 
 export default async function MyLeavePage() {
@@ -28,6 +29,7 @@ export default async function MyLeavePage() {
       </div>
 
       <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <SuccessBanner />
         <h2 className="mb-4 text-sm font-semibold text-ink">Request leave</h2>
         <form action={requestLeave} className="space-y-4">
           <div className="grid grid-cols-3 gap-4">

@@ -4,6 +4,7 @@ import { formatDateShort } from "@/lib/leave";
 import { getReviewQuestions } from "@/lib/review-questions";
 import { ReviewStatusBadge } from "@/components/review-status-badge";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
+import { SuccessBanner } from "@/components/success-banner";
 import { submitReview } from "./actions";
 
 const sectionLabelClass = "font-mono text-xs font-semibold uppercase tracking-widest text-slate-light";
@@ -36,6 +37,7 @@ export default async function MyReviewsPage() {
       </div>
 
       <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <SuccessBanner />
         <h2 className="mb-1 text-sm font-semibold text-ink">Submit a self-assessment</h2>
         <p className="mb-4 text-xs text-slate-light">Tailored to your role as {employee.roleTitle}.</p>
         <form action={submitReview} className="space-y-6">

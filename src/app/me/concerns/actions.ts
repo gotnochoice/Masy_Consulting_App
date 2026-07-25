@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 
@@ -24,4 +25,5 @@ export async function submitConcern(formData: FormData) {
   });
 
   revalidatePath("/me/concerns");
+  redirect(`/me/concerns?done=${encodeURIComponent("Concern submitted")}`);
 }

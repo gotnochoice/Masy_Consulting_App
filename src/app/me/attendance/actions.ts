@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { todayDateOnly } from "@/lib/attendance";
@@ -21,6 +22,7 @@ export async function clockIn() {
   });
 
   revalidatePath("/me/attendance");
+  redirect(`/me/attendance?done=${encodeURIComponent("Clocked in")}`);
 }
 
 export async function clockOut() {
@@ -40,6 +42,7 @@ export async function clockOut() {
   });
 
   revalidatePath("/me/attendance");
+  redirect(`/me/attendance?done=${encodeURIComponent("Clocked out")}`);
 }
 
 export async function deleteAttendanceRecord(recordId: string) {

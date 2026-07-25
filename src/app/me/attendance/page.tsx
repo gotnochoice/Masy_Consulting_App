@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { todayDateOnly, formatTime, formatHours, formatDate } from "@/lib/attendance";
 import { buttonClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { SuccessBanner } from "@/components/success-banner";
 import { clockIn, clockOut, deleteAttendanceRecord } from "./actions";
 
 export default async function MyAttendancePage() {
@@ -33,6 +34,7 @@ export default async function MyAttendancePage() {
       </div>
 
       <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <SuccessBanner />
         {!todayRecord && (
           <form action={clockIn}>
             <button type="submit" className={buttonClass}>

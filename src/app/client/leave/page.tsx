@@ -2,6 +2,7 @@ import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { LeaveStatusBadge } from "@/components/leave-status-badge";
+import { SuccessBanner } from "@/components/success-banner";
 import { approveLeave, denyLeave } from "./actions";
 
 export default async function ClientLeavePage() {
@@ -19,6 +20,8 @@ export default async function ClientLeavePage() {
         <h1 className="text-3xl font-extrabold text-ink">Leave approvals</h1>
         <p className="text-sm text-slate">Approve or decline leave for your team, the one action you take directly.</p>
       </div>
+
+      <SuccessBanner />
 
       <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
@@ -44,6 +47,7 @@ export default async function ClientLeavePage() {
                   {r.status === "PENDING" && (
                     <div className="flex justify-end gap-3">
                       <form action={approveLeave.bind(null, r.id)}>
+                        <input type="hidden" name="redirectTo" value="/client/leave" />
                         <button
                           type="submit"
                           className="rounded-btn bg-orange px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-light"
@@ -52,6 +56,7 @@ export default async function ClientLeavePage() {
                         </button>
                       </form>
                       <form action={denyLeave.bind(null, r.id)}>
+                        <input type="hidden" name="redirectTo" value="/client/leave" />
                         <button type="submit" className="text-sm font-medium text-slate hover:text-ink">
                           Decline
                         </button>
