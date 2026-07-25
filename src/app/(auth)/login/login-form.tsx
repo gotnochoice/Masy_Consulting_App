@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { loginAction } from "./actions";
 import { inputClass, labelClass } from "@/lib/form-styles";
+import { PasswordInput } from "@/components/password-input";
 
 export function LoginForm() {
   const [error, formAction, isPending] = useActionState(loginAction, undefined);
@@ -19,14 +20,7 @@ export function LoginForm() {
         <label htmlFor="password" className={labelClass}>
           Password
         </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          className={inputClass}
-        />
+        <PasswordInput id="password" name="password" required autoComplete="current-password" />
       </div>
       {error && <p className="text-sm text-orange">{error}</p>}
       <button
