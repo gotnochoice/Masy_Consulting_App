@@ -68,7 +68,7 @@ export default async function OpsOnboardingPage() {
         })}
         {employees.length === 0 && (
           <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
-            No onboarding checklists yet — they&apos;re created automatically when you add a new employee.
+            No onboarding checklists yet. They&apos;re created automatically when you add a new employee.
           </p>
         )}
       </div>

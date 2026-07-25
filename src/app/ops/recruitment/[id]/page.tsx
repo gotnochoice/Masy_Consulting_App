@@ -93,7 +93,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                     : "border-orange text-orange"
                 }`}
               >
-                {role.acceptingApplications ? "Accepting applications" : "Applications closed — reopen"}
+                {role.acceptingApplications ? "Accepting applications" : "Applications closed, reopen"}
               </button>
             </form>
           </div>
@@ -133,7 +133,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         <h2 className="mb-4 text-sm font-semibold text-ink">Application questions</h2>
         <p className="mb-4 text-sm text-slate">
           Shown to every applicant on the public form, in this order. Use these for anything specific to this role or
-          client — a portfolio link, availability, relevant experience.
+          client, a portfolio link, availability, relevant experience.
         </p>
         <SuggestQuestionsPanel roleId={role.id} />
         <div className="mb-4 space-y-2">
@@ -154,7 +154,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             );
           })}
           {role.questions.length === 0 && (
-            <p className="text-sm text-slate-light">No custom questions yet — applicants will just submit name, email, and a CV link.</p>
+            <p className="text-sm text-slate-light">No custom questions yet. Applicants will just submit name, email, and a CV link.</p>
           )}
         </div>
         <form action={addQuestionWithId} className="flex flex-wrap items-end gap-3">
@@ -184,7 +184,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           {role.candidates.length > 0 && (
             <ConfirmSubmitButton
               action={clearAllWithId}
-              confirmMessage={`Delete all ${role.candidates.length} candidate(s) for this role? This can't be undone — export a CSV first if you want to keep a record.`}
+              confirmMessage={`Delete all ${role.candidates.length} candidate(s) for this role? This can't be undone, so export a CSV first if you want to keep a record.`}
               className="text-xs font-medium text-slate hover:text-orange"
             >
               Clear all candidates
@@ -226,7 +226,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
 
       <div className="max-w-xl rounded-card border border-border bg-paper shadow-sm p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Add a candidate manually</h2>
-        <p className="mb-4 text-sm text-slate">For candidates sourced outside the application link — referrals, LinkedIn outreach, etc.</p>
+        <p className="mb-4 text-sm text-slate">For candidates sourced outside the application link, referrals, LinkedIn outreach, and so on.</p>
         <form action={addCandidateWithId} className="space-y-4">
           <div>
             <label className={labelClass} htmlFor="name">Name</label>

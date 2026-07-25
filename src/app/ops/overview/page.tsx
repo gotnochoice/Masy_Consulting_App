@@ -35,7 +35,7 @@ export default async function OpsOverviewPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold text-ink">Admin Overview</h1>
-        <p className="text-sm text-slate">{monthLabel} — everything at a glance.</p>
+        <p className="text-sm text-slate">{monthLabel}, everything at a glance.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">

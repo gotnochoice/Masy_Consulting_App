@@ -58,7 +58,7 @@ export function SuggestQuestionsPanel({ roleId }: { roleId: string }) {
       {suggestions && (
         <div className="mt-3 space-y-2 rounded-btn border border-border bg-paper-2 p-4">
           <p className="font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
-            AI suggestions — review and add
+            AI suggestions, review and add
           </p>
           {suggestions.map((q, i) => (
             <label key={i} className="flex items-start gap-2 text-sm text-ink">

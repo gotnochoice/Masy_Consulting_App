@@ -18,7 +18,7 @@ export default async function OpsConcernsPage() {
       <div>
         <h1 className="text-3xl font-extrabold text-ink">Concerns</h1>
         <p className="text-sm text-slate">
-          Raw submissions stay here. Write a curated summary before releasing anything to a client — never the
+          Raw submissions stay here. Write a curated summary before releasing anything to a client, never the
           raw text, never identifying detail unless necessary.
         </p>
       </div>

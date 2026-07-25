@@ -22,7 +22,7 @@ export default async function MyConcernsPage() {
       <div>
         <h1 className="text-3xl font-extrabold text-ink">Concerns</h1>
         <p className="text-sm text-slate">
-          This goes to your Masy HR contact only — never directly to your employer. Masy decides what, if
+          This goes to your Masy HR contact only, never directly to your employer. Masy decides what, if
           anything, gets shared, and never with your name attached unless it&apos;s necessary.
         </p>
       </div>

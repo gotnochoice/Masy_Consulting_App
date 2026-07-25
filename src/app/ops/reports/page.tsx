@@ -72,7 +72,7 @@ export default async function OpsReportsPage({
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold text-ink">Reports</h1>
-        <p className="text-sm text-slate">One shared template — what actually gets sent to each client.</p>
+        <p className="text-sm text-slate">One shared template, what actually gets sent to each client.</p>
       </div>
 
       <form method="get" className="flex flex-wrap items-end gap-4">

@@ -65,7 +65,7 @@ export default async function OpsRecruitmentPage() {
                       action={deleteRoleWithId}
                       confirmMessage={
                         role._count.candidates > 0
-                          ? `Delete "${role.title}"? This will also delete all ${role._count.candidates} candidate(s) in its pipeline. This can't be undone — export a CSV first if you want to keep a record.`
+                          ? `Delete "${role.title}"? This will also delete all ${role._count.candidates} candidate(s) in its pipeline. This can't be undone, so export a CSV first if you want to keep a record.`
                           : `Delete "${role.title}"? This can't be undone.`
                       }
                       className="text-sm font-medium text-slate hover:text-orange"

@@ -24,7 +24,7 @@ export default async function MyPulsePage() {
       <div>
         <h1 className="text-3xl font-extrabold text-ink">Pulse check-in</h1>
         <p className="text-sm text-slate">
-          A quick, private read on how work is going. Masy sees this to spot patterns early — your employer only
+          A quick, private read on how work is going. Masy sees this to spot patterns early, and your employer only
           ever sees an aggregate trend, never your individual answers.
         </p>
       </div>
@@ -59,7 +59,7 @@ export default async function MyPulsePage() {
           <div key={c.id} className="rounded-card border border-border bg-paper shadow-sm p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-ink">
-                {c.score}/5 — {PULSE_SCORE_LABELS[c.score]}
+                {c.score}/5, {PULSE_SCORE_LABELS[c.score]}
               </p>
               <p className="font-mono text-xs text-slate-light">{formatDateShort(c.createdAt)}</p>
             </div>

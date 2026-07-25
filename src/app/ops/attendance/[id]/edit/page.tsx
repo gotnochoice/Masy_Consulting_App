@@ -21,7 +21,7 @@ export default async function EditAttendanceRecordPage({ params }: { params: Pro
       <div>
         <h1 className="text-3xl font-extrabold text-ink">Edit attendance record</h1>
         <p className="text-sm text-slate">
-          {record.employee.name} — {record.employee.clientOrg.name}
+          {record.employee.name} · {record.employee.clientOrg.name}
         </p>
       </div>
       <AttendanceForm employees={[]} record={record} action={updateWithId} submitLabel="Save changes" />

@@ -54,7 +54,7 @@ export default async function MyAttendancePage() {
         )}
         {todayRecord && todayRecord.clockOut && (
           <p className="text-sm text-slate">
-            Done for today —{" "}
+            Done for today,{" "}
             <span className="font-mono text-ink">
               {formatTime(todayRecord.clockIn)} to {formatTime(todayRecord.clockOut)}
             </span>{" "}

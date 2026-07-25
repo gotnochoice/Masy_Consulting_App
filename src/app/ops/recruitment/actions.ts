@@ -152,7 +152,7 @@ export async function suggestQuestionsForRole(
   try {
     const suggestions = await suggestRoleQuestions(role.title, role.description);
     if (suggestions.length === 0) {
-      return { error: "Couldn't generate suggestions — try adding a role description first." };
+      return { error: "Couldn't generate suggestions. Try adding a role description first." };
     }
     return { suggestions };
   } catch (err) {

@@ -29,7 +29,7 @@ export default async function ClientPulsePage() {
       <div>
         <h1 className="text-3xl font-extrabold text-ink">Team pulse</h1>
         <p className="text-sm text-slate">
-          A monthly average from short private check-ins with your team. Individual answers stay with Masy — this
+          A monthly average from short private check-ins with your team. Individual answers stay with Masy, this
           is trend only, and only shown once enough people have responded that no one answer stands out.
         </p>
       </div>
@@ -47,7 +47,7 @@ export default async function ClientPulsePage() {
               <tr key={r.label}>
                 <td className="px-5 py-3 font-medium text-ink">{r.label}</td>
                 <td className="px-5 py-3 text-slate">
-                  {r.avg ? `${r.avg} / 5` : r.count > 0 ? "Not enough responses yet" : "—"}
+                  {r.avg ? `${r.avg} / 5` : r.count > 0 ? "Not enough responses yet" : "–"}
                 </td>
               </tr>
             ))}

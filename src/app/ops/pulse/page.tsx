@@ -21,7 +21,7 @@ export default async function OpsPulsePage() {
   ]);
 
   const avgThisMonth =
-    thisMonth.length > 0 ? (thisMonth.reduce((sum, c) => sum + c.score, 0) / thisMonth.length).toFixed(1) : "—";
+    thisMonth.length > 0 ? (thisMonth.reduce((sum, c) => sum + c.score, 0) / thisMonth.length).toFixed(1) : "–";
 
   return (
     <div className="space-y-8">
@@ -45,8 +45,8 @@ export default async function OpsPulsePage() {
               <p className="font-mono text-xs text-slate-light">{formatDateShort(c.createdAt)}</p>
             </div>
             <p className="mt-1 text-sm text-slate">
-              {c.score}/5 — {PULSE_SCORE_LABELS[c.score]}
-              {c.comment ? ` — ${c.comment}` : ""}
+              {c.score}/5, {PULSE_SCORE_LABELS[c.score]}
+              {c.comment ? `. ${c.comment}` : ""}
             </p>
           </div>
         ))}

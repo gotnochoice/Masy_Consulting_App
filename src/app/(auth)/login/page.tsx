@@ -8,7 +8,7 @@ export default function LoginPage() {
         <div className="p-8">
           <div className="mb-6">
             <MasyLogo className="text-xl" />
-            <p className="mt-1 text-sm text-slate">HR Platform — sign in to continue</p>
+            <p className="mt-1 text-sm text-slate">Sign in to your HR platform</p>
           </div>
           <LoginForm />
         </div>

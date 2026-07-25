@@ -50,7 +50,7 @@ export default async function ClientAttendancePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Attendance — {monthLabel}</h1>
+        <h1 className="text-3xl font-extrabold text-ink">Attendance for {monthLabel}</h1>
         <p className="text-sm text-slate">Read-only monthly summary for your team.</p>
       </div>
 
@@ -76,7 +76,7 @@ export default async function ClientAttendancePage() {
                       {row.incompleteDays}
                     </span>
                   ) : (
-                    "—"
+                    "–"
                   )}
                 </td>
               </tr>

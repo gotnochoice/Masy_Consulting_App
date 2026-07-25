@@ -70,7 +70,7 @@ export default async function OpsCompaniesPage() {
                 <td className="px-4 py-3 text-right">
                   <ConfirmSubmitButton
                     action={deleteCompanyWithId}
-                    confirmMessage={`Delete ${org.name} and ALL its data — ${org._count.employees} employee(s), attendance, leave, reviews, recruitment, everything? This can't be undone.`}
+                    confirmMessage={`Delete ${org.name} and ALL its data, ${org._count.employees} employee(s), attendance, leave, reviews, recruitment, everything? This can't be undone.`}
                     className="text-xs font-medium text-slate-light hover:text-orange"
                   >
                     Delete

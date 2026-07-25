@@ -31,7 +31,7 @@ export default async function ClientConcernsPage() {
       <div>
         <h1 className="text-3xl font-extrabold text-ink">Concerns</h1>
         <p className="text-sm text-slate">
-          A summary view only — individual submissions go to your Masy HR contact, never straight to you. This
+          A summary view only. Individual submissions go to your Masy HR contact, never straight to you, which
           keeps it safe for your team to raise things honestly.
         </p>
       </div>

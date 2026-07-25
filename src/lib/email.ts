@@ -6,7 +6,7 @@ const FROM = process.env.EMAIL_FROM ?? "Masy Consulting HR <onboarding@resend.de
 
 export async function sendOpsNotification(subject: string, body: string) {
   if (!resend) {
-    console.warn(`[email] RESEND_API_KEY not set — skipped notification: ${subject}`);
+    console.warn(`[email] RESEND_API_KEY not set, skipped notification: ${subject}`);
     return;
   }
 

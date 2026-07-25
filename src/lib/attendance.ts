@@ -4,13 +4,13 @@ export function todayDateOnly(): Date {
 }
 
 export function formatHours(clockIn: Date, clockOut: Date | null): string {
-  if (!clockOut) return "—";
+  if (!clockOut) return "–";
   const hours = (clockOut.getTime() - clockIn.getTime()) / 3_600_000;
   return `${hours.toFixed(1)}h`;
 }
 
 export function formatTime(date: Date | null): string {
-  if (!date) return "—";
+  if (!date) return "–";
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 

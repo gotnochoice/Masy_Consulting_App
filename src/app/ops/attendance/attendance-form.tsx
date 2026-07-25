@@ -40,7 +40,7 @@ export function AttendanceForm({ employees, record, action, submitLabel }: Props
             <option value="" disabled>Select employee</option>
             {employees.map((employee) => (
               <option key={employee.id} value={employee.id}>
-                {employee.name} — {employee.clientOrg.name}
+                {employee.name} · {employee.clientOrg.name}
               </option>
             ))}
           </select>
