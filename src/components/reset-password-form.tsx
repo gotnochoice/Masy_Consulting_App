@@ -17,15 +17,21 @@ export function ResetPasswordForm({ userId }: { userId: string }) {
   }
 
   return (
-    <form action={formAction} className="text-right">
+    <form action={formAction} className="flex items-center justify-end gap-2">
+      {state && "error" in state && <span className="text-xs text-orange">{state.error}</span>}
+      <input
+        type="text"
+        name="password"
+        placeholder="password (optional)"
+        className="h-7 w-28 rounded-btn border border-border px-2 py-1 text-xs"
+      />
       <button
         type="submit"
         disabled={isPending}
-        className="text-xs font-medium text-slate hover:text-orange disabled:opacity-50"
+        className="shrink-0 text-xs font-medium text-slate hover:text-orange disabled:opacity-50"
       >
         {isPending ? "…" : "Reset password"}
       </button>
-      {state && "error" in state && <p className="text-xs text-orange">{state.error}</p>}
     </form>
   );
 }
