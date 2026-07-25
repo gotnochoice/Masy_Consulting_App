@@ -3,7 +3,8 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { RoleStageBadge } from "@/components/stage-badge";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
-import { createRole } from "./actions";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { createRole, deleteRole } from "./actions";
 
 export default async function OpsRecruitmentPage() {
   await requireRole("MASY_OPS");
@@ -35,32 +36,49 @@ export default async function OpsRecruitmentPage() {
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Candidates</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Applications</th>
               <th className="px-4 py-2.5" />
+              <th className="px-4 py-2.5" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {roles.map((role) => (
-              <tr key={role.id} className="hover:bg-paper-2">
-                <td className="px-4 py-3 font-medium text-ink">{role.title}</td>
-                <td className="px-4 py-3 text-slate">{role.clientOrg.name}</td>
-                <td className="px-4 py-3"><RoleStageBadge stage={role.stage} /></td>
-                <td className="px-4 py-3 text-slate">{role._count.candidates}</td>
-                <td className="px-4 py-3 text-slate">
-                  {role.acceptingApplications ? (
-                    <span>{websiteCountByRole.get(role.id) ?? 0} online</span>
-                  ) : (
-                    <span className="text-slate-light">Closed</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Link href={`/ops/recruitment/${role.id}`} className="text-sm font-medium text-indigo hover:text-indigo-light">
-                    View pipeline
-                  </Link>
-                </td>
-              </tr>
-            ))}
+            {roles.map((role) => {
+              const deleteRoleWithId = deleteRole.bind(null, role.id);
+              return (
+                <tr key={role.id} className="hover:bg-paper-2">
+                  <td className="px-4 py-3 font-medium text-ink">{role.title}</td>
+                  <td className="px-4 py-3 text-slate">{role.clientOrg.name}</td>
+                  <td className="px-4 py-3"><RoleStageBadge stage={role.stage} /></td>
+                  <td className="px-4 py-3 text-slate">{role._count.candidates}</td>
+                  <td className="px-4 py-3 text-slate">
+                    {role.acceptingApplications ? (
+                      <span>{websiteCountByRole.get(role.id) ?? 0} online</span>
+                    ) : (
+                      <span className="text-slate-light">Closed</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Link href={`/ops/recruitment/${role.id}`} className="text-sm font-medium text-indigo hover:text-indigo-light">
+                      View pipeline
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <ConfirmSubmitButton
+                      action={deleteRoleWithId}
+                      confirmMessage={
+                        role._count.candidates > 0
+                          ? `Delete "${role.title}"? This will also delete all ${role._count.candidates} candidate(s) in its pipeline. This can't be undone — export a CSV first if you want to keep a record.`
+                          : `Delete "${role.title}"? This can't be undone.`
+                      }
+                      className="text-sm font-medium text-slate hover:text-orange"
+                    >
+                      Delete
+                    </ConfirmSubmitButton>
+                  </td>
+                </tr>
+              );
+            })}
             {roles.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate">No open roles yet.</td>
+                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate">No open roles yet.</td>
               </tr>
             )}
           </tbody>

@@ -43,6 +43,26 @@ export async function createRole(formData: FormData) {
   revalidatePath("/ops/recruitment");
 }
 
+export async function deleteRole(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.$transaction([
+    db.candidate.deleteMany({ where: { openRoleId: roleId } }),
+    db.openRole.delete({ where: { id: roleId } }),
+  ]);
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.delete",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath("/ops/recruitment");
+}
+
 export async function updateRoleStage(roleId: string, formData: FormData) {
   await requireRole("MASY_OPS");
 
