@@ -1,13 +1,17 @@
-import { Users, UserCheck, CalendarDays } from "lucide-react";
-import { requireRole } from "@/lib/rbac";
+import { Users, UserCheck, CalendarDays, Clock3 } from "lucide-react";
+import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { formatDateShort } from "@/lib/leave";
 import { StatusBadge } from "@/components/status-badge";
+import { LeaveStatusBadge } from "@/components/leave-status-badge";
 import { StatCard } from "@/components/stat-card";
+import { SuccessBanner } from "@/components/success-banner";
+import { approveLeave, denyLeave } from "../leave/actions";
 
 export default async function ClientStaffPage() {
   const session = await requireRole("CLIENT");
 
-  const [org, employees] = await Promise.all([
+  const [org, employees, recentLeave, pendingLeaveCount] = await Promise.all([
     session.user.clientOrgId
       ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } })
       : null,
@@ -15,6 +19,13 @@ export default async function ClientStaffPage() {
       where: { clientOrgId: session.user.clientOrgId ?? "__none__" },
       orderBy: { name: "asc" },
     }),
+    db.leaveRequest.findMany({
+      where: { employee: scopedEmployeeWhere(session) },
+      include: { employee: true },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      take: 5,
+    }),
+    db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
   ]);
 
   const activeCount = employees.filter((e) => e.status === "ACTIVE").length;
@@ -29,11 +40,60 @@ export default async function ClientStaffPage() {
         <p className="mt-1 text-sm text-slate">Here is how your team is doing right now.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <SuccessBanner />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Team size" value={employees.length} icon={Users} />
         <StatCard label="Active" value={activeCount} icon={UserCheck} />
-        <StatCard label="On leave" value={onLeaveCount} icon={CalendarDays} tone="orange" />
+        <StatCard label="On leave" value={onLeaveCount} icon={CalendarDays} />
+        <StatCard label="Pending leave" value={pendingLeaveCount} icon={Clock3} tone="orange" />
       </div>
+
+      {recentLeave.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-ink">Recent leave requests</h2>
+          <div className="space-y-3">
+            {recentLeave.map((r) => (
+              <div
+                key={r.id}
+                className="flex flex-col gap-3 rounded-card border border-border bg-paper shadow-sm p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="text-sm font-medium text-ink">
+                    {r.employee.name}{" "}
+                    <span className="font-normal capitalize text-slate">· {r.type.toLowerCase()} leave</span>
+                  </p>
+                  <p className="font-mono text-xs text-slate-light">
+                    {formatDateShort(r.startDate)} to {formatDateShort(r.endDate)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <LeaveStatusBadge status={r.status} />
+                  {r.status === "PENDING" && (
+                    <div className="flex gap-3">
+                      <form action={approveLeave.bind(null, r.id)}>
+                        <input type="hidden" name="redirectTo" value="/client/staff" />
+                        <button
+                          type="submit"
+                          className="rounded-btn bg-orange px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-light"
+                        >
+                          Approve
+                        </button>
+                      </form>
+                      <form action={denyLeave.bind(null, r.id)}>
+                        <input type="hidden" name="redirectTo" value="/client/staff" />
+                        <button type="submit" className="text-sm font-medium text-slate hover:text-ink">
+                          Decline
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">

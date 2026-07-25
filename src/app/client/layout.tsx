@@ -1,13 +1,16 @@
-import { requireRole } from "@/lib/rbac";
+import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { DashboardHeader } from "@/components/dashboard-header";
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const session = await requireRole("CLIENT");
 
-  const org = session.user.clientOrgId
-    ? await db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } })
-    : null;
+  const [org, pendingLeaveCount] = await Promise.all([
+    session.user.clientOrgId
+      ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } })
+      : null,
+    db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
+  ]);
 
   return (
     <div className="min-h-screen bg-paper-2">
@@ -17,7 +20,7 @@ export default async function ClientLayout({ children }: { children: React.React
         nav={[
           { label: "Overview", href: "/client/staff" },
           { label: "Attendance", href: "/client/attendance" },
-          { label: "Leave", href: "/client/leave" },
+          { label: "Leave", href: "/client/leave", badge: pendingLeaveCount },
           { label: "Reviews", href: "/client/reviews" },
           { label: "Pulse", href: "/client/pulse" },
           { label: "Concerns", href: "/client/concerns" },

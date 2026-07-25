@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/sign-out-button";
 import { MasyLogo } from "@/components/masy-logo";
 
-type NavItem = { label: string; href: string };
+type NavItem = { label: string; href: string; badge?: number };
 
 export function DashboardHeader({
   roleLabel,
@@ -43,11 +43,20 @@ export function DashboardHeader({
             <Link
               key={item.href}
               href={item.href}
-              className={`shrink-0 rounded-btn px-4 py-2 text-sm font-medium transition-colors ${
+              className={`flex shrink-0 items-center gap-1.5 rounded-btn px-4 py-2 text-sm font-medium transition-colors ${
                 active ? "bg-indigo text-white" : "text-slate hover:bg-indigo-tint hover:text-indigo"
               }`}
             >
               {item.label}
+              {!!item.badge && item.badge > 0 && (
+                <span
+                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-mono text-[10px] font-semibold ${
+                    active ? "bg-white text-indigo" : "bg-orange text-white"
+                  }`}
+                >
+                  {item.badge}
+                </span>
+              )}
             </Link>
           );
         })}
