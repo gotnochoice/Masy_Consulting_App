@@ -1,6 +1,7 @@
 import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { PULSE_MIN_SAMPLE_SIZE } from "@/lib/pulse";
+import { PulseTrendChart } from "@/components/pulse-trend-chart";
 
 export default async function ClientPulsePage() {
   const session = await requireRole("CLIENT");
@@ -34,26 +35,42 @@ export default async function ClientPulsePage() {
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
-        <table className="min-w-full divide-y divide-border text-sm">
-          <thead className="bg-indigo-tint">
-            <tr>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Month</th>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Average score</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {rows.map((r) => (
-              <tr key={r.label}>
-                <td className="px-5 py-3 font-medium text-ink">{r.label}</td>
-                <td className="px-5 py-3 text-slate">
-                  {r.avg ? `${r.avg} / 5` : r.count > 0 ? "Not enough responses yet" : "–"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
+          6-month trend
+        </p>
+        <PulseTrendChart rows={rows} />
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-light">
+          <span className="inline-block h-2.5 w-2.5 rounded-full border border-slate-light bg-paper" />
+          Hollow points mean not enough check-ins that month to show a trend.
+        </p>
       </div>
+
+      <details className="group rounded-card border border-border bg-paper shadow-sm">
+        <summary className="cursor-pointer px-5 py-3 text-sm font-medium text-slate hover:text-ink">
+          View as table
+        </summary>
+        <div className="overflow-x-auto border-t border-border">
+          <table className="min-w-full divide-y divide-border text-sm">
+            <thead className="bg-indigo-tint">
+              <tr>
+                <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Month</th>
+                <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Average score</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {rows.map((r) => (
+                <tr key={r.label}>
+                  <td className="px-5 py-3 font-medium text-ink">{r.label}</td>
+                  <td className="px-5 py-3 text-slate">
+                    {r.avg ? `${r.avg} / 5` : r.count > 0 ? "Not enough responses yet" : "–"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
     </div>
   );
 }
