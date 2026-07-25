@@ -41,3 +41,13 @@ export async function clockOut() {
 
   revalidatePath("/me/attendance");
 }
+
+export async function deleteAttendanceRecord(recordId: string) {
+  const session = await requireRole("EMPLOYEE");
+  const employeeId = session.user.employeeId;
+  if (!employeeId) throw new Error("No employee record linked to this account");
+
+  await db.attendanceRecord.deleteMany({ where: { id: recordId, employeeId } });
+
+  revalidatePath("/me/attendance");
+}

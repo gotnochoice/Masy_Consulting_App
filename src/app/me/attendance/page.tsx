@@ -2,7 +2,8 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { todayDateOnly, formatTime, formatHours, formatDate } from "@/lib/attendance";
 import { buttonClass } from "@/lib/form-styles";
-import { clockIn, clockOut } from "./actions";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { clockIn, clockOut, deleteAttendanceRecord } from "./actions";
 
 export default async function MyAttendancePage() {
   const session = await requireRole("EMPLOYEE");
@@ -70,20 +71,33 @@ export default async function MyAttendancePage() {
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Clock in</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Clock out</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Hours</th>
+              <th className="px-4 py-2.5" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {history.map((record) => (
-              <tr key={record.id}>
-                <td className="px-4 py-3 font-medium text-ink">{formatDate(record.date)}</td>
-                <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockIn)}</td>
-                <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockOut)}</td>
-                <td className="px-4 py-3 font-mono text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
-              </tr>
-            ))}
+            {history.map((record) => {
+              const deleteWithId = deleteAttendanceRecord.bind(null, record.id);
+              return (
+                <tr key={record.id}>
+                  <td className="px-4 py-3 font-medium text-ink">{formatDate(record.date)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockIn)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockOut)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
+                  <td className="px-4 py-3 text-right">
+                    <ConfirmSubmitButton
+                      action={deleteWithId}
+                      confirmMessage={`Delete the attendance record for ${formatDate(record.date)}? This can't be undone.`}
+                      className="text-xs font-medium text-slate-light hover:text-orange"
+                    >
+                      Delete
+                    </ConfirmSubmitButton>
+                  </td>
+                </tr>
+              );
+            })}
             {history.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate">No attendance records yet.</td>
+                <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate">No attendance records yet.</td>
               </tr>
             )}
           </tbody>
