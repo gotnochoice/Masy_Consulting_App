@@ -46,6 +46,18 @@ only for questions essential to screening this candidate, false for nice-to-have
   );
 
   if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    console.error("Gemini API error", res.status, errBody);
+
+    if (res.status === 429) {
+      throw new Error(
+        "Gemini's free tier is rate-limited right now (too many requests). Wait a minute and try again — " +
+          "if it keeps happening, check your usage/quota at aistudio.google.com.",
+      );
+    }
+    if (res.status === 400 || res.status === 403) {
+      throw new Error("Gemini rejected the request — double-check the GEMINI_API_KEY is correct and active.");
+    }
     throw new Error(`Gemini request failed (${res.status}). Try again in a moment.`);
   }
 
