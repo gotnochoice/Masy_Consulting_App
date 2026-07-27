@@ -1,5 +1,6 @@
 import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { AttendanceTrendChart } from "@/components/attendance-trend-chart";
 
 type EmployeeSummary = {
   employeeId: string;
@@ -16,13 +17,35 @@ export default async function ClientAttendancePage() {
   const monthStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
   const monthEnd = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1));
 
-  const records = await db.attendanceRecord.findMany({
-    where: {
-      employee: scopedEmployeeWhere(session),
-      date: { gte: monthStart, lt: monthEnd },
-    },
-    include: { employee: true },
-    orderBy: { date: "asc" },
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const offset = 5 - i;
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset, 1));
+    const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset + 1, 1));
+    return { label: start.toLocaleDateString([], { month: "short", year: "numeric" }), start, end };
+  });
+
+  const [records, sixMonthRecords] = await Promise.all([
+    db.attendanceRecord.findMany({
+      where: {
+        employee: scopedEmployeeWhere(session),
+        date: { gte: monthStart, lt: monthEnd },
+      },
+      include: { employee: true },
+      orderBy: { date: "asc" },
+    }),
+    db.attendanceRecord.findMany({
+      where: {
+        employee: scopedEmployeeWhere(session),
+        date: { gte: months[0].start },
+        clockOut: { not: null },
+      },
+    }),
+  ]);
+
+  const trendRows = months.map((m) => {
+    const inRange = sixMonthRecords.filter((r) => r.date >= m.start && r.date < m.end);
+    const totalMs = inRange.reduce((sum, r) => sum + (r.clockOut!.getTime() - r.clockIn.getTime()), 0);
+    return { label: m.label, hours: Math.round(totalMs / 3_600_000) };
   });
 
   const byEmployee = new Map<string, EmployeeSummary>();
@@ -52,6 +75,13 @@ export default async function ClientAttendancePage() {
       <div>
         <h1 className="text-3xl font-extrabold text-ink">Attendance for {monthLabel}</h1>
         <p className="text-sm text-slate">Read-only monthly summary for your team.</p>
+      </div>
+
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
+          6-month trend, total hours logged
+        </p>
+        <AttendanceTrendChart rows={trendRows} />
       </div>
 
       <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
