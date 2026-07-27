@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { loginAction } from "./actions";
 import { inputClass, labelClass } from "@/lib/form-styles";
 import { PasswordInput } from "@/components/password-input";
@@ -17,9 +18,14 @@ export function LoginForm() {
         <input id="email" name="email" type="email" required autoComplete="email" className={inputClass} />
       </div>
       <div>
-        <label htmlFor="password" className={labelClass}>
-          Password
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="password" className={labelClass}>
+            Password
+          </label>
+          <Link href="/forgot-password" className="text-xs font-medium text-indigo hover:text-indigo-light">
+            Forgot password?
+          </Link>
+        </div>
         <PasswordInput id="password" name="password" required autoComplete="current-password" />
       </div>
       {error && <p className="text-sm text-orange">{error}</p>}

@@ -85,15 +85,26 @@ model ClientOrg {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
+  id           String               @id @default(cuid())
+  email        String               @unique
   passwordHash String
   role         Role
   clientOrgId  String?
-  clientOrg    ClientOrg? @relation(fields: [clientOrgId], references: [id])
-  employeeId   String?    @unique
-  employee     Employee?  @relation(fields: [employeeId], references: [id])
-  createdAt    DateTime   @default(now())
+  clientOrg    ClientOrg?           @relation(fields: [clientOrgId], references: [id])
+  employeeId   String?              @unique
+  employee     Employee?            @relation(fields: [employeeId], references: [id])
+  createdAt    DateTime             @default(now())
+  resetTokens  PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 }
 
 model Employee {
