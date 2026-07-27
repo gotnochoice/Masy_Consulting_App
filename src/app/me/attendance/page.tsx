@@ -38,8 +38,8 @@ export default async function MyAttendancePage() {
         {!todayRecord && (
           <form action={clockIn} className="space-y-3">
             <div>
-              <label className={labelClass} htmlFor="note">What are you working on today? (optional)</label>
-              <input id="note" name="note" type="text" maxLength={280} className={inputClass} />
+              <label className={labelClass} htmlFor="note">What are you working on today?</label>
+              <input id="note" name="note" type="text" required maxLength={280} className={inputClass} />
             </div>
             <button type="submit" className={buttonClass}>
               Clock in
@@ -54,8 +54,8 @@ export default async function MyAttendancePage() {
             </p>
             <form action={clockOut} className="space-y-3">
               <div>
-                <label className={labelClass} htmlFor="note">What did you get done today? (optional)</label>
-                <input id="note" name="note" type="text" maxLength={280} className={inputClass} />
+                <label className={labelClass} htmlFor="note">What did you get done today?</label>
+                <input id="note" name="note" type="text" required maxLength={280} className={inputClass} />
               </div>
               <button type="submit" className={buttonClass}>
                 Clock out

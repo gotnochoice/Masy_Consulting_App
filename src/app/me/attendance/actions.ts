@@ -18,12 +18,15 @@ export async function clockIn(formData: FormData) {
   if (existing) return;
 
   const note = formData.get("note");
+  const trimmedNote = typeof note === "string" ? note.trim() : "";
+  if (!trimmedNote) throw new Error("Add a short note on what you're working on today");
+
   await db.attendanceRecord.create({
     data: {
       employeeId,
       date,
       clockIn: new Date(),
-      clockInNote: typeof note === "string" && note.trim() ? note.trim() : null,
+      clockInNote: trimmedNote,
     },
   });
 
@@ -43,11 +46,14 @@ export async function clockOut(formData: FormData) {
   if (!existing || existing.clockOut) return;
 
   const note = formData.get("note");
+  const trimmedNote = typeof note === "string" ? note.trim() : "";
+  if (!trimmedNote) throw new Error("Add a short note on what you got done today");
+
   await db.attendanceRecord.update({
     where: { id: existing.id },
     data: {
       clockOut: new Date(),
-      clockOutNote: typeof note === "string" && note.trim() ? note.trim() : null,
+      clockOutNote: trimmedNote,
     },
   });
 
