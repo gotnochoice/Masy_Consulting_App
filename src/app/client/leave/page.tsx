@@ -3,16 +3,44 @@ import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { LeaveStatusBadge } from "@/components/leave-status-badge";
 import { SuccessBanner } from "@/components/success-banner";
+import { LeaveCalendar } from "@/components/leave-calendar";
 import { approveLeave, denyLeave } from "./actions";
 
 export default async function ClientLeavePage() {
   const session = await requireRole("CLIENT");
 
-  const requests = await db.leaveRequest.findMany({
-    where: { employee: scopedEmployeeWhere(session) },
-    include: { employee: true },
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-  });
+  const now = new Date();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+
+  const [requests, approvedThisMonth] = await Promise.all([
+    db.leaveRequest.findMany({
+      where: { employee: scopedEmployeeWhere(session) },
+      include: { employee: true },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+    }),
+    db.leaveRequest.findMany({
+      where: {
+        employee: scopedEmployeeWhere(session),
+        status: "APPROVED",
+        startDate: { lt: monthEnd },
+        endDate: { gte: monthStart },
+      },
+      include: { employee: true },
+    }),
+  ]);
+
+  const leaveByDay = new Map<number, { employeeName: string; type: string }[]>();
+  for (const r of approvedThisMonth) {
+    const rangeStart = r.startDate > monthStart ? r.startDate : monthStart;
+    const rangeEndExclusive = r.endDate < monthEnd ? new Date(r.endDate.getTime() + 86_400_000) : monthEnd;
+    for (let d = new Date(rangeStart); d < rangeEndExclusive; d = new Date(d.getTime() + 86_400_000)) {
+      const day = d.getUTCDate();
+      const entries = leaveByDay.get(day) ?? [];
+      entries.push({ employeeName: r.employee.name, type: r.type });
+      leaveByDay.set(day, entries);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -22,6 +50,13 @@ export default async function ClientLeavePage() {
       </div>
 
       <SuccessBanner />
+
+      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
+          {monthStart.toLocaleDateString([], { month: "long", year: "numeric" })}
+        </p>
+        <LeaveCalendar monthStart={monthStart} leaveByDay={leaveByDay} />
+      </div>
 
       <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
         <table className="min-w-full divide-y divide-border text-sm">
