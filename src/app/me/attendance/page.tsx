@@ -1,7 +1,7 @@
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { todayDateOnly, formatTime, formatHours, formatDate } from "@/lib/attendance";
-import { buttonClass } from "@/lib/form-styles";
+import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { SuccessBanner } from "@/components/success-banner";
 import { clockIn, clockOut, deleteAttendanceRecord } from "./actions";
@@ -36,7 +36,11 @@ export default async function MyAttendancePage() {
       <div className="rounded-card border border-border bg-paper shadow-sm p-6">
         <SuccessBanner />
         {!todayRecord && (
-          <form action={clockIn}>
+          <form action={clockIn} className="space-y-3">
+            <div>
+              <label className={labelClass} htmlFor="note">What are you working on today? (optional)</label>
+              <input id="note" name="note" type="text" maxLength={280} className={inputClass} />
+            </div>
             <button type="submit" className={buttonClass}>
               Clock in
             </button>
@@ -45,9 +49,14 @@ export default async function MyAttendancePage() {
         {todayRecord && !todayRecord.clockOut && (
           <div className="space-y-3">
             <p className="text-sm text-slate">
-              Clocked in at <span className="font-mono text-ink">{formatTime(todayRecord.clockIn)}</span>.
+              Clocked in at <span className="font-mono text-ink">{formatTime(todayRecord.clockIn)}</span>
+              {todayRecord.clockInNote ? ` — "${todayRecord.clockInNote}"` : ""}.
             </p>
-            <form action={clockOut}>
+            <form action={clockOut} className="space-y-3">
+              <div>
+                <label className={labelClass} htmlFor="note">What did you get done today? (optional)</label>
+                <input id="note" name="note" type="text" maxLength={280} className={inputClass} />
+              </div>
               <button type="submit" className={buttonClass}>
                 Clock out
               </button>
@@ -55,13 +64,18 @@ export default async function MyAttendancePage() {
           </div>
         )}
         {todayRecord && todayRecord.clockOut && (
-          <p className="text-sm text-slate">
-            Done for today,{" "}
-            <span className="font-mono text-ink">
-              {formatTime(todayRecord.clockIn)} to {formatTime(todayRecord.clockOut)}
-            </span>{" "}
-            ({formatHours(todayRecord.clockIn, todayRecord.clockOut)}).
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-slate">
+              Done for today,{" "}
+              <span className="font-mono text-ink">
+                {formatTime(todayRecord.clockIn)} to {formatTime(todayRecord.clockOut)}
+              </span>{" "}
+              ({formatHours(todayRecord.clockIn, todayRecord.clockOut)}).
+            </p>
+            {todayRecord.clockOutNote && (
+              <p className="text-sm text-ink">&quot;{todayRecord.clockOutNote}&quot;</p>
+            )}
+          </div>
         )}
       </div>
 
@@ -73,6 +87,7 @@ export default async function MyAttendancePage() {
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Clock in</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Clock out</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Hours</th>
+              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Notes</th>
               <th className="px-4 py-2.5" />
             </tr>
           </thead>
@@ -85,6 +100,11 @@ export default async function MyAttendancePage() {
                   <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockIn)}</td>
                   <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockOut)}</td>
                   <td className="px-4 py-3 font-mono text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
+                  <td className="px-4 py-3 text-slate">
+                    {record.clockInNote && <p>In: {record.clockInNote}</p>}
+                    {record.clockOutNote && <p>Out: {record.clockOutNote}</p>}
+                    {!record.clockInNote && !record.clockOutNote && "–"}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <ConfirmSubmitButton
                       action={deleteWithId}
@@ -99,7 +119,7 @@ export default async function MyAttendancePage() {
             })}
             {history.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate">No attendance records yet.</td>
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate">No attendance records yet.</td>
               </tr>
             )}
           </tbody>

@@ -37,28 +37,35 @@ export default async function OpsAttendancePage() {
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Clock in</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Clock out</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Hours</th>
+              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Notes</th>
               <th className="px-4 py-2.5" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {records.map((record) => (
-              <tr key={record.id} className="hover:bg-paper-2">
-                <td className="px-4 py-3 font-mono text-xs text-slate">{formatDate(record.date)}</td>
-                <td className="px-4 py-3 font-medium text-ink">{record.employee.name}</td>
-                <td className="px-4 py-3 text-slate">{record.employee.clientOrg.name}</td>
-                <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockIn)}</td>
-                <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockOut)}</td>
-                <td className="px-4 py-3 font-mono text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
-                <td className="px-4 py-3 text-right">
-                  <Link href={`/ops/attendance/${record.id}/edit`} className="text-sm font-medium text-indigo hover:text-indigo-light">
-                    Edit
-                  </Link>
-                </td>
-              </tr>
-            ))}
+            {records.map((record) => {
+              const notes = [record.clockInNote, record.clockOutNote].filter(Boolean).join(" / ");
+              return (
+                <tr key={record.id} className="hover:bg-paper-2">
+                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatDate(record.date)}</td>
+                  <td className="px-4 py-3 font-medium text-ink">{record.employee.name}</td>
+                  <td className="px-4 py-3 text-slate">{record.employee.clientOrg.name}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockIn)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockOut)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
+                  <td className="px-4 py-3 max-w-[16rem] truncate text-slate" title={notes || undefined}>
+                    {notes || "–"}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Link href={`/ops/attendance/${record.id}/edit`} className="text-sm font-medium text-indigo hover:text-indigo-light">
+                      Edit
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
             {records.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate">No attendance records yet.</td>
+                <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate">No attendance records yet.</td>
               </tr>
             )}
           </tbody>

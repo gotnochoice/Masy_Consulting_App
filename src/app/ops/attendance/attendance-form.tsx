@@ -10,7 +10,9 @@ type RecordValue = {
   employeeId: string;
   date: Date;
   clockIn: Date;
+  clockInNote: string | null;
   clockOut: Date | null;
+  clockOutNote: string | null;
 };
 
 type Props = {
@@ -76,6 +78,30 @@ export function AttendanceForm({ employees, record, action, submitLabel }: Props
             name="clockOut"
             type="time"
             defaultValue={record?.clockOut ? toTimeInput(record.clockOut) : ""}
+            className={inputClass}
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={labelClass} htmlFor="clockInNote">Clock-in note</label>
+          <input
+            id="clockInNote"
+            name="clockInNote"
+            type="text"
+            maxLength={280}
+            defaultValue={record?.clockInNote ?? ""}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass} htmlFor="clockOutNote">Clock-out note</label>
+          <input
+            id="clockOutNote"
+            name="clockOutNote"
+            type="text"
+            maxLength={280}
+            defaultValue={record?.clockOutNote ?? ""}
             className={inputClass}
           />
         </div>

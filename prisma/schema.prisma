@@ -148,14 +148,16 @@ model OnboardingTask {
 }
 
 model AttendanceRecord {
-  id         String    @id @default(cuid())
-  employeeId String
-  employee   Employee  @relation(fields: [employeeId], references: [id])
-  date       DateTime  @db.Date
-  clockIn    DateTime
-  clockOut   DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  employeeId   String
+  employee     Employee  @relation(fields: [employeeId], references: [id])
+  date         DateTime  @db.Date
+  clockIn      DateTime
+  clockInNote  String?
+  clockOut     DateTime?
+  clockOutNote String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@unique([employeeId, date])
 }
