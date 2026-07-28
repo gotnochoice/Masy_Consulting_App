@@ -5,7 +5,7 @@ import { ReviewStatusBadge } from "@/components/review-status-badge";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { saveReviewNotes, releaseReview } from "./actions";
 
-type ReviewResponse = { question: string; answer: string };
+type ReviewResponseSection = { section: string; answers: { question: string; answer: string }[] };
 
 export default async function OpsReviewsPage() {
   await requireRole("MASY_OPS");
@@ -26,7 +26,9 @@ export default async function OpsReviewsPage() {
         {reviews.map((review) => {
           const notesWithId = saveReviewNotes.bind(null, review.id);
           const releaseWithId = releaseReview.bind(null, review.id);
-          const responses = Array.isArray(review.responses) ? (review.responses as unknown as ReviewResponse[]) : [];
+          const responses = Array.isArray(review.responses)
+            ? (review.responses as unknown as ReviewResponseSection[])
+            : [];
           return (
             <div key={review.id} className="rounded-card border border-border bg-paper shadow-sm p-5">
               <div className="mb-3 flex items-start justify-between gap-4">
@@ -41,14 +43,28 @@ export default async function OpsReviewsPage() {
               </div>
 
               {responses.length > 0 && (
-                <div className="mb-4 space-y-2 rounded-btn bg-paper-2 p-3">
-                  {responses.map((r, i) => (
-                    <div key={i}>
-                      <p className="font-mono text-xs font-medium uppercase tracking-wide text-slate-light">{r.question}</p>
-                      <p className="text-sm text-ink">{r.answer}</p>
-                    </div>
-                  ))}
-                </div>
+                <details className="group mb-4 rounded-btn bg-paper-2">
+                  <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-slate hover:text-ink">
+                    View self-assessment ({responses.length} section{responses.length === 1 ? "" : "s"})
+                  </summary>
+                  <div className="space-y-3 border-t border-border p-3">
+                    {responses.map((s, si) => (
+                      <div key={si}>
+                        <p className="font-mono text-xs font-semibold uppercase tracking-wide text-indigo">{s.section}</p>
+                        <div className="mt-1 space-y-2">
+                          {s.answers.map((a, ai) => (
+                            <div key={ai}>
+                              <p className="font-mono text-xs font-medium uppercase tracking-wide text-slate-light">
+                                {a.question}
+                              </p>
+                              <p className="text-sm text-ink">{a.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
               )}
               {review.selfAssessment && (
                 <p className="mb-4 rounded-btn bg-paper-2 p-3 text-sm text-ink">{review.selfAssessment}</p>

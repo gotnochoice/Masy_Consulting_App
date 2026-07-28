@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
-import { getReviewQuestions } from "@/lib/review-questions";
+import { getReviewTemplate } from "@/lib/review-templates";
 
 const schema = z.object({
   cycle: z.string().min(1, "Cycle is required"),
@@ -28,15 +28,18 @@ export async function submitReview(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid review submission");
   }
 
-  const questions = await getReviewQuestions(employeeId, employee.roleTitle, employee.reviewQuestions);
-  const responses = questions.map((question, i) => {
-    const raw = formData.get(`q_${i}`);
-    const answer = typeof raw === "string" ? raw.trim() : "";
-    if (!answer) {
-      throw new Error(`Please answer: "${question}"`);
-    }
-    return { question, answer };
-  });
+  const template = await getReviewTemplate(employeeId, employee.roleTitle, employee.reviewTemplate);
+  const responses = template.map((section, si) => ({
+    section: section.section,
+    answers: section.questions.map((question, qi) => {
+      const raw = formData.get(`s${si}_q${qi}`);
+      const answer = typeof raw === "string" ? raw.trim() : "";
+      if (!answer) {
+        throw new Error(`Please answer: "${question}"`);
+      }
+      return { question, answer };
+    }),
+  }));
 
   await db.performanceReview.create({
     data: {

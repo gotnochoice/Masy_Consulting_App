@@ -1,4 +1,5 @@
 export type SuggestedQuestion = { label: string; type: "SHORT_TEXT" | "LONG_TEXT" | "LINK"; required: boolean };
+export type ReviewTemplateSection = { section: string; questions: string[] };
 
 const GEMINI_MODEL = "gemini-2.0-flash";
 
@@ -79,19 +80,30 @@ only for questions essential to screening this candidate, false for nice-to-have
     .slice(0, 6);
 }
 
-export async function suggestReviewQuestions(roleTitle: string): Promise<string[]> {
-  const prompt = `You are helping build a performance self-assessment form for an employee.
+export async function suggestReviewTemplate(roleTitle: string): Promise<ReviewTemplateSection[]> {
+  const prompt = `You are building a structured end-of-cycle performance self-assessment form for an employee.
 
 Employee's role/job title: ${roleTitle}
 
-Write 5 concise, specific self-assessment questions for this role that go deeper than generic "what did you
-accomplish" questions, probing the skills, responsibilities, and outcomes that matter most for someone in this
-specific role. Each question should invite a few sentences of honest reflection, not a yes/no answer.`;
+Design 3 to 5 sections specific to this role (for example "Task Delivery", "Quality & Brand Alignment",
+"Communication & Collaboration") that probe the skills, responsibilities, and outcomes that matter most for
+someone in this specific role. Each section should have 2 to 4 concise questions inviting a few sentences of
+honest reflection, not yes/no answers. Do not include generic closing sections like "Challenges",
+"Improvements for Next Month", or "Support Needed" — those are added separately.`;
 
   const parsed = (await callGemini(prompt, {
     type: "ARRAY",
-    items: { type: "STRING" },
-  })) as string[];
+    items: {
+      type: "OBJECT",
+      properties: {
+        section: { type: "STRING" },
+        questions: { type: "ARRAY", items: { type: "STRING" } },
+      },
+      required: ["section", "questions"],
+    },
+  })) as ReviewTemplateSection[];
 
-  return parsed.filter((q) => typeof q === "string" && q.trim().length > 0).slice(0, 6);
+  return parsed
+    .filter((s) => s.section && Array.isArray(s.questions) && s.questions.length > 0)
+    .slice(0, 5);
 }
