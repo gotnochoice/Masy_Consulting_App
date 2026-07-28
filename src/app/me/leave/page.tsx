@@ -33,7 +33,7 @@ export default async function MyLeavePage() {
         <SuccessBanner />
         <h2 className="mb-4 text-sm font-semibold text-ink">Request leave</h2>
         <form action={requestLeave} className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className={labelClass} htmlFor="type">Type</label>
               <select id="type" name="type" required defaultValue="ANNUAL" className={inputClass}>

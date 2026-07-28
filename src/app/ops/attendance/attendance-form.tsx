@@ -48,7 +48,7 @@ export function AttendanceForm({ employees, record, action, submitLabel }: Props
           </select>
         </div>
       )}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
           <label className={labelClass} htmlFor="date">Date</label>
           <input
