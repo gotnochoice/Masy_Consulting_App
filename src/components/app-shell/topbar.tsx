@@ -16,7 +16,7 @@ export function Topbar({ userLabel, onMenuClick }: { userLabel: string; onMenuCl
         </button>
         <div>
           <MasyLogo className="text-base" />
-          <p className="font-mono text-[10px] uppercase tracking-wide text-slate-light">HR Platform</p>
+          <p className="text-[10px] uppercase tracking-wide text-slate-light">HR Platform</p>
         </div>
       </div>
       <div className="flex items-center gap-3">

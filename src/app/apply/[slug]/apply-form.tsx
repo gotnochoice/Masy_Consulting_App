@@ -6,7 +6,7 @@ import type { RoleQuestion } from "@/generated/prisma/client";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import type { ApplyState } from "./actions";
 
-const sectionLabelClass = "font-mono text-xs font-semibold uppercase tracking-widest text-slate-light";
+const sectionLabelClass = "text-xs font-semibold uppercase tracking-widest text-slate-light";
 
 export function ApplyForm({
   action,
@@ -36,13 +36,13 @@ export function ApplyForm({
 
         <div className="mx-auto mt-8 max-w-sm space-y-4 border-t border-border pt-6 text-left">
           <div className="flex gap-3">
-            <span className="font-mono text-xs font-semibold text-indigo">01</span>
+            <span className="text-xs font-semibold text-indigo">01</span>
             <p className="text-sm text-slate">
               Masy Consulting reviews every application on behalf of {companyName}.
             </p>
           </div>
           <div className="flex gap-3">
-            <span className="font-mono text-xs font-semibold text-indigo">02</span>
+            <span className="text-xs font-semibold text-indigo">02</span>
             <p className="text-sm text-slate">
               If there&apos;s a fit, we&apos;ll reach out to you directly{state.email ? ` at ${state.email}` : ""}.
             </p>

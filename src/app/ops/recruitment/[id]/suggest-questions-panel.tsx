@@ -57,7 +57,7 @@ export function SuggestQuestionsPanel({ roleId }: { roleId: string }) {
       {state && "error" in state && <p className="mt-2 text-xs text-orange">{state.error}</p>}
       {suggestions && (
         <div className="mt-3 space-y-2 rounded-btn border border-border bg-paper-2 p-4">
-          <p className="font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-light">
             AI suggestions, review and add
           </p>
           {suggestions.map((q, i) => (
@@ -70,7 +70,7 @@ export function SuggestQuestionsPanel({ roleId }: { roleId: string }) {
               />
               <span>
                 {q.label}
-                <span className="ml-1 font-mono text-xs text-slate-light">
+                <span className="ml-1 text-xs text-slate-light">
                   ({TYPE_LABELS[q.type]}, {q.required ? "required" : "optional"})
                 </span>
               </span>

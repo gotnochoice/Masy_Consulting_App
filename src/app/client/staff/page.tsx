@@ -43,7 +43,7 @@ export default async function ClientStaffPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="font-mono text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">{org?.name ?? "Your team"}</h1>
         <p className="mt-1 text-sm text-slate">Here is how your team is doing right now.</p>
       </div>
@@ -73,7 +73,7 @@ export default async function ClientStaffPage() {
                     {r.employee.name}{" "}
                     <span className="font-normal capitalize text-slate">· {r.type.toLowerCase()} leave</span>
                   </p>
-                  <p className="font-mono text-xs text-slate-light">
+                  <p className="text-xs text-slate-light">
                     {formatDateShort(r.startDate)} to {formatDateShort(r.endDate)}
                   </p>
                 </div>
@@ -114,9 +114,9 @@ export default async function ClientStaffPage() {
           <table className="min-w-full divide-y divide-border text-sm">
             <thead className="bg-indigo-tint">
               <tr>
-                <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
-                <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Role</th>
-                <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Status</th>
+                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
+                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Role</th>
+                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

@@ -74,7 +74,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-ink">Public application link</p>
-            <p className="font-mono text-xs text-slate">{applyLink}</p>
+            <p className="text-xs text-slate">{applyLink}</p>
           </div>
           <div className="flex items-center gap-2">
             <CopyLinkButton link={applyLink} />
@@ -144,7 +144,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
               <div key={q.id} className="flex items-center justify-between gap-3 rounded-btn border border-border px-3 py-2">
                 <div>
                   <p className="text-sm text-ink">{q.label}</p>
-                  <p className="font-mono text-xs text-slate-light">
+                  <p className="text-xs text-slate-light">
                     {QUESTION_TYPE_OPTIONS.find((o) => o.value === q.type)?.label} · {q.required ? "required" : "optional"}
                   </p>
                 </div>
@@ -196,10 +196,10 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           {columns.map(({ stage, candidates }) => (
             <div key={stage} className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="font-mono text-xs font-medium uppercase tracking-wide text-slate-light">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
                   {CANDIDATE_STAGE_LABELS[stage]}
                 </p>
-                <span className="font-mono text-xs text-slate-light">{candidates.length}</span>
+                <span className="text-xs text-slate-light">{candidates.length}</span>
               </div>
               <div className="space-y-3">
                 {candidates.map((candidate) => {

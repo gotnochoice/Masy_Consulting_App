@@ -40,7 +40,7 @@ export default async function OpsDocumentsPage() {
 
               {r.responseNote && (
                 <div className="mt-3 rounded-btn bg-paper-2 px-3 py-2 text-sm text-ink">
-                  <p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-wide text-slate-light">
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-light">
                     Your response
                   </p>
                   {r.responseNote}

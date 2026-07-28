@@ -57,7 +57,7 @@ export function PulseTrendChart({ rows }: { rows: Row[] }) {
           />
         ))}
         {gridScores.map((score) => (
-          <text key={score} x={PAD_LEFT - 8} y={yFor(score) + 3} textAnchor="end" className="fill-slate-light text-[9px] font-mono">
+          <text key={score} x={PAD_LEFT - 8} y={yFor(score) + 3} textAnchor="end" className="fill-slate-light text-[9px]">
             {score}
           </text>
         ))}
@@ -122,7 +122,7 @@ export function PulseTrendChart({ rows }: { rows: Row[] }) {
             x={xFor(i)}
             y={HEIGHT - 6}
             textAnchor="middle"
-            className="fill-slate-light text-[9px] font-mono uppercase"
+            className="fill-slate-light text-[9px] uppercase"
           >
             {r.label.split(" ")[0]}
           </text>

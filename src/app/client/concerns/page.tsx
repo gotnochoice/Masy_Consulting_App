@@ -39,11 +39,11 @@ export default async function ClientConcernsPage() {
 
       <div className="rounded-card border border-border bg-indigo-tint p-5">
         <p className="text-sm text-indigo">
-          <span className="font-mono font-semibold">{totalThisQuarter}</span> concern
+          <span className="font-semibold">{totalThisQuarter}</span> concern
           {totalThisQuarter === 1 ? "" : "s"} raised this quarter
           {resolvedThisQuarter > 0 && (
             <>
-              , <span className="font-mono font-semibold">{resolvedThisQuarter}</span> shared with a resolution
+              , <span className="font-semibold">{resolvedThisQuarter}</span> shared with a resolution
               summary below
             </>
           )}
@@ -55,7 +55,7 @@ export default async function ClientConcernsPage() {
         {released.map((concern) => (
           <div key={concern.id} className="rounded-card border border-border bg-paper p-5">
             <p className="text-sm text-ink">{concern.curatedSummary}</p>
-            <p className="mt-2 font-mono text-xs text-slate-light">Updated {formatDateShort(concern.updatedAt)}</p>
+            <p className="mt-2 text-xs text-slate-light">Updated {formatDateShort(concern.updatedAt)}</p>
           </div>
         ))}
         {released.length === 0 && (

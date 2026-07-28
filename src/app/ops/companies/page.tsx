@@ -30,10 +30,10 @@ export default async function OpsCompaniesPage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Staff</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Client login</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Staff</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Client login</th>
               <th className="px-4 py-2.5" />
               <th className="px-4 py-2.5" />
             </tr>
@@ -46,7 +46,7 @@ export default async function OpsCompaniesPage() {
                 <td className="px-4 py-3 font-medium text-ink">{org.name}</td>
                 <td className="px-4 py-3 text-slate">{org._count.employees}</td>
                 <td className="px-4 py-3">
-                  <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+                  <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 text-xs font-medium text-indigo">
                     {org.status}
                   </span>
                 </td>

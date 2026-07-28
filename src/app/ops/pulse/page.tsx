@@ -43,7 +43,7 @@ export default async function OpsPulsePage() {
               <p className="text-sm font-medium text-ink">
                 {c.employee.name} <span className="font-normal text-slate">· {c.employee.clientOrg.name}</span>
               </p>
-              <p className="font-mono text-xs text-slate-light">{formatDateShort(c.createdAt)}</p>
+              <p className="text-xs text-slate-light">{formatDateShort(c.createdAt)}</p>
             </div>
             <p className="mt-1 text-sm text-slate">
               {c.score}/5, {PULSE_SCORE_LABELS[c.score]}

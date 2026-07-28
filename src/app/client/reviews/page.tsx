@@ -32,7 +32,7 @@ export default async function ClientReviewsPage() {
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border bg-paper-2 px-6 py-4">
                 <div>
                   <MasyLogo className="text-sm" />
-                  <p className="mt-1 font-mono text-xs uppercase tracking-widest text-slate-light">
+                  <p className="mt-1 text-xs uppercase tracking-widest text-slate-light">
                     Performance review report
                   </p>
                 </div>
@@ -46,7 +46,7 @@ export default async function ClientReviewsPage() {
                     <p className="text-sm text-slate">{review.employee.roleTitle}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono text-xs uppercase tracking-wide text-slate-light">Review cycle</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-light">Review cycle</p>
                     <p className="text-sm font-medium text-ink">{review.cycle}</p>
                   </div>
                 </div>
@@ -63,7 +63,7 @@ export default async function ClientReviewsPage() {
                   )}
                 </div>
 
-                <p className="mt-6 border-t border-border pt-4 font-mono text-xs text-slate-light">
+                <p className="mt-6 border-t border-border pt-4 text-xs text-slate-light">
                   Prepared by your Masy Consulting HR partner · Released {formatDateShort(review.updatedAt)}
                 </p>
               </div>

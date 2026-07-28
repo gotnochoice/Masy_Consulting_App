@@ -53,7 +53,7 @@ export default async function ClientLeavePage() {
       <SuccessBanner />
 
       <div className="rounded-card border border-border bg-paper p-6">
-        <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-light">
           {monthStart.toLocaleDateString([], { month: "long", year: "numeric" })}
         </p>
         <LeaveCalendar monthStart={monthStart} leaveByDay={leaveByDay} />
@@ -63,11 +63,11 @@ export default async function ClientLeavePage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-indigo-tint">
             <tr>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Employee</th>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Type</th>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Dates</th>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Reason</th>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Status</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Employee</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Type</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Dates</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Reason</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Status</th>
               <th className="px-5 py-3" />
             </tr>
           </thead>
@@ -76,7 +76,7 @@ export default async function ClientLeavePage() {
               <tr key={r.id}>
                 <td className="px-5 py-3 font-medium text-ink">{r.employee.name}</td>
                 <td className="px-5 py-3 capitalize text-slate">{r.type.toLowerCase()}</td>
-                <td className="px-5 py-3 font-mono text-xs text-slate">
+                <td className="px-5 py-3 text-xs text-slate">
                   {formatDateShort(r.startDate)} – {formatDateShort(r.endDate)}
                 </td>
                 <td className="px-5 py-3 text-slate">{r.reason || "—"}</td>

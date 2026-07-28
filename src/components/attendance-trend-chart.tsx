@@ -44,7 +44,7 @@ export function AttendanceTrendChart({ rows }: { rows: Row[] }) {
           />
         ))}
         {gridValues.map((v) => (
-          <text key={v} x={PAD_LEFT - 8} y={yFor(v) + 3} textAnchor="end" className="fill-slate-light text-[9px] font-mono">
+          <text key={v} x={PAD_LEFT - 8} y={yFor(v) + 3} textAnchor="end" className="fill-slate-light text-[9px]">
             {Math.round(v)}
           </text>
         ))}
@@ -75,7 +75,7 @@ export function AttendanceTrendChart({ rows }: { rows: Row[] }) {
             x={xFor(i)}
             y={HEIGHT - 6}
             textAnchor="middle"
-            className="fill-slate-light text-[9px] font-mono uppercase"
+            className="fill-slate-light text-[9px] uppercase"
           >
             {r.label.split(" ")[0]}
           </text>

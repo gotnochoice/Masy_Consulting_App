@@ -79,7 +79,7 @@ export default async function ClientAttendancePage() {
       </div>
 
       <div className="rounded-card border border-border bg-paper p-6">
-        <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-light">
           6-month trend, total hours logged
         </p>
         <AttendanceTrendChart rows={trendRows} />
@@ -89,10 +89,10 @@ export default async function ClientAttendancePage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-indigo-tint">
             <tr>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Days present</th>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Total hours</th>
-              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Incomplete days</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Days present</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Total hours</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Incomplete days</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -100,10 +100,10 @@ export default async function ClientAttendancePage() {
               <tr key={row.employeeId}>
                 <td className="px-5 py-3 font-medium text-ink">{row.name}</td>
                 <td className="px-5 py-3 text-slate">{row.daysPresent}</td>
-                <td className="px-5 py-3 font-mono text-xs text-slate">{(row.totalHoursMs / 3_600_000).toFixed(1)}h</td>
+                <td className="px-5 py-3 text-xs text-slate">{(row.totalHoursMs / 3_600_000).toFixed(1)}h</td>
                 <td className="px-5 py-3 text-slate">
                   {row.incompleteDays > 0 ? (
-                    <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
+                    <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 text-xs font-medium text-orange">
                       {row.incompleteDays}
                     </span>
                   ) : (

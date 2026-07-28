@@ -50,7 +50,7 @@ export default async function MyAttendancePage() {
         {todayRecord && !todayRecord.clockOut && (
           <div className="space-y-3">
             <p className="text-sm text-slate">
-              Clocked in at <span className="font-mono text-ink">{formatTime(todayRecord.clockIn)}</span>
+              Clocked in at <span className="text-ink">{formatTime(todayRecord.clockIn)}</span>
               {todayRecord.clockInNote ? ` — "${todayRecord.clockInNote}"` : ""}.
             </p>
             <form action={clockOut} className="space-y-3">
@@ -68,7 +68,7 @@ export default async function MyAttendancePage() {
           <div className="space-y-1">
             <p className="text-sm text-slate">
               Done for today,{" "}
-              <span className="font-mono text-ink">
+              <span className="text-ink">
                 {formatTime(todayRecord.clockIn)} to {formatTime(todayRecord.clockOut)}
               </span>{" "}
               ({formatHours(todayRecord.clockIn, todayRecord.clockOut)}).
@@ -84,11 +84,11 @@ export default async function MyAttendancePage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Date</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Clock in</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Clock out</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Hours</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Notes</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Date</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Clock in</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Clock out</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Hours</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Notes</th>
               <th className="px-4 py-2.5" />
             </tr>
           </thead>
@@ -98,9 +98,9 @@ export default async function MyAttendancePage() {
               return (
                 <tr key={record.id}>
                   <td className="px-4 py-3 font-medium text-ink">{formatDate(record.date)}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockIn)}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatTime(record.clockOut)}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
+                  <td className="px-4 py-3 text-xs text-slate">{formatTime(record.clockIn)}</td>
+                  <td className="px-4 py-3 text-xs text-slate">{formatTime(record.clockOut)}</td>
+                  <td className="px-4 py-3 text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
                   <td className="px-4 py-3 text-slate">
                     {record.clockInNote && <p>In: {record.clockInNote}</p>}
                     {record.clockOutNote && <p>Out: {record.clockOutNote}</p>}

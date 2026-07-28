@@ -13,7 +13,7 @@ export function InviteClientForm({ clientOrgId }: { clientOrgId: string }) {
     return (
       <div className="text-right">
         <p className="text-xs text-ink">{state.email}</p>
-        <p className="font-mono text-xs text-indigo">{state.password}</p>
+        <p className="text-xs text-indigo">{state.password}</p>
         <p className="text-xs text-slate-light">save this password now</p>
       </div>
     );

@@ -43,7 +43,7 @@ export function DashboardHeader({
             </div>
             <div className="leading-tight">
               <p className="text-sm font-medium text-ink">{personName}</p>
-              <p className="font-mono text-[10px] uppercase tracking-wide text-slate-light">{roleLabel}</p>
+              <p className="text-[10px] uppercase tracking-wide text-slate-light">{roleLabel}</p>
             </div>
           </div>
           <SignOutButton />
@@ -63,7 +63,7 @@ export function DashboardHeader({
               {item.label}
               {!!item.badge && item.badge > 0 && (
                 <span
-                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-mono text-[10px] font-semibold ${
+                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${
                     active ? "bg-white text-indigo" : "bg-orange text-white"
                   }`}
                 >
@@ -113,7 +113,7 @@ export function DashboardHeader({
                   {item.label}
                   {!!item.badge && item.badge > 0 && (
                     <span
-                      className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-mono text-[10px] font-semibold ${
+                      className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${
                         active ? "bg-white text-indigo" : "bg-orange text-white"
                       }`}
                     >

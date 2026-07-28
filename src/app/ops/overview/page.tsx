@@ -67,7 +67,7 @@ export default async function OpsOverviewPage() {
                 <p className="text-sm font-medium text-ink">{org.name}</p>
                 <p className="text-xs text-slate">{org._count.employees} employees</p>
               </div>
-              <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+              <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 text-xs font-medium text-indigo">
                 {org.status}
               </span>
             </div>
@@ -85,11 +85,11 @@ export default async function OpsOverviewPage() {
                 </p>
               </div>
               {record.clockOut ? (
-                <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+                <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 text-xs font-medium text-indigo">
                   Complete
                 </span>
               ) : (
-                <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
+                <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 text-xs font-medium text-orange">
                   Open
                 </span>
               )}

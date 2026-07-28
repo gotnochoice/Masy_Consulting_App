@@ -11,7 +11,7 @@ export function InviteEmployeeForm({ employeeId }: { employeeId: string }) {
   if (state && "password" in state) {
     return (
       <div className="text-right">
-        <p className="font-mono text-xs text-indigo">{state.password}</p>
+        <p className="text-xs text-indigo">{state.password}</p>
         <p className="text-xs text-slate-light">password, save now</p>
       </div>
     );

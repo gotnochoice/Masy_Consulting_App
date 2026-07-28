@@ -24,7 +24,7 @@ export function MilestonesPanel({ milestones, showOrg = false }: { milestones: M
               </p>
               <p className="text-xs text-slate">{m.type === "birthday" ? "Birthday" : `${m.years}-year anniversary`}</p>
             </div>
-            <p className="shrink-0 font-mono text-xs text-slate-light">{formatMilestoneWhen(m.daysAway)}</p>
+            <p className="shrink-0 text-xs text-slate-light">{formatMilestoneWhen(m.daysAway)}</p>
           </div>
         );
       })}

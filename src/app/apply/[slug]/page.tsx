@@ -20,7 +20,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
     <main className="min-h-screen bg-paper-2">
       <div className="flex items-center justify-between border-b border-ink/10 bg-ink px-6 py-4">
         <MasyLogo className="text-lg" light />
-        <span className="hidden font-mono text-xs font-medium uppercase tracking-widest text-white/50 sm:inline">
+        <span className="hidden text-xs font-medium uppercase tracking-widest text-white/50 sm:inline">
           Careers
         </span>
       </div>
@@ -29,7 +29,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
         <div className="w-full max-w-2xl">
           {!role.acceptingApplications ? (
             <div className="rounded-card border border-border bg-paper p-8 text-center shadow-sm sm:p-12">
-              <p className="font-mono text-xs font-semibold uppercase tracking-widest text-orange">Applications closed</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-orange">Applications closed</p>
               <h1 className="mt-3 text-2xl font-extrabold text-ink sm:text-3xl">{role.title}</h1>
               <p className="mt-1 text-sm text-slate">{role.clientOrg.name}</p>
               <p className="mt-6 text-sm text-slate">
@@ -39,7 +39,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
           ) : (
             <>
               <div className="mb-6 text-center sm:text-left">
-                <p className="font-mono text-xs font-semibold uppercase tracking-widest text-indigo">Open role</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-indigo">Open role</p>
                 <h1 className="mt-2 text-3xl font-extrabold leading-tight text-ink sm:text-4xl">{role.title}</h1>
                 <p className="mt-2 text-sm text-slate">
                   {role.clientOrg.name} · Recruitment managed by Masy Consulting

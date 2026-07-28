@@ -31,11 +31,11 @@ export default async function OpsRecruitmentPage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Candidates</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Applications</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Candidates</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Applications</th>
               <th className="px-4 py-2.5" />
               <th className="px-4 py-2.5" />
             </tr>

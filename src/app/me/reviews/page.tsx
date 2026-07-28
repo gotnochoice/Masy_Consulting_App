@@ -7,7 +7,7 @@ import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { SuccessBanner } from "@/components/success-banner";
 import { submitReview } from "./actions";
 
-const sectionLabelClass = "font-mono text-xs font-semibold uppercase tracking-widest text-slate-light";
+const sectionLabelClass = "text-xs font-semibold uppercase tracking-widest text-slate-light";
 
 type ReviewResponseSection = { section: string; answers: { question: string; answer: string }[] };
 
@@ -99,7 +99,7 @@ export default async function MyReviewsPage() {
               {review.selfAssessment && (
                 <p className="mt-2 text-sm text-slate">{review.selfAssessment}</p>
               )}
-              <p className="mt-2 font-mono text-xs text-slate-light">Submitted {formatDateShort(review.createdAt)}</p>
+              <p className="mt-2 text-xs text-slate-light">Submitted {formatDateShort(review.createdAt)}</p>
             </div>
           );
         })}

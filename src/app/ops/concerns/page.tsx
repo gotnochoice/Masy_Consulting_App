@@ -35,11 +35,11 @@ export default async function OpsConcernsPage() {
                   <p className="text-sm font-medium text-ink">
                     {concern.employee.name} <span className="font-normal text-slate">· {concern.employee.clientOrg.name}</span>
                   </p>
-                  <p className="font-mono text-xs text-slate-light">{formatDateShort(concern.createdAt)}</p>
+                  <p className="text-xs text-slate-light">{formatDateShort(concern.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {concern.escalated && (
-                    <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 font-mono text-xs font-medium text-orange">
+                    <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 text-xs font-medium text-orange">
                       Escalated
                     </span>
                   )}

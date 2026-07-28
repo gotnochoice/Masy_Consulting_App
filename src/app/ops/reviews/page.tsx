@@ -38,7 +38,7 @@ export default async function OpsReviewsPage() {
                     {review.employee.name}{" "}
                     <span className="font-normal text-slate">· {review.employee.clientOrg.name} · {review.cycle}</span>
                   </p>
-                  <p className="font-mono text-xs text-slate-light">Submitted {formatDateShort(review.createdAt)}</p>
+                  <p className="text-xs text-slate-light">Submitted {formatDateShort(review.createdAt)}</p>
                 </div>
                 <ReviewStatusBadge status={review.status} />
               </div>
@@ -51,11 +51,11 @@ export default async function OpsReviewsPage() {
                   <div className="space-y-3 border-t border-border p-3">
                     {responses.map((s, si) => (
                       <div key={si}>
-                        <p className="font-mono text-xs font-semibold uppercase tracking-wide text-indigo">{s.section}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-indigo">{s.section}</p>
                         <div className="mt-1 space-y-2">
                           {s.answers.map((a, ai) => (
                             <div key={ai}>
-                              <p className="font-mono text-xs font-medium uppercase tracking-wide text-slate-light">
+                              <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
                                 {a.question}
                               </p>
                               <p className="text-sm text-ink">{a.answer}</p>

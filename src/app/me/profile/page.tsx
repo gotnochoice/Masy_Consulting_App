@@ -53,7 +53,7 @@ export default async function MyProfilePage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="font-mono text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">Welcome back, {firstName}</h1>
         <p className="mt-1 text-sm text-slate">{employee.roleTitle} at {employee.clientOrg.name}</p>
       </div>
@@ -82,7 +82,7 @@ export default async function MyProfilePage() {
             </div>
             <div className="flex items-start justify-between gap-4">
               <dt className="shrink-0 text-slate">Start date</dt>
-              <dd className="font-mono text-xs text-ink">{employee.startDate.toLocaleDateString()}</dd>
+              <dd className="text-xs text-ink">{employee.startDate.toLocaleDateString()}</dd>
             </div>
           </dl>
         </div>
@@ -95,7 +95,7 @@ export default async function MyProfilePage() {
                 <li key={r.id} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium capitalize text-ink">{r.type.toLowerCase()} leave</p>
-                    <p className="font-mono text-xs text-slate-light">
+                    <p className="text-xs text-slate-light">
                       {formatDateShort(r.startDate)} to {formatDateShort(r.endDate)}
                     </p>
                   </div>

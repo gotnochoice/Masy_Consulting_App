@@ -45,14 +45,14 @@ export default async function MyConcernsPage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Submitted</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Details</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Submitted</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Details</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {concerns.map((concern) => (
               <tr key={concern.id}>
-                <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-slate">
+                <td className="whitespace-nowrap px-4 py-3 text-xs text-slate">
                   {formatDateShort(concern.createdAt)}
                 </td>
                 <td className="px-4 py-3 text-ink">{concern.content}</td>

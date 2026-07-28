@@ -17,7 +17,7 @@ const LABELS: Record<DocumentRequestStatus, string> = {
 export function DocumentStatusBadge({ status }: { status: DocumentRequestStatus }) {
   return (
     <span
-      className={`inline-flex items-center rounded-btn px-2.5 py-0.5 font-mono text-xs font-medium ${STYLES[status]}`}
+      className={`inline-flex items-center rounded-btn px-2.5 py-0.5 text-xs font-medium ${STYLES[status]}`}
     >
       {LABELS[status]}
     </span>

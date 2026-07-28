@@ -31,7 +31,7 @@ export function LeaveCalendar({
     <div>
       <div className="grid grid-cols-7 gap-1.5">
         {WEEKDAYS.map((wd) => (
-          <div key={wd} className="text-center font-mono text-[10px] font-medium uppercase tracking-wide text-slate-light">
+          <div key={wd} className="text-center text-[10px] font-medium uppercase tracking-wide text-slate-light">
             {wd}
           </div>
         ))}
@@ -46,7 +46,7 @@ export function LeaveCalendar({
                 isToday ? "border-indigo bg-indigo-tint" : "border-border bg-paper"
               }`}
             >
-              <p className={`mb-1 text-right font-mono text-[10px] ${isToday ? "font-semibold text-indigo" : "text-slate-light"}`}>
+              <p className={`mb-1 text-right text-[10px] ${isToday ? "font-semibold text-indigo" : "text-slate-light"}`}>
                 {day}
               </p>
               {entries.length > 0 && (

@@ -31,7 +31,7 @@ export default async function OpsOnboardingPage() {
                   <p className="text-xs text-slate">{employee.clientOrg.name}</p>
                 </div>
                 <span
-                  className={`rounded-btn px-2.5 py-0.5 font-mono text-xs font-medium ${
+                  className={`rounded-btn px-2.5 py-0.5 text-xs font-medium ${
                     done === total ? "bg-indigo-tint text-indigo" : "bg-orange-light/40 text-orange"
                   }`}
                 >

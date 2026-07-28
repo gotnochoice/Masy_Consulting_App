@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
-  subsets: ["latin"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-mono",
-  weight: ["400", "500"],
   subsets: ["latin"],
 });
 
@@ -24,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full antialiased ${plusJakartaSans.variable} ${ibmPlexMono.variable}`}>
+    <html lang="en" className={`h-full antialiased ${plusJakartaSans.variable}`}>
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );

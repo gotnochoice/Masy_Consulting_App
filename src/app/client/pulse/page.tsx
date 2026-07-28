@@ -37,7 +37,7 @@ export default async function ClientPulsePage() {
       </div>
 
       <div className="rounded-card border border-border bg-paper p-6">
-        <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-light">
           6-month trend
         </p>
         <PulseTrendChart rows={rows} />
@@ -55,8 +55,8 @@ export default async function ClientPulsePage() {
           <table className="min-w-full divide-y divide-border text-sm">
             <thead className="bg-indigo-tint">
               <tr>
-                <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Month</th>
-                <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Average score</th>
+                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Month</th>
+                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Average score</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

@@ -36,13 +36,13 @@ export default async function OpsEmployeesPage({
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Start date</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Tenure</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Login</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Start date</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Tenure</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Login</th>
               <th className="px-4 py-2.5" />
             </tr>
           </thead>
@@ -53,12 +53,12 @@ export default async function OpsEmployeesPage({
                 <td className="px-4 py-3 text-slate">{employee.clientOrg.name}</td>
                 <td className="px-4 py-3 text-slate">{employee.roleTitle}</td>
                 <td className="px-4 py-3"><StatusBadge status={employee.status} /></td>
-                <td className="px-4 py-3 font-mono text-xs text-slate">{employee.startDate.toLocaleDateString()}</td>
+                <td className="px-4 py-3 text-xs text-slate">{employee.startDate.toLocaleDateString()}</td>
                 <td className="px-4 py-3 text-slate">{formatTenure(employee.startDate)}</td>
                 <td className="px-4 py-3">
                   {employee.user ? (
                     <div className="flex items-center justify-end gap-3">
-                      <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
+                      <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 text-xs font-medium text-indigo">
                         Active
                       </span>
                       <ResetPasswordForm userId={employee.user.id} />

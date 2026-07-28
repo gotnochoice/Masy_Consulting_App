@@ -25,7 +25,7 @@ export default async function MyLeavePage() {
         <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
         <h1 className="text-2xl font-bold tracking-tight text-ink">Leave</h1>
         <p className="text-sm text-slate">
-          Balance: <span className="font-mono text-ink">{employee?.leaveBalanceDays ?? 0} days</span> remaining
+          Balance: <span className="text-ink">{employee?.leaveBalanceDays ?? 0} days</span> remaining
         </p>
       </div>
 
@@ -63,18 +63,18 @@ export default async function MyLeavePage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Type</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Dates</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Days</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Reason</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Type</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Dates</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Days</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Reason</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {requests.map((r) => (
               <tr key={r.id}>
                 <td className="px-4 py-3 font-medium capitalize text-ink">{r.type.toLowerCase()}</td>
-                <td className="px-4 py-3 font-mono text-xs text-slate">
+                <td className="px-4 py-3 text-xs text-slate">
                   {formatDateShort(r.startDate)} – {formatDateShort(r.endDate)}
                 </td>
                 <td className="px-4 py-3 text-slate">{leaveDaysBetween(r.startDate, r.endDate)}</td>
