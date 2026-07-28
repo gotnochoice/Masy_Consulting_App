@@ -38,10 +38,16 @@ export async function createEmployee(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid employee data");
   }
 
+  const org = await db.clientOrg.findUnique({
+    where: { id: parsed.data.clientOrgId },
+    select: { leaveAllowanceDays: true },
+  });
+
   const employee = await db.employee.create({
     data: {
       ...parsed.data,
       startDate: new Date(parsed.data.startDate),
+      leaveBalanceDays: org?.leaveAllowanceDays ?? 20,
     },
   });
 

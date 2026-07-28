@@ -33,6 +33,35 @@ export async function createCompany(formData: FormData) {
   revalidatePath("/ops/companies");
 }
 
+const leaveAllowanceSchema = z.object({
+  leaveAllowanceDays: z.coerce.number().int().min(0, "Leave allowance can't be negative"),
+});
+
+export async function updateLeaveAllowance(clientOrgId: string, formData: FormData) {
+  const session = await requireRole("MASY_OPS");
+
+  const parsed = leaveAllowanceSchema.safeParse({ leaveAllowanceDays: formData.get("leaveAllowanceDays") });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid leave allowance");
+  }
+
+  await db.clientOrg.update({
+    where: { id: clientOrgId },
+    data: { leaveAllowanceDays: parsed.data.leaveAllowanceDays },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "company.update_leave_allowance",
+      targetType: "ClientOrg",
+      targetId: clientOrgId,
+    },
+  });
+
+  revalidatePath("/ops/companies");
+}
+
 export type InviteClientState = { email: string; password: string } | { error: string } | undefined;
 
 const inviteSchema = z.object({

@@ -77,6 +77,7 @@ model ClientOrg {
   id                 String              @id @default(cuid())
   name               String
   status             String              @default("active")
+  leaveAllowanceDays Int                 @default(20)
   employees          Employee[]
   users              User[]
   openRoles          OpenRole[]
