@@ -13,6 +13,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Pulse", href: "/ops/pulse", icon: "pulse" },
   { label: "Recruitment", href: "/ops/recruitment", icon: "recruitment" },
   { label: "Concerns", href: "/ops/concerns", icon: "concerns" },
+  { label: "Documents", href: "/ops/documents", icon: "documents" },
+  { label: "Announcements", href: "/ops/announcements", icon: "announcements" },
   { label: "Reports", href: "/ops/reports", icon: "reports" },
 ];
 

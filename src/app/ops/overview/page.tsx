@@ -2,8 +2,10 @@ import { Users, Building2, Clock, AlertTriangle } from "lucide-react";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { todayDateOnly, formatDate } from "@/lib/attendance";
+import { upcomingMilestones } from "@/lib/milestones";
 import { StatCard } from "@/components/stat-card";
 import { Panel, PanelEmptyRow } from "@/components/panel";
+import { MilestonesPanel } from "@/components/milestones-panel";
 
 export default async function OpsOverviewPage() {
   await requireRole("MASY_OPS");
@@ -13,23 +15,30 @@ export default async function OpsOverviewPage() {
   const monthEnd = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 1));
   const monthLabel = new Date().toLocaleDateString([], { year: "numeric", month: "long" });
 
-  const [employeeCount, orgCount, todayClockIns, incompleteThisMonth, orgs, recentAttendance] = await Promise.all([
-    db.employee.count(),
-    db.clientOrg.count(),
-    db.attendanceRecord.count({ where: { date: today } }),
-    db.attendanceRecord.count({
-      where: { date: { gte: monthStart, lt: monthEnd }, clockOut: null },
-    }),
-    db.clientOrg.findMany({
-      include: { _count: { select: { employees: true } } },
-      orderBy: { name: "asc" },
-    }),
-    db.attendanceRecord.findMany({
-      include: { employee: { include: { clientOrg: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    }),
-  ]);
+  const [employeeCount, orgCount, todayClockIns, incompleteThisMonth, orgs, recentAttendance, allEmployees] =
+    await Promise.all([
+      db.employee.count(),
+      db.clientOrg.count(),
+      db.attendanceRecord.count({ where: { date: today } }),
+      db.attendanceRecord.count({
+        where: { date: { gte: monthStart, lt: monthEnd }, clockOut: null },
+      }),
+      db.clientOrg.findMany({
+        include: { _count: { select: { employees: true } } },
+        orderBy: { name: "asc" },
+      }),
+      db.attendanceRecord.findMany({
+        include: { employee: { include: { clientOrg: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      }),
+      db.employee.findMany({
+        where: { status: "ACTIVE" },
+        include: { clientOrg: true },
+      }),
+    ]);
+
+  const milestones = upcomingMilestones(allEmployees);
 
   return (
     <div className="space-y-8">
@@ -50,7 +59,7 @@ export default async function OpsOverviewPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel title="Client organizations">
           {orgs.map((org) => (
             <div key={org.id} className="flex items-center justify-between px-5 py-3">
@@ -88,6 +97,8 @@ export default async function OpsOverviewPage() {
           ))}
           {recentAttendance.length === 0 && <PanelEmptyRow>No attendance recorded yet.</PanelEmptyRow>}
         </Panel>
+
+        <MilestonesPanel milestones={milestones} showOrg />
       </div>
     </div>
   );

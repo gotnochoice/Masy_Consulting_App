@@ -2,10 +2,12 @@ import { Users, UserCheck, CalendarDays, Clock3 } from "lucide-react";
 import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
+import { upcomingMilestones } from "@/lib/milestones";
 import { StatusBadge } from "@/components/status-badge";
 import { LeaveStatusBadge } from "@/components/leave-status-badge";
 import { StatCard } from "@/components/stat-card";
 import { SuccessBanner } from "@/components/success-banner";
+import { MilestonesPanel } from "@/components/milestones-panel";
 import { approveLeave, denyLeave } from "../leave/actions";
 
 export default async function ClientStaffPage() {
@@ -32,6 +34,12 @@ export default async function ClientStaffPage() {
   const onLeaveCount = employees.filter((e) => e.status === "ON_LEAVE").length;
   const today = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
 
+  const milestones = upcomingMilestones(
+    employees
+      .filter((e) => e.status === "ACTIVE")
+      .map((e) => ({ ...e, clientOrg: { name: org?.name ?? "" } })),
+  );
+
   return (
     <div className="space-y-8">
       <div>
@@ -48,6 +56,8 @@ export default async function ClientStaffPage() {
         <StatCard label="On leave" value={onLeaveCount} icon={CalendarDays} />
         <StatCard label="Pending leave" value={pendingLeaveCount} icon={Clock3} tone="orange" />
       </div>
+
+      <MilestonesPanel milestones={milestones} />
 
       {recentLeave.length > 0 && (
         <div>

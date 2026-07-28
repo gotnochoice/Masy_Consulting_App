@@ -73,6 +73,20 @@ enum QuestionType {
   LINK
 }
 
+enum DocumentRequestType {
+  EMPLOYMENT_VERIFICATION
+  REFERENCE
+  SALARY_CONFIRMATION
+  OTHER
+}
+
+enum DocumentRequestStatus {
+  REQUESTED
+  IN_PROGRESS
+  FULFILLED
+  DECLINED
+}
+
 model ClientOrg {
   id                 String              @id @default(cuid())
   name               String
@@ -81,6 +95,7 @@ model ClientOrg {
   users              User[]
   openRoles          OpenRole[]
   monthlyReportNotes MonthlyReportNote[]
+  announcements      Announcement[]
   createdAt          DateTime            @default(now())
 }
 
@@ -115,6 +130,7 @@ model Employee {
   roleTitle          String
   status             EmployeeStatus      @default(ACTIVE)
   startDate          DateTime
+  dateOfBirth        DateTime?           @db.Date
   email              String
   leaveBalanceDays   Int                 @default(0)
   reviewTemplate     Json?
@@ -125,6 +141,7 @@ model Employee {
   concerns           Concern[]
   pulseCheckIns      PulseCheckIn[]
   onboardingTasks    OnboardingTask[]
+  documentRequests   DocumentRequest[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -283,4 +300,27 @@ model ApplicationAttempt {
   createdAt DateTime @default(now())
 
   @@index([ip, createdAt])
+}
+
+model Announcement {
+  id          String     @id @default(cuid())
+  clientOrgId String?
+  clientOrg   ClientOrg? @relation(fields: [clientOrgId], references: [id])
+  authorRole  Role
+  authorLabel String
+  title       String
+  body        String
+  createdAt   DateTime   @default(now())
+}
+
+model DocumentRequest {
+  id           String                 @id @default(cuid())
+  employeeId   String
+  employee     Employee               @relation(fields: [employeeId], references: [id])
+  type         DocumentRequestType
+  details      String?
+  status       DocumentRequestStatus  @default(REQUESTED)
+  responseNote String?
+  requestedAt  DateTime               @default(now())
+  fulfilledAt  DateTime?
 }

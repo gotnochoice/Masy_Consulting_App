@@ -14,6 +14,8 @@ import {
   BarChart3,
   ClipboardCheck,
   Activity,
+  Megaphone,
+  FileSignature,
   X,
 } from "lucide-react";
 
@@ -28,6 +30,8 @@ const ICONS = {
   concerns: AlertTriangle,
   reports: BarChart3,
   onboarding: ClipboardCheck,
+  announcements: Megaphone,
+  documents: FileSignature,
   pulse: Activity,
 } as const;
 

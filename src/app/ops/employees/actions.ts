@@ -15,6 +15,7 @@ const baseFields = {
   roleTitle: z.string().min(1, "Role is required"),
   email: z.string().email("Valid email required"),
   startDate: z.string().min(1, "Start date is required"),
+  dateOfBirth: z.string().optional(),
 };
 
 const leaveBalanceField = { leaveBalanceDays: z.coerce.number().int().min(0, "Leave balance can't be negative") };
@@ -35,16 +36,20 @@ export async function createEmployee(formData: FormData) {
     roleTitle: formData.get("roleTitle"),
     email: formData.get("email"),
     startDate: formData.get("startDate"),
+    dateOfBirth: formData.get("dateOfBirth") || undefined,
     leaveBalanceDays: formData.get("leaveBalanceDays"),
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid employee data");
   }
 
+  const { dateOfBirth, ...rest } = parsed.data;
+
   const employee = await db.employee.create({
     data: {
-      ...parsed.data,
+      ...rest,
       startDate: new Date(parsed.data.startDate),
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
     },
   });
 
@@ -73,6 +78,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     roleTitle: formData.get("roleTitle"),
     email: formData.get("email"),
     startDate: formData.get("startDate"),
+    dateOfBirth: formData.get("dateOfBirth") || undefined,
     status: formData.get("status"),
     leaveBalanceDays: formData.get("leaveBalanceDays"),
   });
@@ -80,11 +86,14 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid employee data");
   }
 
+  const { dateOfBirth, ...rest } = parsed.data;
+
   await db.employee.update({
     where: { id: employeeId },
     data: {
-      ...parsed.data,
+      ...rest,
       startDate: new Date(parsed.data.startDate),
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
     },
   });
 

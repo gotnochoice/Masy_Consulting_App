@@ -3,9 +3,11 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { todayDateOnly } from "@/lib/attendance";
 import { formatDateShort } from "@/lib/leave";
+import { upcomingMilestones } from "@/lib/milestones";
 import { StatusBadge } from "@/components/status-badge";
 import { LeaveStatusBadge } from "@/components/leave-status-badge";
 import { StatCard } from "@/components/stat-card";
+import { MilestonesPanel } from "@/components/milestones-panel";
 
 function formatTenure(startDate: Date): string {
   const now = new Date();
@@ -35,7 +37,7 @@ export default async function MyProfilePage() {
     );
   }
 
-  const [todayRecord, recentLeave] = await Promise.all([
+  const [todayRecord, recentLeave, teammates] = await Promise.all([
     db.attendanceRecord.findUnique({
       where: { employeeId_date: { employeeId: employee.id, date: todayDateOnly() } },
     }),
@@ -44,7 +46,13 @@ export default async function MyProfilePage() {
       orderBy: { createdAt: "desc" },
       take: 3,
     }),
+    db.employee.findMany({
+      where: { clientOrgId: employee.clientOrgId, status: "ACTIVE" },
+      include: { clientOrg: true },
+    }),
   ]);
+
+  const milestones = upcomingMilestones(teammates);
 
   const todayStatus = !todayRecord ? "Not yet" : todayRecord.clockOut ? "Done for today" : "Clocked in";
 
@@ -109,6 +117,8 @@ export default async function MyProfilePage() {
           )}
         </div>
       </div>
+
+      <MilestonesPanel milestones={milestones} />
     </div>
   );
 }

@@ -11,6 +11,7 @@ type Props = {
 
 export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel }: Props) {
   const startDateValue = employee ? employee.startDate.toISOString().slice(0, 10) : "";
+  const dateOfBirthValue = employee?.dateOfBirth ? employee.dateOfBirth.toISOString().slice(0, 10) : "";
 
   return (
     <form action={action} className="space-y-4">
@@ -66,6 +67,16 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
             step="1"
             defaultValue={employee?.leaveBalanceDays ?? 0}
             required
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass} htmlFor="dateOfBirth">Date of birth (optional)</label>
+          <input
+            id="dateOfBirth"
+            name="dateOfBirth"
+            type="date"
+            defaultValue={dateOfBirthValue}
             className={inputClass}
           />
         </div>
