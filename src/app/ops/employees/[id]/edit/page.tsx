@@ -19,7 +19,8 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
 
   return (
     <div className="max-w-lg space-y-6">
-      <h1 className="text-3xl font-extrabold text-ink">Edit employee</h1>
+      <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+      <h1 className="text-2xl font-bold tracking-tight text-ink">Edit employee</h1>
       <EmployeeForm orgs={orgs} employee={employee} action={updateWithId} submitLabel="Save changes" />
     </div>
   );

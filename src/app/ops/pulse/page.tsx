@@ -26,7 +26,8 @@ export default async function OpsPulsePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Pulse</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Pulse</h1>
         <p className="text-sm text-slate">How employees say they&apos;re doing, across every client organization.</p>
       </div>
 
@@ -37,7 +38,7 @@ export default async function OpsPulsePage() {
 
       <div className="space-y-3">
         {checkIns.map((c) => (
-          <div key={c.id} className="rounded-card border border-border bg-paper shadow-sm p-4">
+          <div key={c.id} className="rounded-card border border-border bg-paper p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-ink">
                 {c.employee.name} <span className="font-normal text-slate">· {c.employee.clientOrg.name}</span>
@@ -51,7 +52,7 @@ export default async function OpsPulsePage() {
           </div>
         ))}
         {checkIns.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             No check-ins yet.
           </p>
         )}

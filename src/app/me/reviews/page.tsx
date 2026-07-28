@@ -32,11 +32,12 @@ export default async function MyReviewsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Performance reviews</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Performance reviews</h1>
         <p className="text-sm text-slate">Masy reviews every submission before anything reaches your employer.</p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <SuccessBanner />
         <h2 className="mb-1 text-sm font-semibold text-ink">Submit a self-assessment</h2>
         <p className="mb-4 text-xs text-slate-light">Tailored to your role as {employee.roleTitle}.</p>
@@ -73,7 +74,7 @@ export default async function MyReviewsPage() {
             ? (review.responses as unknown as ReviewResponseSection[])
             : [];
           return (
-            <div key={review.id} className="rounded-card border border-border bg-paper shadow-sm p-5">
+            <div key={review.id} className="rounded-card border border-border bg-paper p-5">
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-sm font-medium text-ink">{review.cycle}</p>
                 <ReviewStatusBadge status={review.status} />
@@ -103,7 +104,7 @@ export default async function MyReviewsPage() {
           );
         })}
         {reviews.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             No reviews submitted yet.
           </p>
         )}

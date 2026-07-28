@@ -21,11 +21,12 @@ export default async function OpsCompaniesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Companies</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Companies</h1>
         <p className="text-sm text-slate">Every client organization on the platform.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -81,14 +82,14 @@ export default async function OpsCompaniesPage() {
             })}
             {orgs.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate">No companies yet.</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-light">No companies yet.</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="max-w-md rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="max-w-md rounded-card border border-border bg-paper p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Add company</h2>
         <form action={createCompany} className="flex flex-wrap items-end gap-3">
           <div className="flex-1">

@@ -34,7 +34,8 @@ export default async function OpsOverviewPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Admin Overview</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Admin Overview</h1>
         <p className="text-sm text-slate">{monthLabel}, everything at a glance.</p>
       </div>
 

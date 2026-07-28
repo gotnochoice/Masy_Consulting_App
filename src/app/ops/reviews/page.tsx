@@ -18,7 +18,8 @@ export default async function OpsReviewsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Performance reviews</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Performance reviews</h1>
         <p className="text-sm text-slate">Add your notes, then release the full review to the client.</p>
       </div>
 
@@ -30,7 +31,7 @@ export default async function OpsReviewsPage() {
             ? (review.responses as unknown as ReviewResponseSection[])
             : [];
           return (
-            <div key={review.id} className="rounded-card border border-border bg-paper shadow-sm p-5">
+            <div key={review.id} className="rounded-card border border-border bg-paper p-5">
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-ink">
@@ -103,7 +104,7 @@ export default async function OpsReviewsPage() {
           );
         })}
         {reviews.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             No reviews submitted yet.
           </p>
         )}

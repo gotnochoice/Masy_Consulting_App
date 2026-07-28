@@ -14,7 +14,8 @@ export default async function OpsOnboardingPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Onboarding</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Onboarding</h1>
         <p className="text-sm text-slate">New hire checklists across every client organization.</p>
       </div>
 
@@ -23,7 +24,7 @@ export default async function OpsOnboardingPage() {
           const done = employee.onboardingTasks.filter((t) => t.done).length;
           const total = employee.onboardingTasks.length;
           return (
-            <div key={employee.id} className="rounded-card border border-border bg-paper shadow-sm p-5">
+            <div key={employee.id} className="rounded-card border border-border bg-paper p-5">
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-ink">{employee.name}</p>
@@ -67,7 +68,7 @@ export default async function OpsOnboardingPage() {
           );
         })}
         {employees.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             No onboarding checklists yet. They&apos;re created automatically when you add a new employee.
           </p>
         )}

@@ -23,11 +23,12 @@ export default async function OpsAttendancePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Attendance</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Attendance</h1>
         <p className="text-sm text-slate">Rollup across all client organizations. Most recent 100 records.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -65,14 +66,14 @@ export default async function OpsAttendancePage() {
             })}
             {records.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate">No attendance records yet.</td>
+                <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-light">No attendance records yet.</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <h2 className="mb-1 text-sm font-semibold text-ink">Add or correct a record</h2>
         <p className="mb-4 text-xs text-slate">
           Use this when an employee forgot to clock in/out, or a day is missing entirely. To fix an existing day, use

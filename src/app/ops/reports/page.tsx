@@ -24,7 +24,8 @@ export default async function OpsReportsPage({
   if (!selectedOrgId) {
     return (
       <div className="space-y-4">
-        <h1 className="text-3xl font-extrabold text-ink">Reports</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Reports</h1>
         <p className="text-sm text-slate">Add a company before you can put together a report.</p>
       </div>
     );
@@ -40,7 +41,8 @@ export default async function OpsReportsPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Reports</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Reports</h1>
         <p className="text-sm text-slate">One shared template, what actually gets sent to each client.</p>
       </div>
 
@@ -92,7 +94,7 @@ export default async function OpsReportsPage({
         </div>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Masy notes for this month</h2>
         <form action={saveReportNotes} className="space-y-4">
           <input type="hidden" name="clientOrgId" value={selectedOrgId} />

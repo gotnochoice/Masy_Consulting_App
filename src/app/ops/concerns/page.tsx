@@ -16,7 +16,8 @@ export default async function OpsConcernsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Concerns</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Concerns</h1>
         <p className="text-sm text-slate">
           Raw submissions stay here. Write a curated summary before releasing anything to a client, never the
           raw text, never identifying detail unless necessary.
@@ -28,7 +29,7 @@ export default async function OpsConcernsPage() {
           const curateWithId = curateConcern.bind(null, concern.id);
           const releaseWithId = releaseToClient.bind(null, concern.id);
           return (
-            <div key={concern.id} className="rounded-card border border-border bg-paper shadow-sm p-5">
+            <div key={concern.id} className="rounded-card border border-border bg-paper p-5">
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-ink">
@@ -85,7 +86,7 @@ export default async function OpsConcernsPage() {
           );
         })}
         {concerns.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             No concerns submitted yet.
           </p>
         )}

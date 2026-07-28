@@ -22,11 +22,12 @@ export default async function OpsRecruitmentPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Recruitment</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Recruitment</h1>
         <p className="text-sm text-slate">Open roles and candidate pipelines across every client organization.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -78,14 +79,14 @@ export default async function OpsRecruitmentPage() {
             })}
             {roles.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate">No open roles yet.</td>
+                <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-light">No open roles yet.</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="max-w-xl rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="max-w-xl rounded-card border border-border bg-paper p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Open a role</h2>
         <form action={createRole} className="flex flex-wrap items-end gap-4">
           <div className="flex-1">

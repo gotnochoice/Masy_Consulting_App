@@ -29,7 +29,8 @@ export default async function ClientConcernsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Concerns</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Concerns</h1>
         <p className="text-sm text-slate">
           A summary view only. Individual submissions go to your Masy HR contact, never straight to you, which
           keeps it safe for your team to raise things honestly.
@@ -52,13 +53,13 @@ export default async function ClientConcernsPage() {
 
       <div className="space-y-3">
         {released.map((concern) => (
-          <div key={concern.id} className="rounded-card border border-border bg-paper shadow-sm p-5">
+          <div key={concern.id} className="rounded-card border border-border bg-paper p-5">
             <p className="text-sm text-ink">{concern.curatedSummary}</p>
             <p className="mt-2 font-mono text-xs text-slate-light">Updated {formatDateShort(concern.updatedAt)}</p>
           </div>
         ))}
         {released.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             Nothing to share right now.
           </p>
         )}

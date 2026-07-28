@@ -26,11 +26,12 @@ export default async function OpsEmployeesPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Employee directory</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Employee directory</h1>
         <p className="text-sm text-slate">All staff across every client organization.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -72,14 +73,14 @@ export default async function OpsEmployeesPage({
             ))}
             {employees.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate">No employees yet.</td>
+                <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-light">No employees yet.</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Add employee</h2>
         <EmployeeForm orgs={orgs} defaultOrgId={defaultOrgId} action={createEmployee} submitLabel="Add employee" />
       </div>

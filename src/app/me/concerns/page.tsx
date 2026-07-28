@@ -21,14 +21,15 @@ export default async function MyConcernsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Concerns</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Concerns</h1>
         <p className="text-sm text-slate">
           This goes to your Masy HR contact only, never directly to your employer. Masy decides what, if
           anything, gets shared, and never with your name attached unless it&apos;s necessary.
         </p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <SuccessBanner />
         <h2 className="mb-4 text-sm font-semibold text-ink">Raise a concern</h2>
         <form action={submitConcern} className="space-y-4">
@@ -40,7 +41,7 @@ export default async function MyConcernsPage() {
         </form>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -59,7 +60,7 @@ export default async function MyConcernsPage() {
             ))}
             {concerns.length === 0 && (
               <tr>
-                <td colSpan={2} className="px-4 py-6 text-center text-sm text-slate">Nothing submitted yet.</td>
+                <td colSpan={2} className="px-4 py-8 text-center text-sm text-slate-light">Nothing submitted yet.</td>
               </tr>
             )}
           </tbody>

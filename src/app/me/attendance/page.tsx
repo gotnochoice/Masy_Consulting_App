@@ -29,11 +29,12 @@ export default async function MyAttendancePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Attendance</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Attendance</h1>
         <p className="text-sm text-slate">Clock in when you start, clock out when you&apos;re done for the day.</p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <SuccessBanner />
         {!todayRecord && (
           <form action={clockIn} className="space-y-3">
@@ -79,7 +80,7 @@ export default async function MyAttendancePage() {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -119,7 +120,7 @@ export default async function MyAttendancePage() {
             })}
             {history.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate">No attendance records yet.</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-light">No attendance records yet.</td>
               </tr>
             )}
           </tbody>

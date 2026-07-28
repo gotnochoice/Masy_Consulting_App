@@ -55,7 +55,7 @@ export default async function MyProfilePage() {
     <div className="space-y-8">
       <div>
         <p className="font-mono text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
-        <h1 className="mt-2 text-3xl font-extrabold text-ink sm:text-4xl">Welcome back, {firstName}</h1>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">Welcome back, {firstName}</h1>
         <p className="mt-1 text-sm text-slate">{employee.roleTitle} at {employee.clientOrg.name}</p>
       </div>
 
@@ -66,7 +66,7 @@ export default async function MyProfilePage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <div className="rounded-card border border-border bg-paper p-6">
           <h2 className="mb-4 text-sm font-semibold text-ink">Your details</h2>
           <dl className="space-y-3 text-sm">
             <div className="flex items-start justify-between gap-4">
@@ -88,7 +88,7 @@ export default async function MyProfilePage() {
           </dl>
         </div>
 
-        <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+        <div className="rounded-card border border-border bg-paper p-6">
           <h2 className="mb-4 text-sm font-semibold text-ink">Recent leave requests</h2>
           {recentLeave.length > 0 ? (
             <ul className="space-y-3 text-sm">

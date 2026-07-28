@@ -36,7 +36,7 @@ export default async function ClientStaffPage() {
     <div className="space-y-8">
       <div>
         <p className="font-mono text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
-        <h1 className="mt-2 text-3xl font-extrabold text-ink sm:text-4xl">{org?.name ?? "Your team"}</h1>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">{org?.name ?? "Your team"}</h1>
         <p className="mt-1 text-sm text-slate">Here is how your team is doing right now.</p>
       </div>
 
@@ -56,7 +56,7 @@ export default async function ClientStaffPage() {
             {recentLeave.map((r) => (
               <div
                 key={r.id}
-                className="flex flex-col gap-3 rounded-card border border-border bg-paper shadow-sm p-4 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-3 rounded-card border border-border bg-paper p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="text-sm font-medium text-ink">
@@ -100,7 +100,7 @@ export default async function ClientStaffPage() {
           <h2 className="text-sm font-semibold text-ink">Your team</h2>
           <p className="text-xs text-slate-light">Read-only. Reach out to your Masy HR contact for changes.</p>
         </div>
-        <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+        <div className="overflow-x-auto rounded-card border border-border bg-paper">
           <table className="min-w-full divide-y divide-border text-sm">
             <thead className="bg-indigo-tint">
               <tr>
@@ -126,7 +126,7 @@ export default async function ClientStaffPage() {
               ))}
               {employees.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-5 py-6 text-center text-sm text-slate">No staff on record yet.</td>
+                  <td colSpan={3} className="px-5 py-8 text-center text-sm text-slate-light">No staff on record yet.</td>
                 </tr>
               )}
             </tbody>

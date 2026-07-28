@@ -73,18 +73,19 @@ export default async function ClientAttendancePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Attendance for {monthLabel}</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Attendance for {monthLabel}</h1>
         <p className="text-sm text-slate">Read-only monthly summary for your team.</p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
           6-month trend, total hours logged
         </p>
         <AttendanceTrendChart rows={trendRows} />
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-indigo-tint">
             <tr>
@@ -113,7 +114,7 @@ export default async function ClientAttendancePage() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-5 py-6 text-center text-sm text-slate">
+                <td colSpan={4} className="px-5 py-8 text-center text-sm text-slate-light">
                   No attendance recorded yet this month.
                 </td>
               </tr>

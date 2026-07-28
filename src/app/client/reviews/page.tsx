@@ -16,7 +16,8 @@ export default async function ClientReviewsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Performance reviews</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Performance reviews</h1>
         <p className="text-sm text-slate">Reviewed and released by your Masy HR contact.</p>
       </div>
 
@@ -26,7 +27,7 @@ export default async function ClientReviewsPage() {
           return (
             <article
               key={review.id}
-              className="overflow-hidden rounded-card border border-border bg-paper shadow-sm print:break-inside-avoid print:shadow-none"
+              className="overflow-hidden rounded-card border border-border bg-paper print:break-inside-avoid print:shadow-none"
             >
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border bg-paper-2 px-6 py-4">
                 <div>
@@ -70,7 +71,7 @@ export default async function ClientReviewsPage() {
           );
         })}
         {reviews.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             No reviews released yet.
           </p>
         )}

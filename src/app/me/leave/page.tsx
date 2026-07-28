@@ -22,13 +22,14 @@ export default async function MyLeavePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Leave</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Leave</h1>
         <p className="text-sm text-slate">
           Balance: <span className="font-mono text-ink">{employee?.leaveBalanceDays ?? 0} days</span> remaining
         </p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <SuccessBanner />
         <h2 className="mb-4 text-sm font-semibold text-ink">Request leave</h2>
         <form action={requestLeave} className="space-y-4">
@@ -58,7 +59,7 @@ export default async function MyLeavePage() {
         </form>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
@@ -83,7 +84,7 @@ export default async function MyLeavePage() {
             ))}
             {requests.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate">No leave requests yet.</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-light">No leave requests yet.</td>
               </tr>
             )}
           </tbody>

@@ -23,14 +23,15 @@ export default async function MyPulsePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Pulse check-in</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Pulse check-in</h1>
         <p className="text-sm text-slate">
           A quick, private read on how work is going. Masy sees this to spot patterns early, and your employer only
           ever sees an aggregate trend, never your individual answers.
         </p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <SuccessBanner />
         <form action={submitPulseCheckIn} className="space-y-4">
           <div>
@@ -58,7 +59,7 @@ export default async function MyPulsePage() {
 
       <div className="space-y-3">
         {checkIns.map((c) => (
-          <div key={c.id} className="rounded-card border border-border bg-paper shadow-sm p-4">
+          <div key={c.id} className="rounded-card border border-border bg-paper p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-ink">
                 {c.score}/5, {PULSE_SCORE_LABELS[c.score]}
@@ -69,7 +70,7 @@ export default async function MyPulsePage() {
           </div>
         ))}
         {checkIns.length === 0 && (
-          <p className="rounded-card border border-border bg-paper shadow-sm px-5 py-6 text-center text-sm text-slate">
+          <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             No check-ins yet.
           </p>
         )}

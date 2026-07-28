@@ -45,20 +45,21 @@ export default async function ClientLeavePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Leave approvals</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Leave approvals</h1>
         <p className="text-sm text-slate">Approve or decline leave for your team, the one action you take directly.</p>
       </div>
 
       <SuccessBanner />
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
           {monthStart.toLocaleDateString([], { month: "long", year: "numeric" })}
         </p>
         <LeaveCalendar monthStart={monthStart} leaveByDay={leaveByDay} />
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper shadow-sm">
+      <div className="overflow-x-auto rounded-card border border-border bg-paper">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-indigo-tint">
             <tr>
@@ -105,7 +106,7 @@ export default async function ClientLeavePage() {
             ))}
             {requests.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-6 text-center text-sm text-slate">No leave requests yet.</td>
+                <td colSpan={6} className="px-5 py-8 text-center text-sm text-slate-light">No leave requests yet.</td>
               </tr>
             )}
           </tbody>

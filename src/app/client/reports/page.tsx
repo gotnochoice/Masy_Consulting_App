@@ -20,7 +20,8 @@ export default async function ClientReportsPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Reports</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Reports</h1>
         <p className="text-sm text-slate">Your monthly summary from Masy Consulting.</p>
       </div>
 
@@ -50,7 +51,7 @@ export default async function ClientReportsPage({
         </div>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <h2 className="mb-3 text-sm font-semibold text-ink">Notes from your Masy HR contact</h2>
         <p className="text-sm text-slate">{report.notes ?? "No notes published for this month yet."}</p>
       </div>

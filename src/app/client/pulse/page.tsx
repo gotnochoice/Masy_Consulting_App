@@ -28,14 +28,15 @@ export default async function ClientPulsePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold text-ink">Team pulse</h1>
+        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Team pulse</h1>
         <p className="text-sm text-slate">
           A monthly average from short private check-ins with your team. Individual answers stay with Masy, this
           is trend only, and only shown once enough people have responded that no one answer stands out.
         </p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper shadow-sm p-6">
+      <div className="rounded-card border border-border bg-paper p-6">
         <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-slate-light">
           6-month trend
         </p>
@@ -46,7 +47,7 @@ export default async function ClientPulsePage() {
         </p>
       </div>
 
-      <details className="group rounded-card border border-border bg-paper shadow-sm">
+      <details className="group rounded-card border border-border bg-paper">
         <summary className="cursor-pointer px-5 py-3 text-sm font-medium text-slate hover:text-ink">
           View as table
         </summary>
