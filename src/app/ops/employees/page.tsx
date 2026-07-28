@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { formatTenure } from "@/lib/tenure";
 import { StatusBadge } from "@/components/status-badge";
 import { ResetPasswordForm } from "@/components/reset-password-form";
 import { createEmployee } from "./actions";
@@ -40,6 +41,7 @@ export default async function OpsEmployeesPage({
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Start date</th>
+              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Tenure</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Login</th>
               <th className="px-4 py-2.5" />
             </tr>
@@ -52,6 +54,7 @@ export default async function OpsEmployeesPage({
                 <td className="px-4 py-3 text-slate">{employee.roleTitle}</td>
                 <td className="px-4 py-3"><StatusBadge status={employee.status} /></td>
                 <td className="px-4 py-3 font-mono text-xs text-slate">{employee.startDate.toLocaleDateString()}</td>
+                <td className="px-4 py-3 text-slate">{formatTenure(employee.startDate)}</td>
                 <td className="px-4 py-3">
                   {employee.user ? (
                     <div className="flex items-center justify-end gap-3">
@@ -73,7 +76,7 @@ export default async function OpsEmployeesPage({
             ))}
             {employees.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-light">No employees yet.</td>
+                <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-light">No employees yet.</td>
               </tr>
             )}
           </tbody>
