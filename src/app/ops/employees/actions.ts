@@ -17,11 +17,13 @@ const baseFields = {
   startDate: z.string().min(1, "Start date is required"),
 };
 
-const createSchema = z.object(baseFields);
+const leaveBalanceField = { leaveBalanceDays: z.coerce.number().int().min(0, "Leave balance can't be negative") };
+
+const createSchema = z.object({ ...baseFields, ...leaveBalanceField });
 const updateSchema = z.object({
   ...baseFields,
+  ...leaveBalanceField,
   status: z.enum(["ACTIVE", "ON_LEAVE", "OFFBOARDED"]),
-  leaveBalanceDays: z.coerce.number().int().min(0, "Leave balance can't be negative"),
 });
 
 export async function createEmployee(formData: FormData) {
@@ -33,21 +35,16 @@ export async function createEmployee(formData: FormData) {
     roleTitle: formData.get("roleTitle"),
     email: formData.get("email"),
     startDate: formData.get("startDate"),
+    leaveBalanceDays: formData.get("leaveBalanceDays"),
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid employee data");
   }
 
-  const org = await db.clientOrg.findUnique({
-    where: { id: parsed.data.clientOrgId },
-    select: { leaveAllowanceDays: true },
-  });
-
   const employee = await db.employee.create({
     data: {
       ...parsed.data,
       startDate: new Date(parsed.data.startDate),
-      leaveBalanceDays: org?.leaveAllowanceDays ?? 20,
     },
   });
 

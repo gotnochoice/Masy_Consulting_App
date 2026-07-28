@@ -27,6 +27,7 @@ export default async function OpsLeavePage() {
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Type</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Dates</th>
+              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Reason</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
               <th className="px-4 py-2.5" />
             </tr>
@@ -40,6 +41,7 @@ export default async function OpsLeavePage() {
                 <td className="px-4 py-3 font-mono text-xs text-slate">
                   {formatDateShort(r.startDate)} – {formatDateShort(r.endDate)} ({leaveDaysBetween(r.startDate, r.endDate)}d)
                 </td>
+                <td className="px-4 py-3 text-slate">{r.reason || "—"}</td>
                 <td className="px-4 py-3"><LeaveStatusBadge status={r.status} /></td>
                 <td className="px-4 py-3 text-right">
                   {r.status === "PENDING" && (
@@ -61,7 +63,7 @@ export default async function OpsLeavePage() {
             ))}
             {requests.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate">No leave requests yet.</td>
+                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate">No leave requests yet.</td>
               </tr>
             )}
           </tbody>

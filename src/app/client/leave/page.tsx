@@ -65,6 +65,7 @@ export default async function ClientLeavePage() {
               <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Employee</th>
               <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Type</th>
               <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Dates</th>
+              <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Reason</th>
               <th className="px-5 py-3 text-left font-mono text-xs font-medium uppercase tracking-wide text-indigo">Status</th>
               <th className="px-5 py-3" />
             </tr>
@@ -77,6 +78,7 @@ export default async function ClientLeavePage() {
                 <td className="px-5 py-3 font-mono text-xs text-slate">
                   {formatDateShort(r.startDate)} – {formatDateShort(r.endDate)}
                 </td>
+                <td className="px-5 py-3 text-slate">{r.reason || "—"}</td>
                 <td className="px-5 py-3"><LeaveStatusBadge status={r.status} /></td>
                 <td className="px-5 py-3 text-right">
                   {r.status === "PENDING" && (
@@ -103,7 +105,7 @@ export default async function ClientLeavePage() {
             ))}
             {requests.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-6 text-center text-sm text-slate">No leave requests yet.</td>
+                <td colSpan={6} className="px-5 py-6 text-center text-sm text-slate">No leave requests yet.</td>
               </tr>
             )}
           </tbody>

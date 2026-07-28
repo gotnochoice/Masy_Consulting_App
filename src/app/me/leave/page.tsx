@@ -65,6 +65,7 @@ export default async function MyLeavePage() {
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Type</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Dates</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Days</th>
+              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Reason</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
             </tr>
           </thead>
@@ -76,12 +77,13 @@ export default async function MyLeavePage() {
                   {formatDateShort(r.startDate)} – {formatDateShort(r.endDate)}
                 </td>
                 <td className="px-4 py-3 text-slate">{leaveDaysBetween(r.startDate, r.endDate)}</td>
+                <td className="px-4 py-3 text-slate">{r.reason || "—"}</td>
                 <td className="px-4 py-3"><LeaveStatusBadge status={r.status} /></td>
               </tr>
             ))}
             {requests.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate">No leave requests yet.</td>
+                <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate">No leave requests yet.</td>
               </tr>
             )}
           </tbody>

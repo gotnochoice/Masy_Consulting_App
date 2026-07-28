@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ResetPasswordForm } from "@/components/reset-password-form";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { createCompany, deleteCompany, updateLeaveAllowance } from "./actions";
+import { createCompany, deleteCompany } from "./actions";
 import { InviteClientForm } from "./invite-client-form";
 
 export default async function OpsCompaniesPage() {
@@ -31,7 +31,6 @@ export default async function OpsCompaniesPage() {
             <tr>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Staff</th>
-              <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Leave days/yr</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
               <th className="px-4 py-2.5 text-left font-mono text-xs font-medium uppercase tracking-wide text-slate-light">Client login</th>
               <th className="px-4 py-2.5" />
@@ -45,20 +44,6 @@ export default async function OpsCompaniesPage() {
               <tr key={org.id} className="hover:bg-paper-2">
                 <td className="px-4 py-3 font-medium text-ink">{org.name}</td>
                 <td className="px-4 py-3 text-slate">{org._count.employees}</td>
-                <td className="px-4 py-3">
-                  <form action={updateLeaveAllowance.bind(null, org.id)} className="flex items-center gap-1.5">
-                    <input
-                      type="number"
-                      name="leaveAllowanceDays"
-                      min={0}
-                      defaultValue={org.leaveAllowanceDays}
-                      className="w-16 rounded-btn border border-border bg-paper px-2 py-1 text-sm text-ink"
-                    />
-                    <button type="submit" className="text-xs font-medium text-indigo hover:text-indigo-light">
-                      Save
-                    </button>
-                  </form>
-                </td>
                 <td className="px-4 py-3">
                   <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 font-mono text-xs font-medium text-indigo">
                     {org.status}
@@ -96,7 +81,7 @@ export default async function OpsCompaniesPage() {
             })}
             {orgs.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate">No companies yet.</td>
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate">No companies yet.</td>
               </tr>
             )}
           </tbody>
