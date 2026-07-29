@@ -8,6 +8,7 @@ type EmployeeSummary = {
   daysPresent: number;
   incompleteDays: number;
   totalHoursMs: number;
+  workNotes: string[];
 };
 
 export default async function ClientAttendancePage() {
@@ -57,6 +58,7 @@ export default async function ClientAttendancePage() {
       daysPresent: 0,
       incompleteDays: 0,
       totalHoursMs: 0,
+      workNotes: [],
     };
     entry.daysPresent += 1;
     if (record.clockOut) {
@@ -64,6 +66,8 @@ export default async function ClientAttendancePage() {
     } else {
       entry.incompleteDays += 1;
     }
+    if (record.clockInNote) entry.workNotes.push(record.clockInNote);
+    if (record.clockOutNote) entry.workNotes.push(record.clockOutNote);
     byEmployee.set(record.employeeId, entry);
   }
 
@@ -93,6 +97,7 @@ export default async function ClientAttendancePage() {
               <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Days present</th>
               <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Total hours</th>
               <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Incomplete days</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Work done</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -110,11 +115,24 @@ export default async function ClientAttendancePage() {
                     "–"
                   )}
                 </td>
+                <td className="px-5 py-3 text-slate">
+                  {row.workNotes.length > 0 ? (
+                    <ul className="space-y-1">
+                      {row.workNotes.map((note, i) => (
+                        <li key={i} className="before:mr-1.5 before:text-slate-light before:content-['•']">
+                          {note}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "–"
+                  )}
+                </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-5 py-8 text-center text-sm text-slate-light">
+                <td colSpan={5} className="px-5 py-8 text-center text-sm text-slate-light">
                   No attendance recorded yet this month.
                 </td>
               </tr>
