@@ -3,7 +3,9 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { leaveDaysBetween } from "@/lib/leave";
+import { leaveDaysBetween, formatDateShort } from "@/lib/leave";
+import { getOrigin } from "@/lib/url";
+import { sendNotification } from "@/lib/email";
 
 export async function decideLeaveRequest(requestId: string, decision: "APPROVED" | "DENIED") {
   const session = await auth();
@@ -45,4 +47,12 @@ export async function decideLeaveRequest(requestId: string, decision: "APPROVED"
       },
     });
   });
+
+  const origin = await getOrigin();
+  await sendNotification(
+    leave.employee.email,
+    decision === "APPROVED" ? "Your leave request was approved" : "Your leave request was declined",
+    `Your ${leave.type.toLowerCase()} leave from ${formatDateShort(leave.startDate)} to ${formatDateShort(leave.endDate)} ` +
+      `was ${decision === "APPROVED" ? "approved" : "declined"}.\n\nView: ${origin}/me/leave`,
+  );
 }

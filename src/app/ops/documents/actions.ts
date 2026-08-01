@@ -4,6 +4,9 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
+import { getOrigin } from "@/lib/url";
+import { sendNotification } from "@/lib/email";
+import { DOCUMENT_TYPE_LABELS } from "@/lib/documents";
 
 export async function markInProgress(requestId: string) {
   const session = await requireRole("MASY_OPS");
@@ -41,13 +44,14 @@ export async function respondToDocumentRequest(requestId: string, formData: Form
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid response");
   }
 
-  await db.documentRequest.update({
+  const updated = await db.documentRequest.update({
     where: { id: requestId },
     data: {
       status: parsed.data.decision,
       responseNote: parsed.data.responseNote,
       fulfilledAt: new Date(),
     },
+    include: { employee: true },
   });
 
   await db.auditLog.create({
@@ -58,6 +62,14 @@ export async function respondToDocumentRequest(requestId: string, formData: Form
       targetId: requestId,
     },
   });
+
+  const origin = await getOrigin();
+  await sendNotification(
+    updated.employee.email,
+    parsed.data.decision === "FULFILLED" ? "Your document request is ready" : "Your document request was declined",
+    `Your request for a ${DOCUMENT_TYPE_LABELS[updated.type]} was ${parsed.data.decision === "FULFILLED" ? "fulfilled" : "declined"}.\n\n` +
+      `${parsed.data.responseNote}\n\nView: ${origin}/me/documents`,
+  );
 
   revalidatePath("/ops/documents");
 }

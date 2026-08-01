@@ -23,6 +23,22 @@ export async function sendOpsNotification(subject: string, body: string) {
   }
 }
 
+export async function sendNotification(to: string | string[], subject: string, body: string) {
+  const recipients = Array.isArray(to) ? to : [to];
+  if (recipients.length === 0) return;
+
+  if (!resend) {
+    console.warn(`[email] RESEND_API_KEY not set, skipped notification: ${subject}`);
+    return;
+  }
+
+  try {
+    await resend.emails.send({ from: FROM, to: recipients, subject, text: body });
+  } catch (err) {
+    console.error("[email] failed to send notification:", err);
+  }
+}
+
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   if (!resend) return { sent: false };
   try {

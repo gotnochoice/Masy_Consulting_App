@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { getOrigin } from "@/lib/url";
-import { sendOpsNotification } from "@/lib/email";
+import { sendOpsNotification, sendNotification } from "@/lib/email";
 
 const schema = z.object({
   type: z.enum(["ANNUAL", "SICK", "OTHER"]),
@@ -51,12 +51,24 @@ export async function requestLeave(formData: FormData) {
 
   if (employee) {
     const origin = await getOrigin();
-    await sendOpsNotification(
-      `Leave request: ${employee.name}`,
+    const summary =
       `${employee.name} (${employee.clientOrg.name}) requested ${parsed.data.type.toLowerCase()} leave ` +
-        `from ${parsed.data.startDate} to ${parsed.data.endDate}.` +
-        `${parsed.data.reason ? `\nReason: ${parsed.data.reason}` : ""}\n\nView: ${origin}/ops/leave`,
-    );
+      `from ${parsed.data.startDate} to ${parsed.data.endDate}.` +
+      `${parsed.data.reason ? `\nReason: ${parsed.data.reason}` : ""}`;
+
+    await sendOpsNotification(`Leave request: ${employee.name}`, `${summary}\n\nView: ${origin}/ops/leave`);
+
+    const clientUsers = await db.user.findMany({
+      where: { clientOrgId: employee.clientOrgId, role: "CLIENT" },
+      select: { email: true },
+    });
+    if (clientUsers.length > 0) {
+      await sendNotification(
+        clientUsers.map((u) => u.email),
+        `Leave request awaiting your approval: ${employee.name}`,
+        `${summary}\n\nApprove or decline: ${origin}/client/leave`,
+      );
+    }
   }
 
   revalidatePath("/me/leave");
