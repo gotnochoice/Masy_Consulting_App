@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/rbac";
 
 const updateSchema = z.object({
   email: z.string().email("Valid email required"),
+  startDate: z.string().min(1, "Start date is required"),
   dateOfBirth: z.string().optional(),
   phone: z.string().optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
@@ -22,6 +23,7 @@ export async function updateMyDetails(formData: FormData) {
 
   const parsed = updateSchema.safeParse({
     email: formData.get("email"),
+    startDate: formData.get("startDate"),
     dateOfBirth: formData.get("dateOfBirth") || undefined,
     phone: formData.get("phone") || undefined,
     gender: formData.get("gender") || undefined,
@@ -33,13 +35,14 @@ export async function updateMyDetails(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid details");
   }
 
-  const { dateOfBirth, phone, gender, address, emergencyContactName, emergencyContactPhone, email } = parsed.data;
+  const { dateOfBirth, phone, gender, address, emergencyContactName, emergencyContactPhone, email, startDate } = parsed.data;
 
   await db.$transaction(async (tx) => {
     await tx.employee.update({
       where: { id: session.user.employeeId! },
       data: {
         email,
+        startDate: new Date(startDate),
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
         phone: phone ?? null,
         gender: gender ?? null,

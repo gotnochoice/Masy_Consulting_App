@@ -10,6 +10,7 @@ const sectionLabelClass = "text-xs font-semibold uppercase tracking-widest text-
 
 export function MyDetailsForm({ employee, action }: Props) {
   const dateOfBirthValue = employee.dateOfBirth ? employee.dateOfBirth.toISOString().slice(0, 10) : "";
+  const startDateValue = employee.startDate.toISOString().slice(0, 10);
 
   return (
     <form action={action} className="space-y-6">
@@ -39,6 +40,15 @@ export function MyDetailsForm({ employee, action }: Props) {
               <option value="OTHER">Other</option>
             </select>
           </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <p className={sectionLabelClass}>Employment</p>
+        <div className="sm:w-1/2 sm:pr-2">
+          <label className={labelClass} htmlFor="startDate">Date you started at the firm</label>
+          <input id="startDate" name="startDate" type="date" defaultValue={startDateValue} required className={inputClass} />
+          <p className="mt-1 text-xs text-slate-light">Helps us track your tenure accurately — correct it if it&rsquo;s off.</p>
         </div>
       </div>
 
