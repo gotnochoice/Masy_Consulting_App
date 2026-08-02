@@ -12,7 +12,7 @@ const PAD_TOP = 16;
 const PAD_BOTTOM = 28;
 const PLOT_W = WIDTH - PAD_LEFT - PAD_RIGHT;
 const PLOT_H = HEIGHT - PAD_TOP - PAD_BOTTOM;
-const MARK_COLOR = "#2F32D5";
+const MARK_COLOR = "#7A4FA9";
 
 function yFor(score: number) {
   const clamped = Math.min(5, Math.max(1, score));

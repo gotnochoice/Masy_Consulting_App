@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --indigo: #281398;
-  --indigo-light: #2f32d5;
-  --indigo-tint: #eeeafb;
-  --orange: #fb961f;
-  --orange-light: #ffc876;
+  --indigo: #4d148c;
+  --indigo-light: #7a4fa9;
+  --indigo-tint: #f1ecf6;
+  --orange: #ff6600;
+  --orange-light: #ff9c59;
   --ink: #1a1330;
   --slate: #5b5870;
   --slate-light: #8b87a0;
