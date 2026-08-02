@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { LeaveStatusBadge } from "@/components/leave-status-badge";
 import { StatCard } from "@/components/stat-card";
 import { MilestonesPanel } from "@/components/milestones-panel";
+import { SuccessBanner } from "@/components/success-banner";
 
 export default async function MyProfilePage() {
   const session = await requireRole("EMPLOYEE");
@@ -58,6 +59,8 @@ export default async function MyProfilePage() {
         <p className="mt-1 text-sm text-slate">{employee.roleTitle} at {employee.clientOrg.name}</p>
       </div>
 
+      <SuccessBanner />
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Today" value={todayStatus} icon={Clock} />
         <StatCard label="Leave balance" value={`${employee.leaveBalanceDays} days`} icon={CalendarDays} />
@@ -66,7 +69,12 @@ export default async function MyProfilePage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-card border border-border bg-paper p-6">
-          <h2 className="mb-4 text-sm font-semibold text-ink">Your details</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-ink">Your details</h2>
+            <a href="/me/profile/edit" className="text-xs font-medium text-indigo hover:text-indigo-light">
+              Edit
+            </a>
+          </div>
           <dl className="space-y-3 text-sm">
             <div className="flex items-start justify-between gap-4">
               <dt className="shrink-0 text-slate">Role</dt>
@@ -83,6 +91,32 @@ export default async function MyProfilePage() {
             <div className="flex items-start justify-between gap-4">
               <dt className="shrink-0 text-slate">Start date</dt>
               <dd className="text-xs text-ink">{employee.startDate.toLocaleDateString()}</dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-slate">Email</dt>
+              <dd className="text-right text-xs text-ink">{employee.email}</dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-slate">Phone</dt>
+              <dd className="text-right text-xs text-ink">{employee.phone || "—"}</dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-slate">Date of birth</dt>
+              <dd className="text-right text-xs text-ink">
+                {employee.dateOfBirth ? employee.dateOfBirth.toLocaleDateString() : "—"}
+              </dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-slate">Address</dt>
+              <dd className="text-right text-xs text-ink">{employee.address || "—"}</dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-slate">Emergency contact</dt>
+              <dd className="text-right text-xs text-ink">
+                {employee.emergencyContactName
+                  ? `${employee.emergencyContactName}${employee.emergencyContactPhone ? ` · ${employee.emergencyContactPhone}` : ""}`
+                  : "—"}
+              </dd>
             </div>
           </dl>
         </div>
