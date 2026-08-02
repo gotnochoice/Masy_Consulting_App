@@ -16,6 +16,14 @@ const baseFields = {
   email: z.string().email("Valid email required"),
   startDate: z.string().min(1, "Start date is required"),
   dateOfBirth: z.string().optional(),
+  phone: z.string().optional(),
+  staffId: z.string().optional(),
+  department: z.string().optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  address: z.string().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+  salary: z.coerce.number().min(0, "Salary can't be negative").optional(),
 };
 
 const leaveBalanceField = { leaveBalanceDays: z.coerce.number().int().min(0, "Leave balance can't be negative") };
@@ -37,19 +45,46 @@ export async function createEmployee(formData: FormData) {
     email: formData.get("email"),
     startDate: formData.get("startDate"),
     dateOfBirth: formData.get("dateOfBirth") || undefined,
+    phone: formData.get("phone") || undefined,
+    staffId: formData.get("staffId") || undefined,
+    department: formData.get("department") || undefined,
+    gender: formData.get("gender") || undefined,
+    address: formData.get("address") || undefined,
+    emergencyContactName: formData.get("emergencyContactName") || undefined,
+    emergencyContactPhone: formData.get("emergencyContactPhone") || undefined,
+    salary: formData.get("salary") || undefined,
     leaveBalanceDays: formData.get("leaveBalanceDays"),
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid employee data");
   }
 
-  const { dateOfBirth, ...rest } = parsed.data;
+  const {
+    dateOfBirth,
+    phone,
+    staffId,
+    department,
+    gender,
+    address,
+    emergencyContactName,
+    emergencyContactPhone,
+    salary,
+    ...rest
+  } = parsed.data;
 
   const employee = await db.employee.create({
     data: {
       ...rest,
       startDate: new Date(parsed.data.startDate),
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      phone: phone ?? null,
+      staffId: staffId ?? null,
+      department: department ?? null,
+      gender: gender ?? null,
+      address: address ?? null,
+      emergencyContactName: emergencyContactName ?? null,
+      emergencyContactPhone: emergencyContactPhone ?? null,
+      salary: salary ?? null,
     },
   });
 
@@ -79,6 +114,14 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     email: formData.get("email"),
     startDate: formData.get("startDate"),
     dateOfBirth: formData.get("dateOfBirth") || undefined,
+    phone: formData.get("phone") || undefined,
+    staffId: formData.get("staffId") || undefined,
+    department: formData.get("department") || undefined,
+    gender: formData.get("gender") || undefined,
+    address: formData.get("address") || undefined,
+    emergencyContactName: formData.get("emergencyContactName") || undefined,
+    emergencyContactPhone: formData.get("emergencyContactPhone") || undefined,
+    salary: formData.get("salary") || undefined,
     status: formData.get("status"),
     leaveBalanceDays: formData.get("leaveBalanceDays"),
   });
@@ -86,7 +129,18 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid employee data");
   }
 
-  const { dateOfBirth, ...rest } = parsed.data;
+  const {
+    dateOfBirth,
+    phone,
+    staffId,
+    department,
+    gender,
+    address,
+    emergencyContactName,
+    emergencyContactPhone,
+    salary,
+    ...rest
+  } = parsed.data;
 
   await db.employee.update({
     where: { id: employeeId },
@@ -94,6 +148,14 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
       ...rest,
       startDate: new Date(parsed.data.startDate),
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      phone: phone ?? null,
+      staffId: staffId ?? null,
+      department: department ?? null,
+      gender: gender ?? null,
+      address: address ?? null,
+      emergencyContactName: emergencyContactName ?? null,
+      emergencyContactPhone: emergencyContactPhone ?? null,
+      salary: salary ?? null,
     },
   });
 

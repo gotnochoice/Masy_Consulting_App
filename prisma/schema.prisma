@@ -87,6 +87,12 @@ enum DocumentRequestStatus {
   DECLINED
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
 model ClientOrg {
   id                 String              @id @default(cuid())
   name               String
@@ -132,6 +138,14 @@ model Employee {
   startDate          DateTime
   dateOfBirth        DateTime?           @db.Date
   email              String
+  phone              String?
+  staffId            String?
+  department         String?
+  gender             Gender?
+  address            String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  salary             Decimal?            @db.Decimal(12, 2)
   leaveBalanceDays   Int                 @default(0)
   reviewTemplate     Json?
   user               User?
