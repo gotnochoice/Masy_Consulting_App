@@ -142,6 +142,8 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     ...rest
   } = parsed.data;
 
+  const existingUser = await db.user.findUnique({ where: { employeeId } });
+
   await db.employee.update({
     where: { id: employeeId },
     data: {
@@ -158,6 +160,10 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
       salary: salary ?? null,
     },
   });
+
+  if (existingUser && existingUser.email !== parsed.data.email) {
+    await db.user.update({ where: { id: existingUser.id }, data: { email: parsed.data.email } });
+  }
 
   await db.auditLog.create({
     data: {

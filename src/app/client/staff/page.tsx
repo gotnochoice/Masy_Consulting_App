@@ -108,7 +108,7 @@ export default async function ClientStaffPage() {
       <div>
         <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-sm font-semibold text-ink">Your team</h2>
-          <p className="text-xs text-slate-light">Read-only. Reach out to your Masy HR contact for changes.</p>
+          <p className="text-xs text-slate-light">Edit a record to correct anything that&rsquo;s out of date.</p>
         </div>
         <div className="overflow-x-auto rounded-card border border-border bg-paper">
           <table className="min-w-full divide-y divide-border text-sm">
@@ -117,6 +117,7 @@ export default async function ClientStaffPage() {
                 <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
                 <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Role</th>
                 <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Status</th>
+                <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -132,11 +133,16 @@ export default async function ClientStaffPage() {
                   </td>
                   <td className="px-5 py-3 text-slate">{employee.roleTitle}</td>
                   <td className="px-5 py-3"><StatusBadge status={employee.status} /></td>
+                  <td className="px-5 py-3 text-right">
+                    <a href={`/client/staff/${employee.id}/edit`} className="text-sm font-medium text-indigo hover:text-indigo-light">
+                      Edit
+                    </a>
+                  </td>
                 </tr>
               ))}
               {employees.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-5 py-8 text-center text-sm text-slate-light">No staff on record yet.</td>
+                  <td colSpan={4} className="px-5 py-8 text-center text-sm text-slate-light">No staff on record yet.</td>
                 </tr>
               )}
             </tbody>
