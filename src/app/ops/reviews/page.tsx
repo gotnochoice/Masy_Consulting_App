@@ -71,7 +71,7 @@ export default async function OpsReviewsPage() {
                 <p className="mb-4 rounded-btn bg-paper-2 p-3 text-sm text-ink">{review.selfAssessment}</p>
               )}
 
-              <form action={notesWithId} className="space-y-3">
+              <form className="space-y-3">
                 <div>
                   <label className={labelClass} htmlFor={`notes-${review.id}`}>Masy notes</label>
                   <textarea
@@ -83,23 +83,20 @@ export default async function OpsReviewsPage() {
                   />
                 </div>
                 <div className="flex items-center gap-3">
-                  <button type="submit" className={buttonClass}>Save</button>
+                  <button type="submit" formAction={notesWithId} className={buttonClass}>
+                    Save
+                  </button>
                   {review.status !== "RELEASED" && (
-                    <span className="text-xs text-slate-light">Save notes, then release separately below.</span>
+                    <button
+                      type="submit"
+                      formAction={releaseWithId}
+                      className="rounded-btn bg-indigo-tint px-3 py-1.5 text-xs font-semibold text-indigo hover:bg-indigo hover:text-white"
+                    >
+                      Release to client
+                    </button>
                   )}
                 </div>
               </form>
-
-              {review.status !== "RELEASED" && (
-                <form action={releaseWithId} className="mt-3">
-                  <button
-                    type="submit"
-                    className="rounded-btn bg-indigo-tint px-3 py-1.5 text-xs font-semibold text-indigo hover:bg-indigo hover:text-white"
-                  >
-                    Release to client
-                  </button>
-                </form>
-              )}
             </div>
           );
         })}

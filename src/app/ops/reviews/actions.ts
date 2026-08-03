@@ -40,18 +40,20 @@ export async function saveReviewNotes(reviewId: string, formData: FormData) {
   revalidatePath("/ops/reviews");
 }
 
-export async function releaseReview(reviewId: string) {
+export async function releaseReview(reviewId: string, formData: FormData) {
   const session = await requireRole("MASY_OPS");
 
-  const review = await db.performanceReview.findUnique({ where: { id: reviewId } });
-  if (!review) throw new Error("Review not found");
-  if (!review.masyNotes) {
+  const parsed = notesSchema.safeParse({ masyNotes: formData.get("masyNotes") });
+  if (!parsed.success) {
     throw new Error("Add Masy's notes before releasing this to the client");
   }
 
+  const review = await db.performanceReview.findUnique({ where: { id: reviewId } });
+  if (!review) throw new Error("Review not found");
+
   await db.performanceReview.update({
     where: { id: reviewId },
-    data: { status: "RELEASED" },
+    data: { masyNotes: parsed.data.masyNotes, status: "RELEASED" },
   });
 
   await db.auditLog.create({
