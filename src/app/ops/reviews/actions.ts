@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 
 const notesSchema = z.object({
-  masyNotes: z.string().min(1, "Write your notes before saving"),
+  masyNotes: z.string().optional(),
 });
 
 export async function saveReviewNotes(reviewId: string, formData: FormData) {
@@ -23,7 +23,7 @@ export async function saveReviewNotes(reviewId: string, formData: FormData) {
   await db.performanceReview.update({
     where: { id: reviewId },
     data: {
-      masyNotes: parsed.data.masyNotes,
+      masyNotes: parsed.data.masyNotes || null,
       status: review.status === "SUBMITTED" ? "MASY_REVIEWED" : review.status,
     },
   });
@@ -45,7 +45,7 @@ export async function releaseReview(reviewId: string, formData: FormData) {
 
   const parsed = notesSchema.safeParse({ masyNotes: formData.get("masyNotes") });
   if (!parsed.success) {
-    throw new Error("Add Masy's notes before releasing this to the client");
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid review notes");
   }
 
   const review = await db.performanceReview.findUnique({ where: { id: reviewId } });
@@ -53,7 +53,7 @@ export async function releaseReview(reviewId: string, formData: FormData) {
 
   await db.performanceReview.update({
     where: { id: reviewId },
-    data: { masyNotes: parsed.data.masyNotes, status: "RELEASED" },
+    data: { masyNotes: parsed.data.masyNotes || null, status: "RELEASED" },
   });
 
   await db.auditLog.create({

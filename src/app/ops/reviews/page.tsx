@@ -20,7 +20,7 @@ export default async function OpsReviewsPage() {
       <div>
         <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
         <h1 className="text-2xl font-bold tracking-tight text-ink">Performance reviews</h1>
-        <p className="text-sm text-slate">Add your notes, then release the full review to the client.</p>
+        <p className="text-sm text-slate">Add notes if you want to, then release the review to the client.</p>
       </div>
 
       <div className="space-y-4">
