@@ -1,17 +1,19 @@
 import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { getUnreadAnnouncements } from "@/lib/announcements";
+import { getUnresolvedConcernsForClient } from "@/lib/concerns";
 import { DashboardHeader } from "@/components/dashboard-header";
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const session = await requireRole("CLIENT");
 
-  const [org, pendingLeaveCount, unread] = await Promise.all([
+  const [org, pendingLeaveCount, unread, unresolvedConcerns] = await Promise.all([
     session.user.clientOrgId
       ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } })
       : null,
     db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
     getUnreadAnnouncements(session.user.id, session.user.clientOrgId),
+    getUnresolvedConcernsForClient(session),
   ]);
 
   return (
@@ -26,13 +28,19 @@ export default async function ClientLayout({ children }: { children: React.React
           authorLabel: a.authorLabel,
           createdAt: a.createdAt.toLocaleDateString(),
         }))}
+        unresolvedConcerns={unresolvedConcerns.map((c) => ({
+          id: c.id,
+          summary: c.curatedSummary ?? "",
+          updatedAt: c.updatedAt.toLocaleDateString(),
+        }))}
+        pendingLeave={{ count: pendingLeaveCount, href: "/client/leave" }}
         nav={[
           { label: "Overview", href: "/client/staff" },
           { label: "Attendance", href: "/client/attendance" },
           { label: "Leave", href: "/client/leave", badge: pendingLeaveCount },
           { label: "Reviews", href: "/client/reviews" },
           { label: "Pulse", href: "/client/pulse" },
-          { label: "Concerns", href: "/client/concerns" },
+          { label: "Concerns", href: "/client/concerns", badge: unresolvedConcerns.length },
           { label: "Announcements", href: "/client/announcements", badge: unread.length },
           { label: "Reports", href: "/client/reports" },
         ]}

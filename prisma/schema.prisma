@@ -117,6 +117,7 @@ model User {
   createdAt         DateTime             @default(now())
   resetTokens       PasswordResetToken[]
   announcementAcks  AnnouncementAck[]
+  concernAcks       ConcernAck[]
 }
 
 model PasswordResetToken {
@@ -231,6 +232,18 @@ model Concern {
   escalated      Boolean           @default(false)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+  acks           ConcernAck[]
+}
+
+model ConcernAck {
+  id             String   @id @default(cuid())
+  concernId      String
+  concern        Concern  @relation(fields: [concernId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  acknowledgedAt DateTime @default(now())
+
+  @@unique([concernId, userId])
 }
 
 model OpenRole {

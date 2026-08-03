@@ -7,25 +7,33 @@ import { Bell, Menu, X } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
 import { MasyLogo } from "@/components/masy-logo";
 import { acknowledgeAnnouncement } from "@/lib/actions/announcements";
+import { acknowledgeConcern } from "@/lib/actions/concerns";
 
 type NavItem = { label: string; href: string; badge?: number };
 type UnreadAnnouncement = { id: string; title: string; body: string; authorLabel: string; createdAt: string };
+type UnresolvedConcern = { id: string; summary: string; updatedAt: string };
+type PendingLeave = { count: number; href: string };
 
 export function DashboardHeader({
   roleLabel,
   personName,
   nav,
   unreadAnnouncements = [],
+  unresolvedConcerns = [],
+  pendingLeave,
 }: {
   roleLabel: string;
   personName: string;
   nav: NavItem[];
   unreadAnnouncements?: UnreadAnnouncement[];
+  unresolvedConcerns?: UnresolvedConcern[];
+  pendingLeave?: PendingLeave;
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const initial = personName.trim().charAt(0).toUpperCase() || "M";
+  const totalUnread = unreadAnnouncements.length + unresolvedConcerns.length + (pendingLeave?.count ?? 0);
 
   return (
     <header className="border-b border-border bg-paper shadow-sm">
@@ -46,11 +54,11 @@ export function DashboardHeader({
             <button
               type="button"
               onClick={() => setBellOpen((v) => !v)}
-              aria-label="Announcements"
+              aria-label="Notifications"
               className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-btn text-slate hover:bg-paper-2 hover:text-ink"
             >
               <Bell className="h-5 w-5" strokeWidth={2} />
-              {unreadAnnouncements.length > 0 && (
+              {totalUnread > 0 && (
                 <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-orange" />
               )}
             </button>
@@ -59,9 +67,37 @@ export function DashboardHeader({
                 <div className="fixed inset-0 z-40" onClick={() => setBellOpen(false)} aria-hidden="true" />
                 <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[90vw] rounded-card border border-border bg-paper shadow-lg">
                   <div className="border-b border-border px-4 py-3">
-                    <p className="text-sm font-semibold text-ink">Announcements</p>
+                    <p className="text-sm font-semibold text-ink">Notifications</p>
                   </div>
                   <div className="max-h-96 divide-y divide-border overflow-y-auto">
+                    {pendingLeave && pendingLeave.count > 0 && (
+                      <Link
+                        href={pendingLeave.href}
+                        onClick={() => setBellOpen(false)}
+                        className="block px-4 py-3 hover:bg-paper-2"
+                      >
+                        <p className="text-sm font-medium text-ink">
+                          {pendingLeave.count} leave request{pendingLeave.count === 1 ? "" : "s"} awaiting your decision
+                        </p>
+                        <p className="text-[11px] text-slate-light">Tap to review</p>
+                      </Link>
+                    )}
+                    {unresolvedConcerns.map((c) => (
+                      <div key={c.id} className="px-4 py-3">
+                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-light">
+                          New concern summary
+                        </p>
+                        <p className="mb-2 whitespace-pre-wrap text-xs text-slate">{c.summary}</p>
+                        <form action={acknowledgeConcern.bind(null, c.id)}>
+                          <button
+                            type="submit"
+                            className="rounded-btn bg-indigo px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-light"
+                          >
+                            Mark as resolved
+                          </button>
+                        </form>
+                      </div>
+                    ))}
                     {unreadAnnouncements.map((a) => (
                       <div key={a.id} className="px-4 py-3">
                         <p className="text-sm font-medium text-ink">{a.title}</p>
@@ -77,7 +113,7 @@ export function DashboardHeader({
                         </form>
                       </div>
                     ))}
-                    {unreadAnnouncements.length === 0 && (
+                    {totalUnread === 0 && (
                       <p className="px-4 py-6 text-center text-xs text-slate-light">You&rsquo;re all caught up.</p>
                     )}
                   </div>

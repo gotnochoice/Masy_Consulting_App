@@ -3,21 +3,24 @@
 import { useState } from "react";
 import { Topbar } from "@/components/app-shell/topbar";
 import { Sidebar, type NavItem } from "@/components/app-shell/sidebar";
+import type { OpsInboxItem } from "@/lib/ops-inbox";
 
 export function AppShell({
   userLabel,
   navItems,
+  inbox,
   children,
 }: {
   userLabel: string;
   navItems: NavItem[];
+  inbox?: OpsInboxItem[];
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen flex-col">
-      <Topbar userLabel={userLabel} onMenuClick={() => setSidebarOpen(true)} />
+      <Topbar userLabel={userLabel} onMenuClick={() => setSidebarOpen(true)} inbox={inbox} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar items={navItems} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main className="flex-1 overflow-y-auto bg-paper-2 px-4 py-6 sm:px-8 sm:py-8">{children}</main>

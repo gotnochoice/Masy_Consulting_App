@@ -36,7 +36,7 @@ const ICONS = {
 } as const;
 
 export type NavIconName = keyof typeof ICONS;
-export type NavItem = { label: string; href: string; icon: NavIconName };
+export type NavItem = { label: string; href: string; icon: NavIconName; badge?: number };
 
 export function Sidebar({ items, open, onClose }: { items: NavItem[]; open: boolean; onClose: () => void }) {
   const pathname = usePathname();
@@ -76,7 +76,16 @@ export function Sidebar({ items, open, onClose }: { items: NavItem[]; open: bool
                   }`}
                 >
                   <Icon className="h-4 w-4" strokeWidth={2} />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {!!item.badge && item.badge > 0 && (
+                    <span
+                      className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${
+                        active ? "bg-white text-indigo" : "bg-orange text-white"
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               </li>
             );

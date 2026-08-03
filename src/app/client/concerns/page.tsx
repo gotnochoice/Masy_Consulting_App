@@ -1,6 +1,8 @@
+import { CheckCircle2 } from "lucide-react";
 import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
+import { acknowledgeConcern } from "@/lib/actions/concerns";
 
 export default async function ClientConcernsPage() {
   const session = await requireRole("CLIENT");
@@ -22,6 +24,7 @@ export default async function ClientConcernsPage() {
     }),
     db.concern.findMany({
       where: { employee: scopedEmployeeWhere(session), visibility: "CLIENT_VISIBLE" },
+      include: { acks: { where: { userId: session.user.id } } },
       orderBy: { updatedAt: "desc" },
     }),
   ]);
@@ -52,12 +55,32 @@ export default async function ClientConcernsPage() {
       </div>
 
       <div className="space-y-3">
-        {released.map((concern) => (
-          <div key={concern.id} className="rounded-card border border-border bg-paper p-5">
-            <p className="text-sm text-ink">{concern.curatedSummary}</p>
-            <p className="mt-2 text-xs text-slate-light">Updated {formatDateShort(concern.updatedAt)}</p>
-          </div>
-        ))}
+        {released.map((concern) => {
+          const resolved = concern.acks.length > 0;
+          return (
+            <div key={concern.id} className="rounded-card border border-border bg-paper p-5">
+              <p className="text-sm text-ink">{concern.curatedSummary}</p>
+              <p className="mt-2 text-xs text-slate-light">Updated {formatDateShort(concern.updatedAt)}</p>
+              <div className="mt-3 border-t border-border pt-3">
+                {resolved ? (
+                  <p className="flex items-center gap-1.5 text-xs font-medium text-indigo">
+                    <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+                    Marked as resolved
+                  </p>
+                ) : (
+                  <form action={acknowledgeConcern.bind(null, concern.id)}>
+                    <button
+                      type="submit"
+                      className="rounded-btn bg-indigo px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-light"
+                    >
+                      Mark as resolved
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+          );
+        })}
         {released.length === 0 && (
           <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             Nothing to share right now.
