@@ -106,16 +106,17 @@ model ClientOrg {
 }
 
 model User {
-  id           String               @id @default(cuid())
-  email        String               @unique
-  passwordHash String
-  role         Role
-  clientOrgId  String?
-  clientOrg    ClientOrg?           @relation(fields: [clientOrgId], references: [id])
-  employeeId   String?              @unique
-  employee     Employee?            @relation(fields: [employeeId], references: [id])
-  createdAt    DateTime             @default(now())
-  resetTokens  PasswordResetToken[]
+  id                String               @id @default(cuid())
+  email             String               @unique
+  passwordHash      String
+  role              Role
+  clientOrgId       String?
+  clientOrg         ClientOrg?           @relation(fields: [clientOrgId], references: [id])
+  employeeId        String?              @unique
+  employee          Employee?            @relation(fields: [employeeId], references: [id])
+  createdAt         DateTime             @default(now())
+  resetTokens       PasswordResetToken[]
+  announcementAcks  AnnouncementAck[]
 }
 
 model PasswordResetToken {
@@ -317,14 +318,26 @@ model ApplicationAttempt {
 }
 
 model Announcement {
-  id          String     @id @default(cuid())
+  id          String            @id @default(cuid())
   clientOrgId String?
-  clientOrg   ClientOrg? @relation(fields: [clientOrgId], references: [id])
+  clientOrg   ClientOrg?        @relation(fields: [clientOrgId], references: [id])
   authorRole  Role
   authorLabel String
   title       String
   body        String
-  createdAt   DateTime   @default(now())
+  createdAt   DateTime          @default(now())
+  acks        AnnouncementAck[]
+}
+
+model AnnouncementAck {
+  id             String       @id @default(cuid())
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  acknowledgedAt DateTime     @default(now())
+
+  @@unique([announcementId, userId])
 }
 
 model DocumentRequest {

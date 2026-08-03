@@ -3,23 +3,28 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
 import { MasyLogo } from "@/components/masy-logo";
+import { acknowledgeAnnouncement } from "@/lib/actions/announcements";
 
 type NavItem = { label: string; href: string; badge?: number };
+type UnreadAnnouncement = { id: string; title: string; body: string; authorLabel: string; createdAt: string };
 
 export function DashboardHeader({
   roleLabel,
   personName,
   nav,
+  unreadAnnouncements = [],
 }: {
   roleLabel: string;
   personName: string;
   nav: NavItem[];
+  unreadAnnouncements?: UnreadAnnouncement[];
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
   const initial = personName.trim().charAt(0).toUpperCase() || "M";
 
   return (
@@ -37,6 +42,49 @@ export function DashboardHeader({
           <MasyLogo className="text-base" />
         </div>
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setBellOpen((v) => !v)}
+              aria-label="Announcements"
+              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-btn text-slate hover:bg-paper-2 hover:text-ink"
+            >
+              <Bell className="h-5 w-5" strokeWidth={2} />
+              {unreadAnnouncements.length > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-orange" />
+              )}
+            </button>
+            {bellOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setBellOpen(false)} aria-hidden="true" />
+                <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[90vw] rounded-card border border-border bg-paper shadow-lg">
+                  <div className="border-b border-border px-4 py-3">
+                    <p className="text-sm font-semibold text-ink">Announcements</p>
+                  </div>
+                  <div className="max-h-96 divide-y divide-border overflow-y-auto">
+                    {unreadAnnouncements.map((a) => (
+                      <div key={a.id} className="px-4 py-3">
+                        <p className="text-sm font-medium text-ink">{a.title}</p>
+                        <p className="mb-1 text-[11px] text-slate-light">{a.authorLabel} · {a.createdAt}</p>
+                        <p className="mb-2 whitespace-pre-wrap text-xs text-slate">{a.body}</p>
+                        <form action={acknowledgeAnnouncement.bind(null, a.id)}>
+                          <button
+                            type="submit"
+                            className="rounded-btn bg-indigo px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-light"
+                          >
+                            Mark as resolved
+                          </button>
+                        </form>
+                      </div>
+                    ))}
+                    {unreadAnnouncements.length === 0 && (
+                      <p className="px-4 py-6 text-center text-xs text-slate-light">You&rsquo;re all caught up.</p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           <div className="hidden items-center gap-2.5 sm:flex">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-tint font-semibold text-indigo">
               {initial}
