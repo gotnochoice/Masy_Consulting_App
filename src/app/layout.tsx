@@ -9,7 +9,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Masy Consulting HR",
-  description: "Internal HR operating system for Masy's Fractional HR pillar",
+  description: "Masy Consulting's HR platform for staff, attendance, leave, and performance reviews.",
 };
 
 export default function RootLayout({
