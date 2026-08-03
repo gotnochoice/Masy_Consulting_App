@@ -1,15 +1,17 @@
+import { CheckCircle2 } from "lucide-react";
 import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { MasyLogo } from "@/components/masy-logo";
 import { PrintButton } from "@/components/print-button";
+import { acknowledgeReview } from "@/lib/actions/reviews";
 
 export default async function ClientReviewsPage() {
   const session = await requireRole("CLIENT");
 
   const reviews = await db.performanceReview.findMany({
     where: { employee: scopedEmployeeWhere(session), status: "RELEASED" },
-    include: { employee: true },
+    include: { employee: true, acks: { where: { userId: session.user.id } } },
     orderBy: { updatedAt: "desc" },
   });
 
@@ -24,6 +26,7 @@ export default async function ClientReviewsPage() {
       <div className="space-y-6">
         {reviews.map((review) => {
           const paragraphs = (review.masyNotes ?? "").split(/\n+/).filter((p) => p.trim().length > 0);
+          const resolved = review.acks.length > 0;
           return (
             <article
               key={review.id}
@@ -66,6 +69,24 @@ export default async function ClientReviewsPage() {
                 <p className="mt-6 border-t border-border pt-4 text-xs text-slate-light">
                   Prepared by your Masy Consulting HR partner · Released {formatDateShort(review.updatedAt)}
                 </p>
+
+                <div className="mt-4 border-t border-border pt-4 print:hidden">
+                  {resolved ? (
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-indigo">
+                      <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+                      Marked as resolved
+                    </p>
+                  ) : (
+                    <form action={acknowledgeReview.bind(null, review.id)}>
+                      <button
+                        type="submit"
+                        className="rounded-btn bg-indigo px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-light"
+                      >
+                        Mark as resolved
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
             </article>
           );

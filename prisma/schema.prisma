@@ -118,6 +118,7 @@ model User {
   resetTokens       PasswordResetToken[]
   announcementAcks  AnnouncementAck[]
   concernAcks       ConcernAck[]
+  performanceReviewAcks PerformanceReviewAck[]
 }
 
 model PasswordResetToken {
@@ -220,6 +221,18 @@ model PerformanceReview {
   status         ReviewStatus @default(SUBMITTED)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  acks           PerformanceReviewAck[]
+}
+
+model PerformanceReviewAck {
+  id               String            @id @default(cuid())
+  performanceReviewId String
+  performanceReview PerformanceReview @relation(fields: [performanceReviewId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  acknowledgedAt   DateTime          @default(now())
+
+  @@unique([performanceReviewId, userId])
 }
 
 model Concern {

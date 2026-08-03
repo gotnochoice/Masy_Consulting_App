@@ -8,10 +8,12 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { MasyLogo } from "@/components/masy-logo";
 import { acknowledgeAnnouncement } from "@/lib/actions/announcements";
 import { acknowledgeConcern } from "@/lib/actions/concerns";
+import { acknowledgeReview } from "@/lib/actions/reviews";
 
 type NavItem = { label: string; href: string; badge?: number };
 type UnreadAnnouncement = { id: string; title: string; body: string; authorLabel: string; createdAt: string };
 type UnresolvedConcern = { id: string; summary: string; updatedAt: string };
+type UnresolvedReview = { id: string; employeeName: string; cycle: string };
 type PendingLeave = { count: number; href: string };
 
 export function DashboardHeader({
@@ -20,6 +22,7 @@ export function DashboardHeader({
   nav,
   unreadAnnouncements = [],
   unresolvedConcerns = [],
+  unresolvedReviews = [],
   pendingLeave,
 }: {
   roleLabel: string;
@@ -27,13 +30,15 @@ export function DashboardHeader({
   nav: NavItem[];
   unreadAnnouncements?: UnreadAnnouncement[];
   unresolvedConcerns?: UnresolvedConcern[];
+  unresolvedReviews?: UnresolvedReview[];
   pendingLeave?: PendingLeave;
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const initial = personName.trim().charAt(0).toUpperCase() || "M";
-  const totalUnread = unreadAnnouncements.length + unresolvedConcerns.length + (pendingLeave?.count ?? 0);
+  const totalUnread =
+    unreadAnnouncements.length + unresolvedConcerns.length + unresolvedReviews.length + (pendingLeave?.count ?? 0);
 
   return (
     <header className="border-b border-border bg-paper shadow-sm">
@@ -89,6 +94,24 @@ export function DashboardHeader({
                         </p>
                         <p className="mb-2 whitespace-pre-wrap text-xs text-slate">{c.summary}</p>
                         <form action={acknowledgeConcern.bind(null, c.id)}>
+                          <button
+                            type="submit"
+                            className="rounded-btn bg-indigo px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-light"
+                          >
+                            Mark as resolved
+                          </button>
+                        </form>
+                      </div>
+                    ))}
+                    {unresolvedReviews.map((r) => (
+                      <div key={r.id} className="px-4 py-3">
+                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-light">
+                          New performance review
+                        </p>
+                        <p className="mb-2 text-xs text-slate">
+                          {r.employeeName} · {r.cycle} is ready to view
+                        </p>
+                        <form action={acknowledgeReview.bind(null, r.id)}>
                           <button
                             type="submit"
                             className="rounded-btn bg-indigo px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-light"
