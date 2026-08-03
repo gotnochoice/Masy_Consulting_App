@@ -51,7 +51,7 @@ export default async function MyAttendancePage() {
           <div className="space-y-3">
             <p className="text-sm text-slate">
               Clocked in at <span className="text-ink">{formatTime(todayRecord.clockIn)}</span>
-              {todayRecord.clockInNote ? ` — "${todayRecord.clockInNote}"` : ""}.
+              {todayRecord.clockInNote ? ` ("${todayRecord.clockInNote}")` : ""}.
             </p>
             <form action={clockOut} className="space-y-3">
               <div>

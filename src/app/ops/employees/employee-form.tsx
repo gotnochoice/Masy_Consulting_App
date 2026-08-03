@@ -153,7 +153,7 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
             defaultValue={salaryValue}
             className={inputClass}
           />
-          <p className="mt-1 text-xs text-slate-light">Visible to Masy Ops only — not shown to the client or the employee.</p>
+          <p className="mt-1 text-xs text-slate-light">Visible to Masy Ops only. Not shown to the client or the employee.</p>
         </div>
       </div>
 

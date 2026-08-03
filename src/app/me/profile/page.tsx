@@ -98,24 +98,24 @@ export default async function MyProfilePage() {
             </div>
             <div className="flex items-start justify-between gap-4">
               <dt className="shrink-0 text-slate">Phone</dt>
-              <dd className="text-right text-xs text-ink">{employee.phone || "—"}</dd>
+              <dd className="text-right text-xs text-ink">{employee.phone || "-"}</dd>
             </div>
             <div className="flex items-start justify-between gap-4">
               <dt className="shrink-0 text-slate">Date of birth</dt>
               <dd className="text-right text-xs text-ink">
-                {employee.dateOfBirth ? employee.dateOfBirth.toLocaleDateString() : "—"}
+                {employee.dateOfBirth ? employee.dateOfBirth.toLocaleDateString() : "-"}
               </dd>
             </div>
             <div className="flex items-start justify-between gap-4">
               <dt className="shrink-0 text-slate">Address</dt>
-              <dd className="text-right text-xs text-ink">{employee.address || "—"}</dd>
+              <dd className="text-right text-xs text-ink">{employee.address || "-"}</dd>
             </div>
             <div className="flex items-start justify-between gap-4">
               <dt className="shrink-0 text-slate">Emergency contact</dt>
               <dd className="text-right text-xs text-ink">
                 {employee.emergencyContactName
                   ? `${employee.emergencyContactName}${employee.emergencyContactPhone ? ` · ${employee.emergencyContactPhone}` : ""}`
-                  : "—"}
+                  : "-"}
               </dd>
             </div>
           </dl>

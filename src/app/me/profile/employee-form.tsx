@@ -48,7 +48,7 @@ export function MyDetailsForm({ employee, action }: Props) {
         <div className="sm:w-1/2 sm:pr-2">
           <label className={labelClass} htmlFor="startDate">Date you started at the firm</label>
           <input id="startDate" name="startDate" type="date" defaultValue={startDateValue} required className={inputClass} />
-          <p className="mt-1 text-xs text-slate-light">Helps us track your tenure accurately — correct it if it&rsquo;s off.</p>
+          <p className="mt-1 text-xs text-slate-light">Helps us track your tenure accurately. Correct it if it&rsquo;s off.</p>
         </div>
       </div>
 

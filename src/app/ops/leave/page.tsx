@@ -42,7 +42,7 @@ export default async function OpsLeavePage() {
                 <td className="px-4 py-3 text-xs text-slate">
                   {formatDateShort(r.startDate)} – {formatDateShort(r.endDate)} ({leaveDaysBetween(r.startDate, r.endDate)}d)
                 </td>
-                <td className="px-4 py-3 text-slate">{r.reason || "—"}</td>
+                <td className="px-4 py-3 text-slate">{r.reason || "-"}</td>
                 <td className="px-4 py-3"><LeaveStatusBadge status={r.status} /></td>
                 <td className="px-4 py-3 text-right">
                   {r.status === "PENDING" && (

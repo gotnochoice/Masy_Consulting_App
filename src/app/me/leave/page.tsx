@@ -78,7 +78,7 @@ export default async function MyLeavePage() {
                   {formatDateShort(r.startDate)} – {formatDateShort(r.endDate)}
                 </td>
                 <td className="px-4 py-3 text-slate">{leaveDaysBetween(r.startDate, r.endDate)}</td>
-                <td className="px-4 py-3 text-slate">{r.reason || "—"}</td>
+                <td className="px-4 py-3 text-slate">{r.reason || "-"}</td>
                 <td className="px-4 py-3"><LeaveStatusBadge status={r.status} /></td>
               </tr>
             ))}
