@@ -35,7 +35,7 @@ export async function submitApplication(
   formData: FormData,
 ): Promise<ApplyState> {
   // Honeypot: bots tend to fill every field, real applicants never see this one.
-  if (formData.get("company_website")) {
+  if (formData.get("hp_gate")) {
     return { success: true };
   }
 

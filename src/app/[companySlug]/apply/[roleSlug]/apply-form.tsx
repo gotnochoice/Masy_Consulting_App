@@ -260,10 +260,15 @@ export function ApplyForm({
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
-      {/* Honeypot: real applicants never see or fill this field */}
-      <div className="sr-only" aria-hidden="true">
-        <label htmlFor="company_website">Leave this field blank</label>
-        <input id="company_website" name="company_website" type="text" tabIndex={-1} autoComplete="off" />
+      {/*
+        Honeypot: real applicants never see this field. It's fully display:none (not just
+        visually clipped) and its name avoids anything autofill heuristics recognize
+        ("website", "url", "company"), because password managers happily fill hidden fields
+        that are still technically present in the accessibility tree, which was silently
+        marking real applications as spam.
+      */}
+      <div className="hidden" aria-hidden="true">
+        <input id="hp_gate" name="hp_gate" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
       <div>
