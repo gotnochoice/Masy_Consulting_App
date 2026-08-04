@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
-import { slugify } from "@/lib/slug";
+import { uniqueRoleSlug } from "@/lib/slug";
 import { suggestRoleQuestions, type SuggestedQuestion } from "@/lib/ai";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
@@ -28,7 +28,7 @@ export async function createRole(formData: FormData) {
   }
 
   const role = await db.openRole.create({
-    data: { ...parsed.data, slug: slugify(parsed.data.title) },
+    data: { ...parsed.data, slug: await uniqueRoleSlug(parsed.data.title) },
   });
 
   await db.auditLog.create({
