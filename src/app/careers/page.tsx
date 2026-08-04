@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { CareersHeader } from "@/components/careers-header";
+import { SocialLinks } from "@/components/social-links";
 
 export const metadata: Metadata = {
   title: "Careers | Masy Consulting",
@@ -58,6 +59,11 @@ export default async function CareersPage() {
               ))}
             </div>
           )}
+
+          <div className="mt-10 flex flex-col items-center gap-3 border-t border-border pt-8 text-center sm:flex-row sm:justify-between sm:text-left">
+            <p className="text-sm text-slate">Follow us on social media to hear about new roles as they open.</p>
+            <SocialLinks />
+          </div>
         </div>
       </div>
     </main>

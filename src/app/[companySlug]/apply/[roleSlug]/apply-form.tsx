@@ -3,6 +3,7 @@
 import { useActionState, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { RoleQuestion, QuestionSection } from "@/generated/prisma/client";
+import { SocialLinks } from "@/components/social-links";
 import type { ApplyState } from "./actions";
 
 const inputClass =
@@ -252,6 +253,13 @@ export function ApplyForm({
               If there&apos;s a fit, we&apos;ll reach out to you directly{state.email ? ` at ${state.email}` : ""}.
             </p>
           </div>
+        </div>
+
+        <div className="mx-auto mt-8 max-w-sm border-t border-border pt-6">
+          <p className="text-sm text-slate">
+            Follow us for new roles as they open.
+          </p>
+          <SocialLinks className="mt-3 justify-center" />
         </div>
       </div>
     );
