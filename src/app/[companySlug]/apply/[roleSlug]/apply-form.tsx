@@ -136,7 +136,6 @@ export function ApplyForm({
                 id="expectedPay"
                 name="expectedPay"
                 required={active}
-                placeholder="e.g. ₦250,000 - ₦350,000/month"
                 className={inputClass}
               />
             </div>
