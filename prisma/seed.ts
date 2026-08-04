@@ -62,11 +62,11 @@ async function main() {
   });
   credentials.push({ role: "MASY_OPS", org: "-", email: opsUser.email, password: opsPassword });
 
-  const createdOrgs: { id: string; name: string }[] = [];
+  const createdOrgs: { id: string; name: string; slug: string }[] = [];
 
   for (const orgData of orgs) {
     const org = await db.clientOrg.create({
-      data: { name: orgData.name, status: "active" },
+      data: { name: orgData.name, slug: slugify(orgData.name), status: "active" },
     });
     createdOrgs.push(org);
 
@@ -153,7 +153,7 @@ async function main() {
   for (const c of credentials) {
     console.log(`  [${c.role}]${c.org !== "-" ? ` (${c.org})` : ""} ${c.email} / ${c.password}`);
   }
-  console.log(`\nSample public application form: /apply/${sampleRole.slug}\n`);
+  console.log(`\nSample public application form: /${createdOrgs[0].slug}/apply/${sampleRole.slug}\n`);
 }
 
 main()

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { generateTemporaryPassword } from "@/lib/password";
+import { uniqueCompanySlug } from "@/lib/slug";
 
 const createSchema = z.object({
   name: z.string().min(1, "Company name is required"),
@@ -19,7 +20,9 @@ export async function createCompany(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid company data");
   }
 
-  const org = await db.clientOrg.create({ data: { name: parsed.data.name } });
+  const org = await db.clientOrg.create({
+    data: { name: parsed.data.name, slug: await uniqueCompanySlug(parsed.data.name) },
+  });
 
   await db.auditLog.create({
     data: {

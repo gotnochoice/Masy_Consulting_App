@@ -130,6 +130,21 @@ export function ApplyForm({
               </label>
               {q.type === "LONG_TEXT" ? (
                 <textarea id={`answer_${q.id}`} name={`answer_${q.id}`} required={q.required} rows={3} className={inputClass} />
+              ) : q.type === "MULTIPLE_CHOICE" ? (
+                <div className="space-y-2">
+                  {q.options.map((opt) => (
+                    <label key={opt} className="flex items-center gap-2 text-sm text-ink">
+                      <input
+                        type="radio"
+                        name={`answer_${q.id}`}
+                        value={opt}
+                        required={q.required}
+                        className="border-border"
+                      />
+                      {opt}
+                    </label>
+                  ))}
+                </div>
               ) : (
                 <input
                   id={`answer_${q.id}`}

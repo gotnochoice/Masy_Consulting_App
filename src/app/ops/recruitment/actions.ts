@@ -9,7 +9,7 @@ import { suggestRoleQuestions, type SuggestedQuestion } from "@/lib/ai";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
 const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
-const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK"] as const;
+const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE"] as const;
 
 const createRoleSchema = z.object({
   clientOrgId: z.string().min(1, "Company is required"),
@@ -28,7 +28,7 @@ export async function createRole(formData: FormData) {
   }
 
   const role = await db.openRole.create({
-    data: { ...parsed.data, slug: await uniqueRoleSlug(parsed.data.title) },
+    data: { ...parsed.data, slug: await uniqueRoleSlug(parsed.data.title, parsed.data.clientOrgId) },
   });
 
   await db.auditLog.create({
@@ -103,6 +103,7 @@ const addQuestionSchema = z.object({
   label: z.string().min(1, "Question is required"),
   type: z.enum(QUESTION_TYPES),
   required: z.boolean(),
+  options: z.string().optional(),
 });
 
 export async function addQuestion(roleId: string, formData: FormData) {
@@ -112,15 +113,31 @@ export async function addQuestion(roleId: string, formData: FormData) {
     label: formData.get("label"),
     type: formData.get("type"),
     required: formData.get("required") === "on",
+    options: formData.get("options") || undefined,
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid question");
   }
 
+  const options =
+    parsed.data.type === "MULTIPLE_CHOICE"
+      ? (parsed.data.options ?? "")
+          .split("\n")
+          .map((o) => o.trim())
+          .filter(Boolean)
+      : [];
+
   const count = await db.roleQuestion.count({ where: { openRoleId: roleId } });
 
   await db.roleQuestion.create({
-    data: { openRoleId: roleId, ...parsed.data, order: count },
+    data: {
+      openRoleId: roleId,
+      label: parsed.data.label,
+      type: parsed.data.type,
+      required: parsed.data.required,
+      options,
+      order: count,
+    },
   });
 
   revalidatePath(`/ops/recruitment/${roleId}`);

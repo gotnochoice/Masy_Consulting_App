@@ -71,6 +71,7 @@ enum QuestionType {
   SHORT_TEXT
   LONG_TEXT
   LINK
+  MULTIPLE_CHOICE
 }
 
 enum DocumentRequestType {
@@ -96,6 +97,7 @@ enum Gender {
 model ClientOrg {
   id                 String              @id @default(cuid())
   name               String
+  slug               String              @unique
   status             String              @default("active")
   employees          Employee[]
   users              User[]
@@ -264,25 +266,28 @@ model OpenRole {
   clientOrgId             String
   clientOrg               ClientOrg      @relation(fields: [clientOrgId], references: [id])
   title                   String
-  slug                    String         @unique
+  slug                    String
   description             String?
   stage                   RoleStage      @default(SOURCING)
   acceptingApplications   Boolean        @default(true)
   questions               RoleQuestion[]
   candidates              Candidate[]
   createdAt               DateTime       @default(now())
+
+  @@unique([clientOrgId, slug])
 }
 
 model RoleQuestion {
-  id         String         @id @default(cuid())
+  id         String            @id @default(cuid())
   openRoleId String
-  openRole   OpenRole       @relation(fields: [openRoleId], references: [id], onDelete: Cascade)
+  openRole   OpenRole          @relation(fields: [openRoleId], references: [id], onDelete: Cascade)
   label      String
-  type       QuestionType   @default(SHORT_TEXT)
-  required   Boolean        @default(true)
-  order      Int            @default(0)
+  type       QuestionType      @default(SHORT_TEXT)
+  options    String[]          @default([])
+  required   Boolean           @default(true)
+  order      Int               @default(0)
   answers    CandidateAnswer[]
-  createdAt  DateTime       @default(now())
+  createdAt  DateTime          @default(now())
 }
 
 model Candidate {

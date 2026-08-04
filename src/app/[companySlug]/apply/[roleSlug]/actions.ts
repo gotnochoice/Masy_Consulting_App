@@ -28,7 +28,12 @@ async function getClientIp(): Promise<string> {
   return h.get("x-real-ip") ?? "unknown";
 }
 
-export async function submitApplication(slug: string, _prevState: ApplyState, formData: FormData): Promise<ApplyState> {
+export async function submitApplication(
+  companySlug: string,
+  roleSlug: string,
+  _prevState: ApplyState,
+  formData: FormData,
+): Promise<ApplyState> {
   // Honeypot: bots tend to fill every field, real applicants never see this one.
   if (formData.get("company_website")) {
     return { success: true };
@@ -43,8 +48,8 @@ export async function submitApplication(slug: string, _prevState: ApplyState, fo
   }
   await db.applicationAttempt.create({ data: { ip } });
 
-  const role = await db.openRole.findUnique({
-    where: { slug },
+  const role = await db.openRole.findFirst({
+    where: { slug: roleSlug, clientOrg: { slug: companySlug } },
     include: { questions: true, clientOrg: true },
   });
   if (!role || !role.acceptingApplications) {
@@ -68,6 +73,9 @@ export async function submitApplication(slug: string, _prevState: ApplyState, fo
   for (const q of role.questions) {
     const raw = formData.get(`answer_${q.id}`);
     const value = typeof raw === "string" ? raw.trim() : "";
+    if (q.type === "MULTIPLE_CHOICE" && value && !q.options.includes(value)) {
+      return { error: `"${q.label}" has an invalid answer.` };
+    }
     if (q.required && !value) {
       return { error: `"${q.label}" is required.` };
     }

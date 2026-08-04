@@ -31,6 +31,7 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "SHORT_TEXT", label: "Short answer" },
   { value: "LONG_TEXT", label: "Long answer" },
   { value: "LINK", label: "Link (portfolio, etc.)" },
+  { value: "MULTIPLE_CHOICE", label: "Multiple choice" },
 ];
 
 export default async function RolePipelinePage({ params }: { params: Promise<{ id: string }> }) {
@@ -48,7 +49,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   if (!role) notFound();
 
   const origin = await getOrigin();
-  const applyLink = `${origin}/apply/${role.slug}`;
+  const applyLink = `${origin}/${role.clientOrg.slug}/apply/${role.slug}`;
 
   const updateRoleStageWithId = updateRoleStage.bind(null, role.id);
   const addCandidateWithId = addCandidate.bind(null, role.id);
@@ -146,6 +147,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                   <p className="text-sm text-ink">{q.label}</p>
                   <p className="text-xs text-slate-light">
                     {QUESTION_TYPE_OPTIONS.find((o) => o.value === q.type)?.label} · {q.required ? "required" : "optional"}
+                    {q.type === "MULTIPLE_CHOICE" && q.options.length > 0 && ` · ${q.options.join(", ")}`}
                   </p>
                 </div>
                 <form action={deleteQuestionWithIds}>
@@ -158,23 +160,31 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             <p className="text-sm text-slate-light">No custom questions yet. Applicants will just submit name, email, and a CV link.</p>
           )}
         </div>
-        <form action={addQuestionWithId} className="flex flex-wrap items-end gap-3">
-          <div className="flex-1 min-w-[200px]">
-            <label className={labelClass} htmlFor="label">Question</label>
-            <input id="label" name="label" required className={inputClass} />
+        <form action={addQuestionWithId} className="space-y-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[200px]">
+              <label className={labelClass} htmlFor="label">Question</label>
+              <input id="label" name="label" required className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass} htmlFor="type">Answer type</label>
+              <select id="type" name="type" defaultValue="SHORT_TEXT" className={inputClass}>
+                {QUESTION_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <label className="flex items-center gap-2 pb-2 text-sm text-slate">
+              <input type="checkbox" name="required" defaultChecked className="rounded border-border" />
+              Required
+            </label>
           </div>
           <div>
-            <label className={labelClass} htmlFor="type">Answer type</label>
-            <select id="type" name="type" defaultValue="SHORT_TEXT" className={inputClass}>
-              {QUESTION_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+            <label className={labelClass} htmlFor="options">
+              Choices (for multiple choice only, one per line)
+            </label>
+            <textarea id="options" name="options" rows={3} placeholder={"Option A\nOption B\nOption C"} className={inputClass} />
           </div>
-          <label className="flex items-center gap-2 pb-2 text-sm text-slate">
-            <input type="checkbox" name="required" defaultChecked className="rounded border-border" />
-            Required
-          </label>
           <button type="submit" className={buttonClass}>Add question</button>
         </form>
       </div>
