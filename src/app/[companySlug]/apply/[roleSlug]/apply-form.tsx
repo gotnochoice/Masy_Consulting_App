@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { RoleQuestion, QuestionSection } from "@/generated/prisma/client";
 import type { ApplyState } from "./actions";
@@ -10,19 +10,14 @@ const inputClass =
 const labelClass = "mb-1.5 block text-sm font-medium text-ink";
 const buttonClass =
   "rounded-btn bg-indigo px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-light disabled:cursor-not-allowed disabled:opacity-50";
+const secondaryButtonClass =
+  "rounded-btn border border-border px-4 py-3 text-sm font-semibold text-slate transition-colors hover:border-ink/20 hover:text-ink";
 
-function SectionHeading({ number, children }: { number: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2.5">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-btn bg-indigo-tint text-xs font-bold text-indigo">
-        {number}
-      </span>
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-light">{children}</p>
-    </div>
-  );
-}
-
-function QuestionField({ q }: { q: RoleQuestion }) {
+// Fields on steps that aren't currently showing must not carry `required`, or the browser's
+// native validation blocks advancing/submitting on fields the applicant can't even see yet.
+// Their entered values are preserved regardless (the DOM node stays mounted, just visually hidden).
+function QuestionField({ q, active }: { q: RoleQuestion; active: boolean }) {
+  const required = active && q.required;
   return (
     <div>
       <label className={labelClass} htmlFor={`answer_${q.id}`}>
@@ -30,7 +25,7 @@ function QuestionField({ q }: { q: RoleQuestion }) {
         {!q.required && <span className="text-slate-light"> (optional)</span>}
       </label>
       {q.type === "LONG_TEXT" ? (
-        <textarea id={`answer_${q.id}`} name={`answer_${q.id}`} required={q.required} rows={3} className={inputClass} />
+        <textarea id={`answer_${q.id}`} name={`answer_${q.id}`} required={required} rows={3} className={inputClass} />
       ) : q.type === "MULTIPLE_CHOICE" ? (
         <div className="space-y-2">
           {q.options.map((opt) => (
@@ -42,7 +37,7 @@ function QuestionField({ q }: { q: RoleQuestion }) {
                 type="radio"
                 name={`answer_${q.id}`}
                 value={opt}
-                required={q.required}
+                required={required}
                 className="h-4 w-4 shrink-0 accent-indigo"
               />
               {opt}
@@ -54,13 +49,15 @@ function QuestionField({ q }: { q: RoleQuestion }) {
           id={`answer_${q.id}`}
           name={`answer_${q.id}`}
           type={q.type === "LINK" ? "url" : "text"}
-          required={q.required}
+          required={required}
           className={inputClass}
         />
       )}
     </div>
   );
 }
+
+type Step = { key: string; label: string; content: ReactNode };
 
 export function ApplyForm({
   action,
@@ -84,17 +81,147 @@ export function ApplyForm({
   askResumeLink: boolean;
 }) {
   const [state, formAction, isPending] = useActionState<ApplyState, FormData>(action, {});
+  const [currentStep, setCurrentStep] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const ungroupedQuestions = questions.filter((q) => !q.sectionId);
   const namedSections = questionSections
     .map((section) => ({ section, questions: questions.filter((q) => q.sectionId === section.id) }))
     .filter((s) => s.questions.length > 0);
 
-  let sectionCount = 0;
-  const personalSection = String(++sectionCount).padStart(2, "0");
-  const materialsSection = askResumeLink ? String(++sectionCount).padStart(2, "0") : null;
-  const additionalQuestionsSection = ungroupedQuestions.length > 0 ? String(++sectionCount).padStart(2, "0") : null;
-  const namedSectionNumbers = new Map(namedSections.map((s) => [s.section.id, String(++sectionCount).padStart(2, "0")]));
+  const steps: Step[] = [];
+
+  {
+    const active = steps.length === currentStep;
+    steps.push({
+      key: "basics",
+      label: "The basics",
+      content: (
+        <div className="space-y-4">
+          <div>
+            <label className={labelClass} htmlFor="name">Full name</label>
+            <input id="name" name="name" required={active} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" required={active} className={inputClass} />
+            <p className="mt-1 text-xs text-slate-light">We&apos;ll use this to keep you updated on your application.</p>
+          </div>
+        </div>
+      ),
+    });
+  }
+
+  {
+    const active = steps.length === currentStep;
+    steps.push({
+      key: "personal",
+      label: "Personal details",
+      content: (
+        <div className="space-y-4">
+          <div>
+            <label className={labelClass} htmlFor="phone">Phone</label>
+            <input id="phone" name="phone" required={active} className={inputClass} />
+          </div>
+          {askYearsExperience && (
+            <div>
+              <label className={labelClass} htmlFor="yearsExperience">Years of experience in this kind of role</label>
+              <input id="yearsExperience" name="yearsExperience" required={active} placeholder="e.g. 3 years" className={inputClass} />
+            </div>
+          )}
+          {askExpectedPay && (
+            <div>
+              <label className={labelClass} htmlFor="expectedPay">Expected pay range</label>
+              <input
+                id="expectedPay"
+                name="expectedPay"
+                required={active}
+                placeholder="e.g. ₦250,000 - ₦350,000/month"
+                className={inputClass}
+              />
+            </div>
+          )}
+          {askHowHeard && (
+            <div>
+              <label className={labelClass} htmlFor="howHeard">How did you hear about this role?</label>
+              <select id="howHeard" name="howHeard" required={active} defaultValue="" className={inputClass}>
+                <option value="" disabled>Select one</option>
+                <option value="LinkedIn">LinkedIn</option>
+                <option value="Instagram / social media">Instagram / social media</option>
+                <option value="Job board">Job board</option>
+                <option value="Referral from someone">Referral from someone</option>
+                <option value="Masy Consulting website">Masy Consulting website</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          )}
+        </div>
+      ),
+    });
+  }
+
+  if (askResumeLink) {
+    steps.push({
+      key: "materials",
+      label: "Application materials",
+      content: (
+        <div>
+          <label className={labelClass} htmlFor="resumeLink">Link to your CV / resume</label>
+          <input
+            id="resumeLink"
+            name="resumeLink"
+            type="url"
+            placeholder="https://drive.google.com/..."
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-slate-light">A shareable Google Drive, Dropbox, or LinkedIn link works.</p>
+        </div>
+      ),
+    });
+  }
+
+  if (ungroupedQuestions.length > 0) {
+    const active = steps.length === currentStep;
+    steps.push({
+      key: "additional",
+      label: "Additional questions",
+      content: (
+        <div className="space-y-5">
+          {ungroupedQuestions.map((q) => (
+            <QuestionField key={q.id} q={q} active={active} />
+          ))}
+        </div>
+      ),
+    });
+  }
+
+  for (const { section, questions: sectionQuestions } of namedSections) {
+    const active = steps.length === currentStep;
+    steps.push({
+      key: section.id,
+      label: section.title,
+      content: (
+        <div className="space-y-5">
+          {sectionQuestions.map((q) => (
+            <QuestionField key={q.id} q={q} active={active} />
+          ))}
+        </div>
+      ),
+    });
+  }
+
+  const isLastStep = currentStep === steps.length - 1;
+
+  function goNext() {
+    if (formRef.current && !formRef.current.reportValidity()) return;
+    setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function goBack() {
+    setCurrentStep((s) => Math.max(s - 1, 0));
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   if (state.success) {
     return (
@@ -132,95 +259,40 @@ export function ApplyForm({
   }
 
   return (
-    <form action={formAction} className="space-y-8">
+    <form ref={formRef} action={formAction} className="space-y-6">
       {/* Honeypot: real applicants never see or fill this field */}
       <div className="sr-only" aria-hidden="true">
         <label htmlFor="company_website">Leave this field blank</label>
         <input id="company_website" name="company_website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
-      <div className="space-y-4">
-        <SectionHeading number={personalSection}>Personal details</SectionHeading>
-        <div>
-          <label className={labelClass} htmlFor="name">Full name</label>
-          <input id="name" name="name" required className={inputClass} />
+      <div>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          {steps.map((step, i) => (
+            <div key={step.key} className="flex shrink-0 items-center gap-1.5">
+              {i > 0 && <span className={`h-px w-4 ${i <= currentStep ? "bg-indigo" : "bg-border"}`} />}
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-btn text-xs font-bold ${
+                  i === currentStep
+                    ? "bg-indigo text-white"
+                    : i < currentStep
+                      ? "bg-indigo-tint text-indigo"
+                      : "border border-border bg-paper text-slate-light"
+                }`}
+              >
+                {i < currentStep ? "✓" : i + 1}
+              </span>
+            </div>
+          ))}
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className={labelClass} htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" required className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="phone">Phone</label>
-            <input id="phone" name="phone" required className={inputClass} />
-          </div>
-        </div>
-        {askYearsExperience && (
-          <div>
-            <label className={labelClass} htmlFor="yearsExperience">Years of experience in this kind of role</label>
-            <input id="yearsExperience" name="yearsExperience" required placeholder="e.g. 3 years" className={inputClass} />
-          </div>
-        )}
-        {askExpectedPay && (
-          <div>
-            <label className={labelClass} htmlFor="expectedPay">Expected pay range</label>
-            <input
-              id="expectedPay"
-              name="expectedPay"
-              required
-              placeholder="e.g. ₦250,000 - ₦350,000/month"
-              className={inputClass}
-            />
-          </div>
-        )}
-        {askHowHeard && (
-          <div>
-            <label className={labelClass} htmlFor="howHeard">How did you hear about this role?</label>
-            <select id="howHeard" name="howHeard" required defaultValue="" className={inputClass}>
-              <option value="" disabled>Select one</option>
-              <option value="LinkedIn">LinkedIn</option>
-              <option value="Instagram / social media">Instagram / social media</option>
-              <option value="Job board">Job board</option>
-              <option value="Referral from someone">Referral from someone</option>
-              <option value="Masy Consulting website">Masy Consulting website</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        )}
+        <p className="mt-2 text-xs font-semibold uppercase tracking-widest text-slate-light">
+          Step {currentStep + 1} of {steps.length} &middot; {steps[currentStep].label}
+        </p>
       </div>
 
-      {askResumeLink && (
-        <div className="space-y-4 border-t border-border pt-6">
-          <SectionHeading number={materialsSection!}>Application materials</SectionHeading>
-          <div>
-            <label className={labelClass} htmlFor="resumeLink">Link to your CV / resume</label>
-            <input
-              id="resumeLink"
-              name="resumeLink"
-              type="url"
-              placeholder="https://drive.google.com/..."
-              className={inputClass}
-            />
-            <p className="mt-1 text-xs text-slate-light">A shareable Google Drive, Dropbox, or LinkedIn link works.</p>
-          </div>
-        </div>
-      )}
-
-      {ungroupedQuestions.length > 0 && (
-        <div className="space-y-5 border-t border-border pt-6">
-          <SectionHeading number={additionalQuestionsSection!}>Additional questions</SectionHeading>
-          {ungroupedQuestions.map((q) => (
-            <QuestionField key={q.id} q={q} />
-          ))}
-        </div>
-      )}
-
-      {namedSections.map(({ section, questions: sectionQuestions }) => (
-        <div key={section.id} className="space-y-5 border-t border-border pt-6">
-          <SectionHeading number={namedSectionNumbers.get(section.id)!}>{section.title}</SectionHeading>
-          {sectionQuestions.map((q) => (
-            <QuestionField key={q.id} q={q} />
-          ))}
+      {steps.map((step, i) => (
+        <div key={step.key} className={i === currentStep ? "" : "hidden"}>
+          {step.content}
         </div>
       ))}
 
@@ -228,14 +300,28 @@ export function ApplyForm({
         <p className="rounded-btn border border-orange/30 bg-orange/5 px-3.5 py-2.5 text-sm text-orange">{state.error}</p>
       )}
 
-      <div className="space-y-4 border-t border-border pt-6">
+      {isLastStep && (
         <p className="text-xs text-slate-light">
           By submitting this application, you agree that your information will be used only to evaluate you for this
           role and shared with {companyName}. We won&apos;t use it for anything else.
         </p>
-        <button type="submit" disabled={isPending} className={`w-full ${buttonClass}`}>
-          {isPending ? "Submitting..." : "Submit application"}
-        </button>
+      )}
+
+      <div className="flex gap-3 border-t border-border pt-6">
+        {currentStep > 0 && (
+          <button type="button" onClick={goBack} className={secondaryButtonClass}>
+            Back
+          </button>
+        )}
+        {isLastStep ? (
+          <button type="submit" disabled={isPending} className={`flex-1 ${buttonClass}`}>
+            {isPending ? "Submitting..." : "Submit application"}
+          </button>
+        ) : (
+          <button type="button" onClick={goNext} className={`flex-1 ${buttonClass}`}>
+            Next
+          </button>
+        )}
       </div>
     </form>
   );
