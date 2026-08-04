@@ -12,10 +12,10 @@ const baseSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Enter a valid email"),
   phone: z.string().min(1, "Phone is required"),
-  yearsExperience: z.string().min(1, "Years of experience is required"),
+  yearsExperience: z.string().optional(),
   resumeLink: z.string().url("Enter a full link, starting with https://").optional().or(z.literal("")),
-  expectedPay: z.string().min(1, "Expected pay range is required"),
-  howHeard: z.string().min(1, "Please tell us how you heard about this role"),
+  expectedPay: z.string().optional(),
+  howHeard: z.string().optional(),
 });
 
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
@@ -68,6 +68,15 @@ export async function submitApplication(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Please check your answers." };
   }
+  if (role.askYearsExperience && !parsed.data.yearsExperience) {
+    return { error: "Years of experience is required." };
+  }
+  if (role.askExpectedPay && !parsed.data.expectedPay) {
+    return { error: "Expected pay range is required." };
+  }
+  if (role.askHowHeard && !parsed.data.howHeard) {
+    return { error: "Please tell us how you heard about this role." };
+  }
 
   const answers: { roleQuestionId: string; value: string }[] = [];
   for (const q of role.questions) {
@@ -99,11 +108,17 @@ export async function submitApplication(
   });
 
   const origin = await getOrigin();
+  const detailLines = [
+    `Email: ${parsed.data.email}`,
+    `Phone: ${parsed.data.phone}`,
+    parsed.data.yearsExperience && `Experience: ${parsed.data.yearsExperience}`,
+    parsed.data.expectedPay && `Expected pay: ${parsed.data.expectedPay}`,
+    parsed.data.howHeard && `Heard about it via: ${parsed.data.howHeard}`,
+  ].filter(Boolean);
   await sendOpsNotification(
     `New application: ${role.title} at ${role.clientOrg.name}`,
     `${parsed.data.name} applied for ${role.title} (${role.clientOrg.name}).\n\n` +
-      `Email: ${parsed.data.email}\nPhone: ${parsed.data.phone}\nExperience: ${parsed.data.yearsExperience}\n` +
-      `Expected pay: ${parsed.data.expectedPay}\nHeard about it via: ${parsed.data.howHeard}\n\n` +
+      `${detailLines.join("\n")}\n\n` +
       `View: ${origin}/ops/recruitment/${role.id}#candidate-${candidate.id}`,
   );
 

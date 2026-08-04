@@ -13,13 +13,26 @@ export function ApplyForm({
   questions,
   roleTitle,
   companyName,
+  askYearsExperience,
+  askExpectedPay,
+  askHowHeard,
+  askResumeLink,
 }: {
   action: (prevState: ApplyState, formData: FormData) => Promise<ApplyState>;
   questions: RoleQuestion[];
   roleTitle: string;
   companyName: string;
+  askYearsExperience: boolean;
+  askExpectedPay: boolean;
+  askHowHeard: boolean;
+  askResumeLink: boolean;
 }) {
   const [state, formAction, isPending] = useActionState<ApplyState, FormData>(action, {});
+
+  let sectionCount = 0;
+  const personalSection = String(++sectionCount).padStart(2, "0");
+  const materialsSection = askResumeLink ? String(++sectionCount).padStart(2, "0") : null;
+  const questionsSection = questions.length > 0 ? String(++sectionCount).padStart(2, "0") : null;
 
   if (state.success) {
     return (
@@ -61,7 +74,7 @@ export function ApplyForm({
       </div>
 
       <div className="space-y-4">
-        <p className={sectionLabelClass}>01 · Personal details</p>
+        <p className={sectionLabelClass}>{personalSection} · Personal details</p>
         <div>
           <label className={labelClass} htmlFor="name">Full name</label>
           <input id="name" name="name" required className={inputClass} />
@@ -76,52 +89,60 @@ export function ApplyForm({
             <input id="phone" name="phone" required className={inputClass} />
           </div>
         </div>
-        <div>
-          <label className={labelClass} htmlFor="yearsExperience">Years of experience in this kind of role</label>
-          <input id="yearsExperience" name="yearsExperience" required placeholder="e.g. 3 years" className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass} htmlFor="expectedPay">Expected pay range</label>
-          <input
-            id="expectedPay"
-            name="expectedPay"
-            required
-            placeholder="e.g. ₦250,000 - ₦350,000/month"
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className={labelClass} htmlFor="howHeard">How did you hear about this role?</label>
-          <select id="howHeard" name="howHeard" required defaultValue="" className={inputClass}>
-            <option value="" disabled>Select one</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Instagram / social media">Instagram / social media</option>
-            <option value="Job board">Job board</option>
-            <option value="Referral from someone">Referral from someone</option>
-            <option value="Masy Consulting website">Masy Consulting website</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
+        {askYearsExperience && (
+          <div>
+            <label className={labelClass} htmlFor="yearsExperience">Years of experience in this kind of role</label>
+            <input id="yearsExperience" name="yearsExperience" required placeholder="e.g. 3 years" className={inputClass} />
+          </div>
+        )}
+        {askExpectedPay && (
+          <div>
+            <label className={labelClass} htmlFor="expectedPay">Expected pay range</label>
+            <input
+              id="expectedPay"
+              name="expectedPay"
+              required
+              placeholder="e.g. ₦250,000 - ₦350,000/month"
+              className={inputClass}
+            />
+          </div>
+        )}
+        {askHowHeard && (
+          <div>
+            <label className={labelClass} htmlFor="howHeard">How did you hear about this role?</label>
+            <select id="howHeard" name="howHeard" required defaultValue="" className={inputClass}>
+              <option value="" disabled>Select one</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Instagram / social media">Instagram / social media</option>
+              <option value="Job board">Job board</option>
+              <option value="Referral from someone">Referral from someone</option>
+              <option value="Masy Consulting website">Masy Consulting website</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        )}
       </div>
 
-      <div className="space-y-4 border-t border-border pt-6">
-        <p className={sectionLabelClass}>02 · Application materials</p>
-        <div>
-          <label className={labelClass} htmlFor="resumeLink">Link to your CV / resume</label>
-          <input
-            id="resumeLink"
-            name="resumeLink"
-            type="url"
-            placeholder="https://drive.google.com/..."
-            className={inputClass}
-          />
-          <p className="mt-1 text-xs text-slate-light">A shareable Google Drive, Dropbox, or LinkedIn link works.</p>
+      {askResumeLink && (
+        <div className="space-y-4 border-t border-border pt-6">
+          <p className={sectionLabelClass}>{materialsSection} · Application materials</p>
+          <div>
+            <label className={labelClass} htmlFor="resumeLink">Link to your CV / resume</label>
+            <input
+              id="resumeLink"
+              name="resumeLink"
+              type="url"
+              placeholder="https://drive.google.com/..."
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-slate-light">A shareable Google Drive, Dropbox, or LinkedIn link works.</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {questions.length > 0 && (
         <div className="space-y-4 border-t border-border pt-6">
-          <p className={sectionLabelClass}>03 · Additional questions</p>
+          <p className={sectionLabelClass}>{questionsSection} · Additional questions</p>
           {questions.map((q) => (
             <div key={q.id}>
               <label className={labelClass} htmlFor={`answer_${q.id}`}>

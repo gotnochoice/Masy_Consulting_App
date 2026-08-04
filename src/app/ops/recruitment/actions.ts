@@ -99,12 +99,45 @@ export async function updateRoleDescription(roleId: string, formData: FormData) 
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
+export async function updateRoleDefaultFields(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: {
+      askYearsExperience: formData.get("askYearsExperience") === "on",
+      askExpectedPay: formData.get("askExpectedPay") === "on",
+      askHowHeard: formData.get("askHowHeard") === "on",
+      askResumeLink: formData.get("askResumeLink") === "on",
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
 const addQuestionSchema = z.object({
   label: z.string().min(1, "Question is required"),
   type: z.enum(QUESTION_TYPES),
   required: z.boolean(),
   options: z.string().optional(),
 });
+
+function parseOptions(type: (typeof QUESTION_TYPES)[number], raw: string | undefined) {
+  if (type !== "MULTIPLE_CHOICE") return [];
+  return (raw ?? "")
+    .split("\n")
+    .map((o) => o.trim())
+    .filter(Boolean);
+}
+
+async function nextQuestionOrder(roleId: string) {
+  const last = await db.roleQuestion.findFirst({
+    where: { openRoleId: roleId },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+  return (last?.order ?? -1) + 1;
+}
 
 export async function addQuestion(roleId: string, formData: FormData) {
   await requireRole("MASY_OPS");
@@ -119,24 +152,40 @@ export async function addQuestion(roleId: string, formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid question");
   }
 
-  const options =
-    parsed.data.type === "MULTIPLE_CHOICE"
-      ? (parsed.data.options ?? "")
-          .split("\n")
-          .map((o) => o.trim())
-          .filter(Boolean)
-      : [];
-
-  const count = await db.roleQuestion.count({ where: { openRoleId: roleId } });
-
   await db.roleQuestion.create({
     data: {
       openRoleId: roleId,
       label: parsed.data.label,
       type: parsed.data.type,
       required: parsed.data.required,
-      options,
-      order: count,
+      options: parseOptions(parsed.data.type, parsed.data.options),
+      order: await nextQuestionOrder(roleId),
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function updateQuestion(questionId: string, roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = addQuestionSchema.safeParse({
+    label: formData.get("label"),
+    type: formData.get("type"),
+    required: formData.get("required") === "on",
+    options: formData.get("options") || undefined,
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid question");
+  }
+
+  await db.roleQuestion.update({
+    where: { id: questionId },
+    data: {
+      label: parsed.data.label,
+      type: parsed.data.type,
+      required: parsed.data.required,
+      options: parseOptions(parsed.data.type, parsed.data.options),
     },
   });
 
@@ -147,6 +196,32 @@ export async function deleteQuestion(questionId: string, roleId: string) {
   await requireRole("MASY_OPS");
 
   await db.roleQuestion.delete({ where: { id: questionId } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function moveQuestion(questionId: string, roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const direction = formData.get("direction");
+  if (direction !== "up" && direction !== "down") throw new Error("Invalid direction");
+
+  const questions = await db.roleQuestion.findMany({
+    where: { openRoleId: roleId },
+    orderBy: { order: "asc" },
+    select: { id: true, order: true },
+  });
+  const index = questions.findIndex((q) => q.id === questionId);
+  const swapIndex = direction === "up" ? index - 1 : index + 1;
+  if (index === -1 || swapIndex < 0 || swapIndex >= questions.length) return;
+
+  const current = questions[index];
+  const swapWith = questions[swapIndex];
+
+  await db.$transaction([
+    db.roleQuestion.update({ where: { id: current.id }, data: { order: swapWith.order } }),
+    db.roleQuestion.update({ where: { id: swapWith.id }, data: { order: current.order } }),
+  ]);
 
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
@@ -191,7 +266,7 @@ export async function addSuggestedQuestions(roleId: string, questions: Suggested
   const parsed = suggestedQuestionsSchema.safeParse(questions);
   if (!parsed.success || parsed.data.length === 0) return;
 
-  const count = await db.roleQuestion.count({ where: { openRoleId: roleId } });
+  const start = await nextQuestionOrder(roleId);
 
   await db.roleQuestion.createMany({
     data: parsed.data.map((q, i) => ({
@@ -199,7 +274,7 @@ export async function addSuggestedQuestions(roleId: string, questions: Suggested
       label: q.label,
       type: q.type,
       required: q.required,
-      order: count + i,
+      order: start + i,
     })),
   });
 
