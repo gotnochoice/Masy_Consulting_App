@@ -3,7 +3,7 @@
 import { useActionState, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { RoleQuestion, QuestionSection } from "@/generated/prisma/client";
-import { SocialLinks } from "@/components/social-links";
+import { SocialLinks, SocialLinksList } from "@/components/social-links";
 import type { ApplyState } from "./actions";
 
 const inputClass =
@@ -313,10 +313,26 @@ export function ApplyForm({
       )}
 
       {isLastStep && (
-        <p className="text-xs text-slate-light">
-          By submitting this application, you agree that your information will be used only to evaluate you for this
-          role and shared with {companyName}. We won&apos;t use it for anything else.
-        </p>
+        <div className="space-y-4 border-t border-border pt-6">
+          <div>
+            <p className="text-sm font-medium text-ink">Follow us on social media</p>
+            <p className="mt-1 text-xs text-slate-light">Stay updated on new roles as they open.</p>
+            <SocialLinksList className="mt-3" />
+          </div>
+          <label className="flex items-start gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              name="followsSocial"
+              required
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-indigo"
+            />
+            I follow Masy Consulting on social media
+          </label>
+          <p className="text-xs text-slate-light">
+            By submitting this application, you agree that your information will be used only to evaluate you for this
+            role and shared with {companyName}. We won&apos;t use it for anything else.
+          </p>
+        </div>
       )}
 
       <div className="flex gap-3 border-t border-border pt-6">

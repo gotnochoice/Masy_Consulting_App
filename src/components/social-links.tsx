@@ -1,4 +1,4 @@
-const SOCIALS: { name: string; href: string; icon: React.ReactNode }[] = [
+export const SOCIAL_PLATFORMS: { name: string; href: string; icon: React.ReactNode }[] = [
   {
     name: "Instagram",
     href: "https://www.instagram.com/masy_consulting",
@@ -42,7 +42,7 @@ const SOCIALS: { name: string; href: string; icon: React.ReactNode }[] = [
 export function SocialLinks({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      {SOCIALS.map((s) => (
+      {SOCIAL_PLATFORMS.map((s) => (
         <a
           key={s.name}
           href={s.href}
@@ -52,6 +52,29 @@ export function SocialLinks({ className = "" }: { className?: string }) {
           className="flex h-9 w-9 items-center justify-center rounded-btn bg-indigo-tint text-indigo transition-colors hover:bg-indigo hover:text-white"
         >
           {s.icon}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// Named links (not just icons) so applicants can see exactly which platform each one is
+// before checking the required "I follow" box.
+export function SocialLinksList({ className = "" }: { className?: string }) {
+  return (
+    <div className={`grid grid-cols-2 gap-2 ${className}`}>
+      {SOCIAL_PLATFORMS.map((s) => (
+        <a
+          key={s.name}
+          href={s.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-btn border border-border px-3 py-2 text-sm text-ink transition-colors hover:border-indigo/40 hover:text-indigo"
+        >
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-btn bg-indigo-tint text-indigo">
+            {s.icon}
+          </span>
+          {s.name}
         </a>
       ))}
     </div>

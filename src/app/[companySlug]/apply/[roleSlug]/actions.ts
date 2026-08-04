@@ -77,6 +77,9 @@ export async function submitApplication(
   if (role.askHowHeard && !parsed.data.howHeard) {
     return { error: "Please tell us how you heard about this role." };
   }
+  if (formData.get("followsSocial") !== "on") {
+    return { error: "Please confirm you follow us on social media before submitting." };
+  }
 
   const answers: { roleQuestionId: string; value: string }[] = [];
   for (const q of role.questions) {
