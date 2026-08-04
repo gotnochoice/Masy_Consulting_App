@@ -60,10 +60,10 @@ export async function submitApplication(
     name: formData.get("name"),
     email: formData.get("email"),
     phone: formData.get("phone"),
-    yearsExperience: formData.get("yearsExperience"),
+    yearsExperience: formData.get("yearsExperience") || undefined,
     resumeLink: formData.get("resumeLink") || "",
-    expectedPay: formData.get("expectedPay"),
-    howHeard: formData.get("howHeard"),
+    expectedPay: formData.get("expectedPay") || undefined,
+    howHeard: formData.get("howHeard") || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Please check your answers." };
