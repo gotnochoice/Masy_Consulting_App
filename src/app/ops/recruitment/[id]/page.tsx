@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
+import type { RoleQuestion } from "@/generated/prisma/client";
 import { CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { CandidateCard } from "./candidate-card";
@@ -19,6 +20,10 @@ import {
   updateQuestion,
   moveQuestion,
   deleteQuestion,
+  createQuestionSection,
+  renameQuestionSection,
+  deleteQuestionSection,
+  moveQuestionSection,
   deleteCandidate,
   clearAllCandidates,
 } from "../actions";
@@ -44,6 +49,126 @@ const DEFAULT_FIELD_OPTIONS = [
   { name: "askResumeLink", label: "Link to CV / resume" },
 ] as const;
 
+function SectionSelect({
+  id,
+  sections,
+  defaultValue,
+}: {
+  id: string;
+  sections: { id: string; title: string }[];
+  defaultValue: string;
+}) {
+  return (
+    <div>
+      <label className={labelClass} htmlFor={id}>Section</label>
+      <select id={id} name="sectionId" defaultValue={defaultValue} className={inputClass}>
+        <option value="">No section</option>
+        {sections.map((s) => (
+          <option key={s.id} value={s.id}>{s.title}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function QuestionRow({
+  q,
+  index,
+  siblingCount,
+  roleId,
+  sections,
+}: {
+  q: RoleQuestion;
+  index: number;
+  siblingCount: number;
+  roleId: string;
+  sections: { id: string; title: string }[];
+}) {
+  const deleteQuestionWithIds = deleteQuestion.bind(null, q.id, roleId);
+  const updateQuestionWithIds = updateQuestion.bind(null, q.id, roleId);
+  const moveQuestionWithIds = moveQuestion.bind(null, q.id, roleId);
+
+  return (
+    <details className="rounded-btn border border-border px-3 py-2">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+        <div>
+          <p className="text-sm text-ink">{q.label}</p>
+          <p className="text-xs text-slate-light">
+            {QUESTION_TYPE_OPTIONS.find((o) => o.value === q.type)?.label} · {q.required ? "required" : "optional"}
+            {q.type === "MULTIPLE_CHOICE" && q.options.length > 0 && ` · ${q.options.join(", ")}`}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <form action={moveQuestionWithIds}>
+            <input type="hidden" name="direction" value="up" />
+            <button
+              type="submit"
+              disabled={index === 0}
+              aria-label="Move question up"
+              className="text-xs font-medium text-slate hover:text-ink disabled:opacity-30"
+            >
+              ↑
+            </button>
+          </form>
+          <form action={moveQuestionWithIds}>
+            <input type="hidden" name="direction" value="down" />
+            <button
+              type="submit"
+              disabled={index === siblingCount - 1}
+              aria-label="Move question down"
+              className="text-xs font-medium text-slate hover:text-ink disabled:opacity-30"
+            >
+              ↓
+            </button>
+          </form>
+          <span className="text-xs font-medium text-indigo">Edit</span>
+          <form action={deleteQuestionWithIds}>
+            <button type="submit" className="text-xs font-medium text-slate hover:text-orange">Remove</button>
+          </form>
+        </div>
+      </summary>
+
+      <form action={updateQuestionWithIds} className="mt-3 space-y-3 border-t border-border pt-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex-1 min-w-[200px]">
+            <label className={labelClass} htmlFor={`label-${q.id}`}>Question</label>
+            <input id={`label-${q.id}`} name="label" required defaultValue={q.label} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor={`type-${q.id}`}>Answer type</label>
+            <select id={`type-${q.id}`} name="type" defaultValue={q.type} className={inputClass}>
+              {QUESTION_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          {sections.length > 0 && (
+            <SectionSelect id={`section-${q.id}`} sections={sections} defaultValue={q.sectionId ?? ""} />
+          )}
+          <label className="flex items-center gap-2 pb-2 text-sm text-slate">
+            <input type="checkbox" name="required" defaultChecked={q.required} className="rounded border-border" />
+            Required
+          </label>
+        </div>
+        <div>
+          <label className={labelClass} htmlFor={`options-${q.id}`}>
+            Choices (for multiple choice only, one per line)
+          </label>
+          <textarea
+            id={`options-${q.id}`}
+            name="options"
+            rows={3}
+            defaultValue={q.options.join("\n")}
+            placeholder={"Option A\nOption B\nOption C"}
+            className={inputClass}
+          />
+        </div>
+        <button type="submit" className={buttonClass}>Save changes</button>
+      </form>
+    </details>
+  );
+}
+
 export default async function RolePipelinePage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole("MASY_OPS");
   const { id } = await params;
@@ -53,6 +178,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
     include: {
       clientOrg: true,
       questions: { orderBy: { order: "asc" } },
+      questionSections: { orderBy: { order: "asc" } },
       candidates: { orderBy: { createdAt: "desc" }, include: { answers: { include: { roleQuestion: true } } } },
     },
   });
@@ -67,7 +193,13 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
   const updateDefaultFieldsWithId = updateRoleDefaultFields.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
+  const createSectionWithId = createQuestionSection.bind(null, role.id);
   const clearAllWithId = clearAllCandidates.bind(null, role.id);
+
+  const ungroupedQuestions = role.questions.filter((q) => !q.sectionId);
+  const questionsBySection = new Map(
+    role.questionSections.map((s) => [s.id, role.questions.filter((q) => q.sectionId === s.id)]),
+  );
 
   const columns = CANDIDATE_STAGE_ORDER.map((stage) => ({
     stage,
@@ -168,97 +300,123 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
       <div className="rounded-card border border-border bg-paper p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Application questions</h2>
         <p className="mb-4 text-sm text-slate">
-          Shown to every applicant on the public form, in this order. Use these for anything specific to this role or
-          client, a portfolio link, availability, relevant experience.
+          Shown to every applicant on the public form, in this order. Group related questions into a section (e.g.
+          &ldquo;Availability&rdquo;, &ldquo;Sewing experience&rdquo;) to keep a long form easy to follow, or leave a
+          question ungrouped and it will show under &ldquo;Additional questions&rdquo;.
         </p>
         <SuggestQuestionsPanel roleId={role.id} />
-        <div className="mb-4 space-y-2">
-          {role.questions.map((q, i) => {
-            const deleteQuestionWithIds = deleteQuestion.bind(null, q.id, role.id);
-            const updateQuestionWithIds = updateQuestion.bind(null, q.id, role.id);
-            const moveQuestionWithIds = moveQuestion.bind(null, q.id, role.id);
-            return (
-              <details key={q.id} className="rounded-btn border border-border px-3 py-2">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
-                  <div>
-                    <p className="text-sm text-ink">{q.label}</p>
-                    <p className="text-xs text-slate-light">
-                      {QUESTION_TYPE_OPTIONS.find((o) => o.value === q.type)?.label} · {q.required ? "required" : "optional"}
-                      {q.type === "MULTIPLE_CHOICE" && q.options.length > 0 && ` · ${q.options.join(", ")}`}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <form action={moveQuestionWithIds}>
-                      <input type="hidden" name="direction" value="up" />
-                      <button
-                        type="submit"
-                        disabled={i === 0}
-                        aria-label="Move question up"
-                        className="text-xs font-medium text-slate hover:text-ink disabled:opacity-30"
-                      >
-                        ↑
-                      </button>
-                    </form>
-                    <form action={moveQuestionWithIds}>
-                      <input type="hidden" name="direction" value="down" />
-                      <button
-                        type="submit"
-                        disabled={i === role.questions.length - 1}
-                        aria-label="Move question down"
-                        className="text-xs font-medium text-slate hover:text-ink disabled:opacity-30"
-                      >
-                        ↓
-                      </button>
-                    </form>
-                    <span className="text-xs font-medium text-indigo">Edit</span>
-                    <form action={deleteQuestionWithIds}>
-                      <button type="submit" className="text-xs font-medium text-slate hover:text-orange">Remove</button>
-                    </form>
-                  </div>
-                </summary>
 
-                <form action={updateQuestionWithIds} className="mt-3 space-y-3 border-t border-border pt-3">
-                  <div className="flex flex-wrap items-end gap-3">
-                    <div className="flex-1 min-w-[200px]">
-                      <label className={labelClass} htmlFor={`label-${q.id}`}>Question</label>
-                      <input id={`label-${q.id}`} name="label" required defaultValue={q.label} className={inputClass} />
-                    </div>
-                    <div>
-                      <label className={labelClass} htmlFor={`type-${q.id}`}>Answer type</label>
-                      <select id={`type-${q.id}`} name="type" defaultValue={q.type} className={inputClass}>
-                        {QUESTION_TYPE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <label className="flex items-center gap-2 pb-2 text-sm text-slate">
-                      <input type="checkbox" name="required" defaultChecked={q.required} className="rounded border-border" />
-                      Required
-                    </label>
+        {ungroupedQuestions.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {ungroupedQuestions.map((q, i) => (
+              <QuestionRow
+                key={q.id}
+                q={q}
+                index={i}
+                siblingCount={ungroupedQuestions.length}
+                roleId={role.id}
+                sections={role.questionSections}
+              />
+            ))}
+          </div>
+        )}
+        {role.questions.length === 0 && role.questionSections.length === 0 && (
+          <p className="mb-4 text-sm text-slate-light">No custom questions yet. Applicants will just submit name, email, and a CV link.</p>
+        )}
+
+        {role.questionSections.length > 0 && (
+          <div className="mb-4 space-y-3">
+            {role.questionSections.map((section, si) => {
+              const sectionQuestions = questionsBySection.get(section.id) ?? [];
+              const renameWithIds = renameQuestionSection.bind(null, section.id, role.id);
+              const deleteSectionWithIds = deleteQuestionSection.bind(null, section.id, role.id);
+              const moveSectionWithIds = moveQuestionSection.bind(null, section.id, role.id);
+              return (
+                <div key={section.id} className="rounded-btn border border-border bg-paper-2 p-3">
+                  <details>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                      <p className="text-sm font-semibold text-ink">{section.title}</p>
+                      <div className="flex shrink-0 items-center gap-3">
+                        <form action={moveSectionWithIds}>
+                          <input type="hidden" name="direction" value="up" />
+                          <button
+                            type="submit"
+                            disabled={si === 0}
+                            aria-label="Move section up"
+                            className="text-xs font-medium text-slate hover:text-ink disabled:opacity-30"
+                          >
+                            ↑
+                          </button>
+                        </form>
+                        <form action={moveSectionWithIds}>
+                          <input type="hidden" name="direction" value="down" />
+                          <button
+                            type="submit"
+                            disabled={si === role.questionSections.length - 1}
+                            aria-label="Move section down"
+                            className="text-xs font-medium text-slate hover:text-ink disabled:opacity-30"
+                          >
+                            ↓
+                          </button>
+                        </form>
+                        <span className="text-xs font-medium text-indigo">Rename</span>
+                        <form action={deleteSectionWithIds}>
+                          <button type="submit" className="text-xs font-medium text-slate hover:text-orange">
+                            Delete section
+                          </button>
+                        </form>
+                      </div>
+                    </summary>
+                    <form action={renameWithIds} className="mt-3 flex items-end gap-3 border-t border-border pt-3">
+                      <div className="flex-1">
+                        <label className={labelClass} htmlFor={`section-title-${section.id}`}>Section title</label>
+                        <input
+                          id={`section-title-${section.id}`}
+                          name="title"
+                          required
+                          defaultValue={section.title}
+                          className={inputClass}
+                        />
+                      </div>
+                      <button type="submit" className="rounded-btn border border-border px-3 py-2 text-xs font-medium text-slate hover:text-ink">
+                        Save
+                      </button>
+                    </form>
+                  </details>
+
+                  <div className="mt-3 space-y-2">
+                    {sectionQuestions.map((q, i) => (
+                      <QuestionRow
+                        key={q.id}
+                        q={q}
+                        index={i}
+                        siblingCount={sectionQuestions.length}
+                        roleId={role.id}
+                        sections={role.questionSections}
+                      />
+                    ))}
+                    {sectionQuestions.length === 0 && (
+                      <p className="text-xs text-slate-light">No questions in this section yet.</p>
+                    )}
                   </div>
-                  <div>
-                    <label className={labelClass} htmlFor={`options-${q.id}`}>
-                      Choices (for multiple choice only, one per line)
-                    </label>
-                    <textarea
-                      id={`options-${q.id}`}
-                      name="options"
-                      rows={3}
-                      defaultValue={q.options.join("\n")}
-                      placeholder={"Option A\nOption B\nOption C"}
-                      className={inputClass}
-                    />
-                  </div>
-                  <button type="submit" className={buttonClass}>Save changes</button>
-                </form>
-              </details>
-            );
-          })}
-          {role.questions.length === 0 && (
-            <p className="text-sm text-slate-light">No custom questions yet. Applicants will just submit name, email, and a CV link.</p>
-          )}
-        </div>
-        <form action={addQuestionWithId} className="space-y-3">
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <form action={createSectionWithId} className="mb-6 flex items-end gap-3 border-t border-border pt-4">
+          <div className="flex-1 max-w-xs">
+            <label className={labelClass} htmlFor="sectionTitle">New section</label>
+            <input id="sectionTitle" name="title" placeholder="e.g. Availability" className={inputClass} />
+          </div>
+          <button type="submit" className="rounded-btn border border-border px-3 py-2 text-xs font-medium text-slate hover:text-ink">
+            Add section
+          </button>
+        </form>
+
+        <form action={addQuestionWithId} className="space-y-3 border-t border-border pt-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-light">Add a question</p>
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex-1 min-w-[200px]">
               <label className={labelClass} htmlFor="label">Question</label>
@@ -272,6 +430,9 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                 ))}
               </select>
             </div>
+            {role.questionSections.length > 0 && (
+              <SectionSelect id="sectionId" sections={role.questionSections} defaultValue="" />
+            )}
             <label className="flex items-center gap-2 pb-2 text-sm text-slate">
               <input type="checkbox" name="required" defaultChecked className="rounded border-border" />
               Required

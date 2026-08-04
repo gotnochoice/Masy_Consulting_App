@@ -120,6 +120,7 @@ const addQuestionSchema = z.object({
   type: z.enum(QUESTION_TYPES),
   required: z.boolean(),
   options: z.string().optional(),
+  sectionId: z.string().optional(),
 });
 
 function parseOptions(type: (typeof QUESTION_TYPES)[number], raw: string | undefined) {
@@ -147,6 +148,7 @@ export async function addQuestion(roleId: string, formData: FormData) {
     type: formData.get("type"),
     required: formData.get("required") === "on",
     options: formData.get("options") || undefined,
+    sectionId: formData.get("sectionId") || undefined,
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid question");
@@ -159,6 +161,7 @@ export async function addQuestion(roleId: string, formData: FormData) {
       type: parsed.data.type,
       required: parsed.data.required,
       options: parseOptions(parsed.data.type, parsed.data.options),
+      sectionId: parsed.data.sectionId || null,
       order: await nextQuestionOrder(roleId),
     },
   });
@@ -174,6 +177,7 @@ export async function updateQuestion(questionId: string, roleId: string, formDat
     type: formData.get("type"),
     required: formData.get("required") === "on",
     options: formData.get("options") || undefined,
+    sectionId: formData.get("sectionId") || undefined,
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid question");
@@ -186,6 +190,7 @@ export async function updateQuestion(questionId: string, roleId: string, formDat
       type: parsed.data.type,
       required: parsed.data.required,
       options: parseOptions(parsed.data.type, parsed.data.options),
+      sectionId: parsed.data.sectionId || null,
     },
   });
 
@@ -206,21 +211,105 @@ export async function moveQuestion(questionId: string, roleId: string, formData:
   const direction = formData.get("direction");
   if (direction !== "up" && direction !== "down") throw new Error("Invalid direction");
 
-  const questions = await db.roleQuestion.findMany({
-    where: { openRoleId: roleId },
+  const moving = await db.roleQuestion.findUnique({ where: { id: questionId }, select: { sectionId: true } });
+  if (!moving) return;
+
+  const siblings = await db.roleQuestion.findMany({
+    where: { openRoleId: roleId, sectionId: moving.sectionId },
     orderBy: { order: "asc" },
     select: { id: true, order: true },
   });
-  const index = questions.findIndex((q) => q.id === questionId);
+  const index = siblings.findIndex((q) => q.id === questionId);
   const swapIndex = direction === "up" ? index - 1 : index + 1;
-  if (index === -1 || swapIndex < 0 || swapIndex >= questions.length) return;
+  if (index === -1 || swapIndex < 0 || swapIndex >= siblings.length) return;
 
-  const current = questions[index];
-  const swapWith = questions[swapIndex];
+  const current = siblings[index];
+  const swapWith = siblings[swapIndex];
 
   await db.$transaction([
     db.roleQuestion.update({ where: { id: current.id }, data: { order: swapWith.order } }),
     db.roleQuestion.update({ where: { id: swapWith.id }, data: { order: current.order } }),
+  ]);
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+const sectionTitleSchema = z.object({
+  title: z.string().min(1, "Section title is required"),
+});
+
+async function nextSectionOrder(roleId: string) {
+  const last = await db.questionSection.findFirst({
+    where: { openRoleId: roleId },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+  return (last?.order ?? -1) + 1;
+}
+
+export async function createQuestionSection(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = sectionTitleSchema.safeParse({ title: formData.get("title") });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid section");
+  }
+
+  await db.questionSection.create({
+    data: {
+      openRoleId: roleId,
+      title: parsed.data.title,
+      order: await nextSectionOrder(roleId),
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function renameQuestionSection(sectionId: string, roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = sectionTitleSchema.safeParse({ title: formData.get("title") });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid section");
+  }
+
+  await db.questionSection.update({ where: { id: sectionId }, data: { title: parsed.data.title } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function deleteQuestionSection(sectionId: string, roleId: string) {
+  await requireRole("MASY_OPS");
+
+  // Questions in this section fall back to ungrouped (sectionId set to null via the DB's
+  // onDelete: SetNull), they are not deleted along with the section.
+  await db.questionSection.delete({ where: { id: sectionId } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function moveQuestionSection(sectionId: string, roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const direction = formData.get("direction");
+  if (direction !== "up" && direction !== "down") throw new Error("Invalid direction");
+
+  const sections = await db.questionSection.findMany({
+    where: { openRoleId: roleId },
+    orderBy: { order: "asc" },
+    select: { id: true, order: true },
+  });
+  const index = sections.findIndex((s) => s.id === sectionId);
+  const swapIndex = direction === "up" ? index - 1 : index + 1;
+  if (index === -1 || swapIndex < 0 || swapIndex >= sections.length) return;
+
+  const current = sections[index];
+  const swapWith = sections[swapIndex];
+
+  await db.$transaction([
+    db.questionSection.update({ where: { id: current.id }, data: { order: swapWith.order } }),
+    db.questionSection.update({ where: { id: swapWith.id }, data: { order: current.order } }),
   ]);
 
   revalidatePath(`/ops/recruitment/${roleId}`);

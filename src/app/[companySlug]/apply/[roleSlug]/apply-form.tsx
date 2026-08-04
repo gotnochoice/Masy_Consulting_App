@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import type { RoleQuestion } from "@/generated/prisma/client";
+import type { RoleQuestion, QuestionSection } from "@/generated/prisma/client";
 import type { ApplyState } from "./actions";
 
 const inputClass =
@@ -22,9 +22,50 @@ function SectionHeading({ number, children }: { number: string; children: React.
   );
 }
 
+function QuestionField({ q }: { q: RoleQuestion }) {
+  return (
+    <div>
+      <label className={labelClass} htmlFor={`answer_${q.id}`}>
+        {q.label}
+        {!q.required && <span className="text-slate-light"> (optional)</span>}
+      </label>
+      {q.type === "LONG_TEXT" ? (
+        <textarea id={`answer_${q.id}`} name={`answer_${q.id}`} required={q.required} rows={3} className={inputClass} />
+      ) : q.type === "MULTIPLE_CHOICE" ? (
+        <div className="space-y-2">
+          {q.options.map((opt) => (
+            <label
+              key={opt}
+              className="flex cursor-pointer items-center gap-3 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint has-[:hover]:border-indigo/40"
+            >
+              <input
+                type="radio"
+                name={`answer_${q.id}`}
+                value={opt}
+                required={q.required}
+                className="h-4 w-4 shrink-0 accent-indigo"
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      ) : (
+        <input
+          id={`answer_${q.id}`}
+          name={`answer_${q.id}`}
+          type={q.type === "LINK" ? "url" : "text"}
+          required={q.required}
+          className={inputClass}
+        />
+      )}
+    </div>
+  );
+}
+
 export function ApplyForm({
   action,
   questions,
+  questionSections,
   roleTitle,
   companyName,
   askYearsExperience,
@@ -34,6 +75,7 @@ export function ApplyForm({
 }: {
   action: (prevState: ApplyState, formData: FormData) => Promise<ApplyState>;
   questions: RoleQuestion[];
+  questionSections: QuestionSection[];
   roleTitle: string;
   companyName: string;
   askYearsExperience: boolean;
@@ -43,10 +85,16 @@ export function ApplyForm({
 }) {
   const [state, formAction, isPending] = useActionState<ApplyState, FormData>(action, {});
 
+  const ungroupedQuestions = questions.filter((q) => !q.sectionId);
+  const namedSections = questionSections
+    .map((section) => ({ section, questions: questions.filter((q) => q.sectionId === section.id) }))
+    .filter((s) => s.questions.length > 0);
+
   let sectionCount = 0;
   const personalSection = String(++sectionCount).padStart(2, "0");
   const materialsSection = askResumeLink ? String(++sectionCount).padStart(2, "0") : null;
-  const questionsSection = questions.length > 0 ? String(++sectionCount).padStart(2, "0") : null;
+  const additionalQuestionsSection = ungroupedQuestions.length > 0 ? String(++sectionCount).padStart(2, "0") : null;
+  const namedSectionNumbers = new Map(namedSections.map((s) => [s.section.id, String(++sectionCount).padStart(2, "0")]));
 
   if (state.success) {
     return (
@@ -158,48 +206,23 @@ export function ApplyForm({
         </div>
       )}
 
-      {questions.length > 0 && (
+      {ungroupedQuestions.length > 0 && (
         <div className="space-y-5 border-t border-border pt-6">
-          <SectionHeading number={questionsSection!}>Additional questions</SectionHeading>
-          {questions.map((q) => (
-            <div key={q.id}>
-              <label className={labelClass} htmlFor={`answer_${q.id}`}>
-                {q.label}
-                {!q.required && <span className="text-slate-light"> (optional)</span>}
-              </label>
-              {q.type === "LONG_TEXT" ? (
-                <textarea id={`answer_${q.id}`} name={`answer_${q.id}`} required={q.required} rows={3} className={inputClass} />
-              ) : q.type === "MULTIPLE_CHOICE" ? (
-                <div className="space-y-2">
-                  {q.options.map((opt) => (
-                    <label
-                      key={opt}
-                      className="flex cursor-pointer items-center gap-3 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint has-[:hover]:border-indigo/40"
-                    >
-                      <input
-                        type="radio"
-                        name={`answer_${q.id}`}
-                        value={opt}
-                        required={q.required}
-                        className="h-4 w-4 shrink-0 accent-indigo"
-                      />
-                      {opt}
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <input
-                  id={`answer_${q.id}`}
-                  name={`answer_${q.id}`}
-                  type={q.type === "LINK" ? "url" : "text"}
-                  required={q.required}
-                  className={inputClass}
-                />
-              )}
-            </div>
+          <SectionHeading number={additionalQuestionsSection!}>Additional questions</SectionHeading>
+          {ungroupedQuestions.map((q) => (
+            <QuestionField key={q.id} q={q} />
           ))}
         </div>
       )}
+
+      {namedSections.map(({ section, questions: sectionQuestions }) => (
+        <div key={section.id} className="space-y-5 border-t border-border pt-6">
+          <SectionHeading number={namedSectionNumbers.get(section.id)!}>{section.title}</SectionHeading>
+          {sectionQuestions.map((q) => (
+            <QuestionField key={q.id} q={q} />
+          ))}
+        </div>
+      ))}
 
       {state.error && (
         <p className="rounded-btn border border-orange/30 bg-orange/5 px-3.5 py-2.5 text-sm text-orange">{state.error}</p>

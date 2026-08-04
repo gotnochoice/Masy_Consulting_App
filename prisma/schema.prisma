@@ -275,16 +275,29 @@ model OpenRole {
   askHowHeard             Boolean        @default(true)
   askResumeLink           Boolean        @default(true)
   questions               RoleQuestion[]
+  questionSections        QuestionSection[]
   candidates              Candidate[]
   createdAt               DateTime       @default(now())
 
   @@unique([clientOrgId, slug])
 }
 
+model QuestionSection {
+  id         String         @id @default(cuid())
+  openRoleId String
+  openRole   OpenRole       @relation(fields: [openRoleId], references: [id], onDelete: Cascade)
+  title      String
+  order      Int            @default(0)
+  questions  RoleQuestion[]
+  createdAt  DateTime       @default(now())
+}
+
 model RoleQuestion {
   id         String            @id @default(cuid())
   openRoleId String
   openRole   OpenRole          @relation(fields: [openRoleId], references: [id], onDelete: Cascade)
+  sectionId  String?
+  section    QuestionSection?  @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   label      String
   type       QuestionType      @default(SHORT_TEXT)
   options    String[]          @default([])

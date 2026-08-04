@@ -12,7 +12,11 @@ export default async function ApplyPage({
 
   const role = await db.openRole.findFirst({
     where: { slug: roleSlug, clientOrg: { slug: companySlug } },
-    include: { clientOrg: true, questions: { orderBy: { order: "asc" } } },
+    include: {
+      clientOrg: true,
+      questions: { orderBy: { order: "asc" } },
+      questionSections: { orderBy: { order: "asc" } },
+    },
   });
 
   if (!role) notFound();
@@ -67,6 +71,7 @@ export default async function ApplyPage({
                 <ApplyForm
                   action={submitWithSlugs}
                   questions={role.questions}
+                  questionSections={role.questionSections}
                   roleTitle={role.title}
                   companyName={role.clientOrg.name}
                   askYearsExperience={role.askYearsExperience}
