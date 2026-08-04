@@ -8,6 +8,7 @@ import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { CandidateCard } from "./candidate-card";
 import { CopyLinkButton } from "./copy-link-button";
 import { SuggestQuestionsPanel } from "./suggest-questions-panel";
+import { SectionMoveSelect } from "./section-move-select";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import {
   updateRoleStage,
@@ -19,6 +20,7 @@ import {
   addQuestion,
   updateQuestion,
   moveQuestion,
+  moveQuestionToSection,
   deleteQuestion,
   createQuestionSection,
   renameQuestionSection,
@@ -87,6 +89,7 @@ function QuestionRow({
   const deleteQuestionWithIds = deleteQuestion.bind(null, q.id, roleId);
   const updateQuestionWithIds = updateQuestion.bind(null, q.id, roleId);
   const moveQuestionWithIds = moveQuestion.bind(null, q.id, roleId);
+  const moveToSectionWithIds = moveQuestionToSection.bind(null, q.id, roleId);
 
   return (
     <details className="rounded-btn border border-border px-3 py-2">
@@ -99,6 +102,9 @@ function QuestionRow({
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
+          {sections.length > 0 && (
+            <SectionMoveSelect action={moveToSectionWithIds} sections={sections} defaultValue={q.sectionId ?? ""} />
+          )}
           <form action={moveQuestionWithIds}>
             <input type="hidden" name="direction" value="up" />
             <button
@@ -142,9 +148,6 @@ function QuestionRow({
               ))}
             </select>
           </div>
-          {sections.length > 0 && (
-            <SectionSelect id={`section-${q.id}`} sections={sections} defaultValue={q.sectionId ?? ""} />
-          )}
           <label className="flex items-center gap-2 pb-2 text-sm text-slate">
             <input type="checkbox" name="required" defaultChecked={q.required} className="rounded border-border" />
             Required

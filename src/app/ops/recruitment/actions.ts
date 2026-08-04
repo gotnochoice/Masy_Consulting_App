@@ -205,6 +205,18 @@ export async function deleteQuestion(questionId: string, roleId: string) {
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
+export async function moveQuestionToSection(questionId: string, roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const sectionId = formData.get("sectionId");
+  await db.roleQuestion.update({
+    where: { id: questionId },
+    data: { sectionId: typeof sectionId === "string" && sectionId ? sectionId : null },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
 export async function moveQuestion(questionId: string, roleId: string, formData: FormData) {
   await requireRole("MASY_OPS");
 
