@@ -45,6 +45,25 @@ function QuestionField({ q, active }: { q: RoleQuestion; active: boolean }) {
             </label>
           ))}
         </div>
+      ) : q.type === "CHECKBOXES" ? (
+        // A checkbox group can't use `required` per-box (that would force every box checked
+        // instead of "at least one"), so "at least one selected" is enforced server-side.
+        <div className="space-y-2">
+          {q.options.map((opt) => (
+            <label
+              key={opt}
+              className="flex cursor-pointer items-center gap-3 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint has-[:hover]:border-indigo/40"
+            >
+              <input
+                type="checkbox"
+                name={`answer_${q.id}`}
+                value={opt}
+                className="h-4 w-4 shrink-0 rounded accent-indigo"
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
       ) : (
         <input
           id={`answer_${q.id}`}
@@ -83,6 +102,7 @@ export function ApplyForm({
 }) {
   const [state, formAction, isPending] = useActionState<ApplyState, FormData>(action, {});
   const [currentStep, setCurrentStep] = useState(0);
+  const [showFollowPrompt, setShowFollowPrompt] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const ungroupedQuestions = questions.filter((q) => !q.sectionId);
@@ -319,19 +339,60 @@ export function ApplyForm({
             <p className="mt-1 text-xs text-slate-light">Stay updated on new roles as they open.</p>
             <SocialLinksList className="mt-3" />
           </div>
-          <label className="flex items-start gap-2 text-sm text-ink">
-            <input
-              type="checkbox"
-              name="followsSocial"
-              required
-              className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-indigo"
-            />
-            I follow Masy Consulting on social media
-          </label>
+          <div className="space-y-2">
+            <label className="flex cursor-pointer items-center gap-2 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint">
+              <input
+                type="radio"
+                name="followsSocial"
+                value="yes"
+                required
+                onChange={() => setShowFollowPrompt(false)}
+                className="h-4 w-4 shrink-0 accent-indigo"
+              />
+              I follow Masy Consulting on social media
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint">
+              <input
+                type="radio"
+                name="followsSocial"
+                value="no"
+                required
+                onChange={() => setShowFollowPrompt(true)}
+                className="h-4 w-4 shrink-0 accent-indigo"
+              />
+              I don&apos;t follow yet
+            </label>
+          </div>
           <p className="text-xs text-slate-light">
             By submitting this application, you agree that your information will be used only to evaluate you for this
             role and shared with {companyName}. We won&apos;t use it for anything else.
           </p>
+        </div>
+      )}
+
+      {showFollowPrompt && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"
+          onClick={() => setShowFollowPrompt(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-card bg-paper p-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-base font-bold text-ink">Follow us to continue</p>
+            <p className="mt-2 text-sm text-slate">
+              Please follow Masy Consulting on social media to stay updated on new roles, then come back and select
+              &ldquo;I follow Masy Consulting on social media&rdquo; above to continue.
+            </p>
+            <SocialLinksList className="mt-4" />
+            <button
+              type="button"
+              onClick={() => setShowFollowPrompt(false)}
+              className={`mt-4 w-full ${buttonClass}`}
+            >
+              Got it
+            </button>
+          </div>
         </div>
       )}
 

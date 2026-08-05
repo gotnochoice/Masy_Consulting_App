@@ -41,7 +41,8 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "SHORT_TEXT", label: "Short answer" },
   { value: "LONG_TEXT", label: "Long answer" },
   { value: "LINK", label: "Link (portfolio, etc.)" },
-  { value: "MULTIPLE_CHOICE", label: "Multiple choice" },
+  { value: "MULTIPLE_CHOICE", label: "Multiple choice (pick one)" },
+  { value: "CHECKBOXES", label: "Checkboxes (pick multiple)" },
 ];
 
 const DEFAULT_FIELD_OPTIONS = [
@@ -98,7 +99,7 @@ function QuestionRow({
           <p className="text-sm text-ink">{q.label}</p>
           <p className="text-xs text-slate-light">
             {QUESTION_TYPE_OPTIONS.find((o) => o.value === q.type)?.label} · {q.required ? "required" : "optional"}
-            {q.type === "MULTIPLE_CHOICE" && q.options.length > 0 && ` · ${q.options.join(", ")}`}
+            {(q.type === "MULTIPLE_CHOICE" || q.type === "CHECKBOXES") && q.options.length > 0 && ` · ${q.options.join(", ")}`}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
@@ -155,7 +156,7 @@ function QuestionRow({
         </div>
         <div>
           <label className={labelClass} htmlFor={`options-${q.id}`}>
-            Choices (for multiple choice only, one per line)
+            Choices (for multiple choice or checkboxes only, one per line)
           </label>
           <textarea
             id={`options-${q.id}`}
@@ -443,7 +444,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           </div>
           <div>
             <label className={labelClass} htmlFor="options">
-              Choices (for multiple choice only, one per line)
+              Choices (for multiple choice or checkboxes only, one per line)
             </label>
             <textarea id="options" name="options" rows={3} placeholder={"Option A\nOption B\nOption C"} className={inputClass} />
           </div>

@@ -9,7 +9,7 @@ import { suggestRoleQuestions, type SuggestedQuestion } from "@/lib/ai";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
 const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
-const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE"] as const;
+const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES"] as const;
 
 const createRoleSchema = z.object({
   clientOrgId: z.string().min(1, "Company is required"),
@@ -124,7 +124,7 @@ const addQuestionSchema = z.object({
 });
 
 function parseOptions(type: (typeof QUESTION_TYPES)[number], raw: string | undefined) {
-  if (type !== "MULTIPLE_CHOICE") return [];
+  if (type !== "MULTIPLE_CHOICE" && type !== "CHECKBOXES") return [];
   return (raw ?? "")
     .split("\n")
     .map((o) => o.trim())

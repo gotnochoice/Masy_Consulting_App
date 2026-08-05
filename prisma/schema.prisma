@@ -72,6 +72,7 @@ enum QuestionType {
   LONG_TEXT
   LINK
   MULTIPLE_CHOICE
+  CHECKBOXES
 }
 
 enum DocumentRequestType {

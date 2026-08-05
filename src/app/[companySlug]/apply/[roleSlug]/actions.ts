@@ -77,16 +77,26 @@ export async function submitApplication(
   if (role.askHowHeard && !parsed.data.howHeard) {
     return { error: "Please tell us how you heard about this role." };
   }
-  if (formData.get("followsSocial") !== "on") {
+  if (formData.get("followsSocial") !== "yes") {
     return { error: "Please confirm you follow us on social media before submitting." };
   }
 
   const answers: { roleQuestionId: string; value: string }[] = [];
   for (const q of role.questions) {
-    const raw = formData.get(`answer_${q.id}`);
-    const value = typeof raw === "string" ? raw.trim() : "";
-    if (q.type === "MULTIPLE_CHOICE" && value && !q.options.includes(value)) {
-      return { error: `"${q.label}" has an invalid answer.` };
+    let value: string;
+    if (q.type === "CHECKBOXES") {
+      const selected = formData.getAll(`answer_${q.id}`).filter((v): v is string => typeof v === "string");
+      const invalid = selected.find((v) => !q.options.includes(v));
+      if (invalid) {
+        return { error: `"${q.label}" has an invalid answer.` };
+      }
+      value = selected.join(", ");
+    } else {
+      const raw = formData.get(`answer_${q.id}`);
+      value = typeof raw === "string" ? raw.trim() : "";
+      if (q.type === "MULTIPLE_CHOICE" && value && !q.options.includes(value)) {
+        return { error: `"${q.label}" has an invalid answer.` };
+      }
     }
     if (q.required && !value) {
       return { error: `"${q.label}" is required.` };
