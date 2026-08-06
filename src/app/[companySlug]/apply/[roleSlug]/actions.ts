@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
 import { sendOpsNotification } from "@/lib/email";
 
-export type ApplyState = { error?: string; success?: boolean; name?: string; email?: string };
+export type ApplyState = { error?: string; success?: boolean; name?: string };
 
 const baseSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -135,5 +135,5 @@ export async function submitApplication(
       `View: ${origin}/ops/recruitment/${role.id}#candidate-${candidate.id}`,
   );
 
-  return { success: true, name: parsed.data.name, email: parsed.data.email };
+  return { success: true, name: parsed.data.name };
 }

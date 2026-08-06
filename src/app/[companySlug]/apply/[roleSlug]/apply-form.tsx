@@ -270,7 +270,7 @@ export function ApplyForm({
               02
             </span>
             <p className="text-sm text-slate">
-              If there&apos;s a fit, we&apos;ll reach out to you directly{state.email ? ` at ${state.email}` : ""}.
+              If there&apos;s a fit, we&apos;ll reach out to you directly, or you can reach us at hello@masyconsulting.com.
             </p>
           </div>
         </div>
