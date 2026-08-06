@@ -1,16 +1,17 @@
 // One-off, idempotent setup for "Unfolding with Ewaji" (client of Masy Consulting).
 // Creates the client org and two open roles with their screening questions,
 // replacing the Google Form that was previously used to collect applications.
+// Each role becomes reachable at /<companySlug>/apply/<roleSlug>.
 //
 // Run once against the target database:
 //   DATABASE_URL="<production connection string>" npx tsx prisma/seed-ewaji.ts
 //
-// Safe to re-run: it looks up existing records by name/slug/label before
+// Safe to re-run: it looks up existing records by name/title/label before
 // creating anything, so it will not create duplicates.
 
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { slugify } from "../src/lib/slug";
+import { uniqueCompanySlug, uniqueRoleSlug } from "../src/lib/slug";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const db = new PrismaClient({ adapter });
@@ -72,13 +73,13 @@ const ROLES: { title: string; description: string; questions: QuestionSeed[] }[]
 async function ensureOrg(name: string) {
   const existing = await db.clientOrg.findFirst({ where: { name } });
   if (existing) return existing;
-  return db.clientOrg.create({ data: { name } });
+  return db.clientOrg.create({ data: { name, slug: await uniqueCompanySlug(name) } });
 }
 
 async function ensureRole(clientOrgId: string, title: string, description: string) {
-  const slug = slugify(title);
-  const existing = await db.openRole.findUnique({ where: { slug } });
+  const existing = await db.openRole.findFirst({ where: { clientOrgId, title } });
   if (existing) return existing;
+  const slug = await uniqueRoleSlug(title, clientOrgId);
   return db.openRole.create({
     data: { clientOrgId, title, slug, description, acceptingApplications: true },
   });
@@ -103,10 +104,10 @@ async function main() {
   for (const role of ROLES) {
     const openRole = await ensureRole(org.id, role.title, role.description);
     await ensureQuestions(openRole.id, role.questions);
-    console.log(`Role: ${openRole.title} -> /apply/${openRole.slug}`);
+    console.log(`Role: ${openRole.title} -> /${org.slug}/apply/${openRole.slug}`);
   }
 
-  console.log("\nDone. Share the /apply/<slug> links above in place of the Google Form.");
+  console.log("\nDone. Share the links above in place of the Google Form.");
 }
 
 main()
