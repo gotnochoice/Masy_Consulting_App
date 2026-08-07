@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { CandidateSourceBadge, CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
 import type { CandidateStage } from "@/generated/prisma/client";
 import { inputClass } from "@/lib/form-styles";
@@ -29,10 +30,19 @@ export function CandidateCard({
   updateStage: (formData: FormData) => Promise<void>;
   deleteCandidate: (formData: FormData) => Promise<void>;
 }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const hasDetails = candidate.answers.length > 0 || !!candidate.notes || !!candidate.howHeard;
+
   return (
     <div id={`candidate-${candidate.id}`} className="rounded-card border border-border bg-paper p-4 scroll-mt-4">
       <div className="mb-2 flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-ink">{candidate.name}</p>
+        <button
+          type="button"
+          onClick={() => dialogRef.current?.showModal()}
+          className="text-left text-sm font-medium text-ink hover:text-indigo"
+        >
+          {candidate.name}
+        </button>
         <CandidateSourceBadge source={candidate.source} />
       </div>
       {candidate.email && <p className="truncate text-xs text-slate">{candidate.email}</p>}
@@ -50,32 +60,14 @@ export function CandidateCard({
         </a>
       )}
 
-      {(candidate.answers.length > 0 || candidate.notes || candidate.howHeard) && (
-        <details className="mt-2">
-          <summary className="cursor-pointer text-xs font-medium text-slate hover:text-ink">
-            View details
-          </summary>
-          <div className="mt-2 space-y-2">
-            {candidate.howHeard && (
-              <div>
-                <p className="text-xs font-medium text-slate-light">How they heard about it</p>
-                <p className="text-xs text-ink">{candidate.howHeard}</p>
-              </div>
-            )}
-            {candidate.answers.map((a) => (
-              <div key={a.id}>
-                <p className="text-xs font-medium text-slate-light">{a.roleQuestion.label}</p>
-                <p className="text-xs text-ink">{a.value}</p>
-              </div>
-            ))}
-            {candidate.notes && (
-              <div>
-                <p className="text-xs font-medium text-slate-light">Notes</p>
-                <p className="text-xs text-ink">{candidate.notes}</p>
-              </div>
-            )}
-          </div>
-        </details>
+      {hasDetails && (
+        <button
+          type="button"
+          onClick={() => dialogRef.current?.showModal()}
+          className="mt-2 block text-xs font-medium text-indigo hover:text-indigo-light"
+        >
+          View full application →
+        </button>
       )}
 
       <form action={updateStage} className="mt-3">
@@ -98,6 +90,89 @@ export function CandidateCard({
       >
         Delete
       </ConfirmSubmitButton>
+
+      <dialog
+        ref={dialogRef}
+        onClick={(e) => {
+          if (e.target === dialogRef.current) dialogRef.current?.close();
+        }}
+        className="w-full max-w-2xl rounded-card border border-border bg-paper p-0 backdrop:bg-ink/40 open:flex open:flex-col"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-border p-6">
+          <div>
+            <h2 className="text-lg font-bold text-ink">{candidate.name}</h2>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <CandidateSourceBadge source={candidate.source} />
+              {candidate.email && <span className="text-sm text-slate">{candidate.email}</span>}
+              {candidate.phone && <span className="text-sm text-slate">{candidate.phone}</span>}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => dialogRef.current?.close()}
+            className="rounded-btn border border-border px-3 py-1.5 text-sm font-medium text-slate hover:text-ink"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="max-h-[70vh] overflow-y-auto p-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {candidate.yearsExperience && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Experience</p>
+                <p className="mt-0.5 text-sm text-ink">{candidate.yearsExperience}</p>
+              </div>
+            )}
+            {candidate.expectedPay && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Expected pay</p>
+                <p className="mt-0.5 text-sm text-ink">{candidate.expectedPay}</p>
+              </div>
+            )}
+            {candidate.resumeLink && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">CV / resume</p>
+                <a
+                  href={candidate.resumeLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-0.5 block text-sm font-medium text-indigo hover:text-indigo-light"
+                >
+                  View
+                </a>
+              </div>
+            )}
+          </div>
+
+          {(candidate.howHeard || candidate.answers.length > 0 || candidate.notes) && (
+            <div className="mt-6 space-y-5 border-t border-border pt-6">
+              {candidate.howHeard && (
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
+                    How they heard about it
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink">{candidate.howHeard}</p>
+                </div>
+              )}
+              {candidate.answers.map((a) => (
+                <div key={a.id}>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
+                    {a.roleQuestion.label}
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{a.value}</p>
+                </div>
+              ))}
+              {candidate.notes && (
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Notes</p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{candidate.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </dialog>
     </div>
   );
 }
