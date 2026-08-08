@@ -370,7 +370,7 @@ export function ApplyForm({
       {isLastStep && (
         <div className="space-y-4 border-t border-border pt-6">
           <div>
-            <p className="text-sm font-medium text-ink">Follow us on social media</p>
+            <p className="text-sm font-medium text-ink">Follow us</p>
             <p className="mt-1 text-xs text-slate-light">Stay updated on new roles as they open.</p>
             <SocialLinksList className="mt-3" />
           </div>
