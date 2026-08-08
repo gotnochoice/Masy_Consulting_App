@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { CareersHeader } from "@/components/careers-header";
 import { SocialLinks } from "@/components/social-links";
+import { stripBoldMarkers } from "@/lib/format-text";
 
 export const metadata: Metadata = {
   title: "Careers | Masy Consulting",
@@ -51,7 +52,7 @@ export default async function CareersPage() {
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-light">{role.clientOrg.name}</p>
                     <p className="mt-1 text-base font-bold text-ink">{role.title}</p>
                     {role.description && (
-                      <p className="mt-1 line-clamp-1 text-sm text-slate">{role.description}</p>
+                      <p className="mt-1 line-clamp-1 text-sm text-slate">{stripBoldMarkers(role.description)}</p>
                     )}
                   </div>
                   <span className="shrink-0 text-sm font-semibold text-indigo">View role &rarr;</span>

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { CareersHeader } from "@/components/careers-header";
+import { formatBoldText } from "@/lib/format-text";
 import { ApplyForm } from "./apply-form";
 import { submitApplication } from "./actions";
 
@@ -53,7 +54,9 @@ export default async function ApplyPage({
               <div className="relative overflow-hidden rounded-card border border-border bg-paper p-6 shadow-[0_8px_30px_rgba(26,19,48,0.08)] sm:p-10">
                 <div className="absolute inset-x-0 top-0 h-1 bg-indigo" />
                 {role.description && (
-                  <p className="mb-8 whitespace-pre-line text-sm leading-relaxed text-slate">{role.description}</p>
+                  <p className="mb-8 whitespace-pre-line text-sm leading-relaxed text-slate">
+                    {formatBoldText(role.description)}
+                  </p>
                 )}
                 <ApplyForm
                   action={submitWithSlugs}

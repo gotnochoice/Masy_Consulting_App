@@ -294,6 +294,9 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             placeholder="A short description of the role, responsibilities, and what makes this a good fit."
             className={inputClass}
           />
+          <p className="text-xs text-slate-light">
+            Wrap text in ** to bold it, e.g. **Key Responsibilities** shows up bold to applicants.
+          </p>
           <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
             Save description
           </button>
