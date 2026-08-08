@@ -196,6 +196,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           resumeFileUrl: true,
           expectedPay: true,
           howHeard: true,
+          followedSocials: true,
           stage: true,
           source: true,
           notes: true,

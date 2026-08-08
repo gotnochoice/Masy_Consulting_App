@@ -321,6 +321,7 @@ model Candidate {
   resumeFileUrl   String?
   expectedPay     String?
   howHeard        String?
+  followedSocials String[]          @default([])
   stage           CandidateStage    @default(APPLIED)
   source          CandidateSource   @default(MASY_SOURCED)
   notes           String?

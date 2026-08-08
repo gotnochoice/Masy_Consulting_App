@@ -15,6 +15,7 @@ type CandidateWithAnswers = {
   cvUrl: string | null;
   expectedPay: string | null;
   howHeard: string | null;
+  followedSocials: string[];
   notes: string | null;
   source: "WEBSITE" | "MASY_SOURCED";
   stage: CandidateStage;
@@ -49,6 +50,9 @@ export function CandidateCard({
       {candidate.phone && <p className="text-xs text-slate">{candidate.phone}</p>}
       {candidate.yearsExperience && <p className="text-xs text-slate">{candidate.yearsExperience} experience</p>}
       {candidate.expectedPay && <p className="text-xs text-slate">Expects {candidate.expectedPay}</p>}
+      {candidate.followedSocials.length > 0 && (
+        <p className="text-xs text-slate-light">Says they follow: {candidate.followedSocials.join(", ")}</p>
+      )}
       {candidate.cvUrl && (
         <a
           href={candidate.cvUrl}
@@ -141,6 +145,12 @@ export function CandidateCard({
                 >
                   View
                 </a>
+              </div>
+            )}
+            {candidate.followedSocials.length > 0 && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Says they follow</p>
+                <p className="mt-0.5 text-sm text-ink">{candidate.followedSocials.join(", ")}</p>
               </div>
             )}
           </div>

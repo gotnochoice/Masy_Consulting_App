@@ -3,7 +3,7 @@
 import { useActionState, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { RoleQuestion, QuestionSection } from "@/generated/prisma/client";
-import { SocialLinks, SocialLinksList } from "@/components/social-links";
+import { SocialLinks, SocialLinksList, SOCIAL_PLATFORMS } from "@/components/social-links";
 import { MAX_RESUME_FILE_BYTES, MAX_RESUME_FILE_LABEL } from "@/lib/resume";
 import type { ApplyState } from "./actions";
 
@@ -14,6 +14,7 @@ const buttonClass =
   "rounded-btn bg-indigo px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-light disabled:cursor-not-allowed disabled:opacity-50";
 const secondaryButtonClass =
   "rounded-btn border border-border px-4 py-3 text-sm font-semibold text-slate transition-colors hover:border-ink/20 hover:text-ink";
+const MIN_FOLLOWED_SOCIALS = 2;
 
 // Fields on steps that aren't currently showing must not carry `required`, or the browser's
 // native validation blocks advancing/submitting on fields the applicant can't even see yet.
@@ -103,9 +104,22 @@ export function ApplyForm({
 }) {
   const [state, formAction, isPending] = useActionState<ApplyState, FormData>(action, {});
   const [currentStep, setCurrentStep] = useState(0);
-  const [showFollowPrompt, setShowFollowPrompt] = useState(false);
+  const [checkedSocials, setCheckedSocials] = useState<string[]>([]);
+  const [followError, setFollowError] = useState<string | null>(null);
   const [resumeFileError, setResumeFileError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  function toggleSocial(name: string) {
+    setFollowError(null);
+    setCheckedSocials((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (checkedSocials.length < MIN_FOLLOWED_SOCIALS) {
+      e.preventDefault();
+      setFollowError(`Please select at least ${MIN_FOLLOWED_SOCIALS} platforms you follow us on.`);
+    }
+  }
 
   function handleResumeFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -307,7 +321,7 @@ export function ApplyForm({
   }
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-6">
+    <form ref={formRef} action={formAction} onSubmit={handleSubmit} className="space-y-6">
       {/*
         Honeypot: real applicants never see this field. It's fully display:none (not just
         visually clipped) and its name avoids anything autofill heuristics recognize
@@ -360,60 +374,37 @@ export function ApplyForm({
             <p className="mt-1 text-xs text-slate-light">Stay updated on new roles as they open.</p>
             <SocialLinksList className="mt-3" />
           </div>
-          <div className="space-y-2">
-            <label className="flex cursor-pointer items-center gap-2 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint">
-              <input
-                type="radio"
-                name="followsSocial"
-                value="yes"
-                required
-                onChange={() => setShowFollowPrompt(false)}
-                className="h-4 w-4 shrink-0 accent-indigo"
-              />
-              I follow Masy Consulting on social media
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint">
-              <input
-                type="radio"
-                name="followsSocial"
-                value="no"
-                required
-                onChange={() => setShowFollowPrompt(true)}
-                className="h-4 w-4 shrink-0 accent-indigo"
-              />
-              I don&apos;t follow yet
-            </label>
+          <div>
+            <p className="text-sm text-ink">
+              Tick at least {MIN_FOLLOWED_SOCIALS} platforms you actually follow us on below.
+            </p>
+            <p className="mt-1 text-xs text-slate-light">
+              We check, so please only select platforms you genuinely follow.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {SOCIAL_PLATFORMS.map((s) => (
+                <label
+                  key={s.name}
+                  className="flex cursor-pointer items-center gap-2 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint"
+                >
+                  <input
+                    type="checkbox"
+                    name="followedSocials"
+                    value={s.name}
+                    checked={checkedSocials.includes(s.name)}
+                    onChange={() => toggleSocial(s.name)}
+                    className="h-4 w-4 shrink-0 rounded accent-indigo"
+                  />
+                  {s.name}
+                </label>
+              ))}
+            </div>
+            {followError && <p className="mt-2 text-xs text-orange">{followError}</p>}
           </div>
           <p className="text-xs text-slate-light">
             By submitting this application, you agree that your information will be used only to evaluate you for this
             role and shared with {companyName}. We won&apos;t use it for anything else.
           </p>
-        </div>
-      )}
-
-      {showFollowPrompt && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"
-          onClick={() => setShowFollowPrompt(false)}
-        >
-          <div
-            className="w-full max-w-sm rounded-card bg-paper p-6 shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-base font-bold text-ink">Follow us to continue</p>
-            <p className="mt-2 text-sm text-slate">
-              Please follow Masy Consulting on social media to stay updated on new roles, then come back and select
-              &ldquo;I follow Masy Consulting on social media&rdquo; above to continue.
-            </p>
-            <SocialLinksList className="mt-4" />
-            <button
-              type="button"
-              onClick={() => setShowFollowPrompt(false)}
-              className={`mt-4 w-full ${buttonClass}`}
-            >
-              Got it
-            </button>
-          </div>
         </div>
       )}
 

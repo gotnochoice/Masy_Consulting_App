@@ -7,6 +7,10 @@ import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
 import { sendOpsNotification } from "@/lib/email";
 import { MAX_RESUME_FILE_BYTES, MAX_RESUME_FILE_LABEL } from "@/lib/resume";
+import { SOCIAL_PLATFORMS } from "@/components/social-links";
+
+const MIN_FOLLOWED_SOCIALS = 2;
+const VALID_SOCIAL_NAMES = new Set(SOCIAL_PLATFORMS.map((s) => s.name));
 
 export type ApplyState = { error?: string; success?: boolean; name?: string };
 
@@ -77,8 +81,12 @@ export async function submitApplication(
   if (role.askHowHeard && !parsed.data.howHeard) {
     return { error: "Please tell us how you heard about this role." };
   }
-  if (formData.get("followsSocial") !== "yes") {
-    return { error: "Please confirm you follow us on social media before submitting." };
+  const followedSocials = [...new Set(formData.getAll("followedSocials").filter((v): v is string => typeof v === "string"))];
+  if (followedSocials.some((s) => !VALID_SOCIAL_NAMES.has(s))) {
+    return { error: "Please check your answers." };
+  }
+  if (followedSocials.length < MIN_FOLLOWED_SOCIALS) {
+    return { error: `Please select at least ${MIN_FOLLOWED_SOCIALS} platforms you follow us on before submitting.` };
   }
 
   let resumeFile: { name: string; url: string } | undefined;
@@ -136,6 +144,7 @@ export async function submitApplication(
       resumeFileUrl: resumeFile?.url,
       expectedPay: parsed.data.expectedPay,
       howHeard: parsed.data.howHeard,
+      followedSocials,
       source: "WEBSITE",
       stage: "APPLIED",
       answers: { create: answers },
