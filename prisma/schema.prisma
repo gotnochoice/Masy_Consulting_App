@@ -318,8 +318,7 @@ model Candidate {
   yearsExperience String?
   resumeLink      String?
   resumeFileName  String?
-  resumeFileType  String?
-  resumeFileData  Bytes?
+  resumeFileUrl   String?
   expectedPay     String?
   howHeard        String?
   stage           CandidateStage    @default(APPLIED)

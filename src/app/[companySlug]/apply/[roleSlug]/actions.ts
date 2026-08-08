@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { headers } from "next/headers";
+import { put } from "@vercel/blob";
 import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
 import { sendOpsNotification } from "@/lib/email";
@@ -80,7 +81,7 @@ export async function submitApplication(
     return { error: "Please confirm you follow us on social media before submitting." };
   }
 
-  let resumeFile: { name: string; type: string; data: Uint8Array<ArrayBuffer> } | undefined;
+  let resumeFile: { name: string; url: string } | undefined;
   const resumeFileRaw = formData.get("resumeFile");
   if (resumeFileRaw instanceof File && resumeFileRaw.size > 0) {
     if (resumeFileRaw.type !== "application/pdf") {
@@ -89,11 +90,16 @@ export async function submitApplication(
     if (resumeFileRaw.size > MAX_RESUME_FILE_BYTES) {
       return { error: `Your CV is too large. Please keep it under ${MAX_RESUME_FILE_LABEL}.` };
     }
-    resumeFile = {
-      name: resumeFileRaw.name,
-      type: resumeFileRaw.type,
-      data: new Uint8Array(await resumeFileRaw.arrayBuffer()) as Uint8Array<ArrayBuffer>,
-    };
+    try {
+      const blob = await put(`resumes/${role.id}/${resumeFileRaw.name}`, resumeFileRaw, {
+        access: "public",
+        contentType: "application/pdf",
+      });
+      resumeFile = { name: resumeFileRaw.name, url: blob.url };
+    } catch (err) {
+      console.error("[apply] failed to upload resume:", err);
+      return { error: "We couldn't upload your CV right now. Please try again in a moment." };
+    }
   }
 
   const answers: { roleQuestionId: string; value: string }[] = [];
@@ -127,8 +133,7 @@ export async function submitApplication(
       phone: parsed.data.phone,
       yearsExperience: parsed.data.yearsExperience,
       resumeFileName: resumeFile?.name,
-      resumeFileType: resumeFile?.type,
-      resumeFileData: resumeFile?.data,
+      resumeFileUrl: resumeFile?.url,
       expectedPay: parsed.data.expectedPay,
       howHeard: parsed.data.howHeard,
       source: "WEBSITE",

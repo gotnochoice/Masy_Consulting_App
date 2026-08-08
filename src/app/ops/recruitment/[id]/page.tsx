@@ -193,7 +193,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           phone: true,
           yearsExperience: true,
           resumeLink: true,
-          resumeFileName: true,
+          resumeFileUrl: true,
           expectedPay: true,
           howHeard: true,
           stage: true,
@@ -226,7 +226,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
 
   const candidatesWithCvUrl = role.candidates.map((c) => ({
     ...c,
-    cvUrl: c.resumeFileName ? `/ops/recruitment/candidates/${c.id}/resume` : c.resumeLink,
+    cvUrl: c.resumeFileUrl ?? c.resumeLink,
   }));
 
   const columns = CANDIDATE_STAGE_ORDER.map((stage) => ({

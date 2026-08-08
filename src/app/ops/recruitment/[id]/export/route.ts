@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
-import { getOrigin } from "@/lib/url";
 
 function csvEscape(value: string) {
   if (/[",\n]/.test(value)) {
@@ -27,7 +26,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
           phone: true,
           yearsExperience: true,
           resumeLink: true,
-          resumeFileName: true,
+          resumeFileUrl: true,
           expectedPay: true,
           howHeard: true,
           source: true,
@@ -42,8 +41,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!role) {
     return new NextResponse("Not found", { status: 404 });
   }
-
-  const origin = await getOrigin();
 
   const headers = [
     "Name",
@@ -61,7 +58,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const rows = role.candidates.map((c) => {
     const answerByQuestionId = new Map(c.answers.map((a) => [a.roleQuestionId, a.value]));
-    const resumeUrl = c.resumeFileName ? `${origin}/ops/recruitment/candidates/${c.id}/resume` : (c.resumeLink ?? "");
+    const resumeUrl = c.resumeFileUrl ?? c.resumeLink ?? "";
     return [
       c.name,
       c.email ?? "",
