@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
 import { sendOpsNotification } from "@/lib/email";
+import { MAX_RESUME_FILE_BYTES, MAX_RESUME_FILE_LABEL } from "@/lib/resume";
 
 export type ApplyState = { error?: string; success?: boolean; name?: string };
 
@@ -13,7 +14,6 @@ const baseSchema = z.object({
   email: z.string().email("Enter a valid email"),
   phone: z.string().min(1, "Phone is required"),
   yearsExperience: z.string().optional(),
-  resumeLink: z.string().url("Enter a full link, starting with https://").optional().or(z.literal("")),
   expectedPay: z.string().optional(),
   howHeard: z.string().optional(),
 });
@@ -61,7 +61,6 @@ export async function submitApplication(
     email: formData.get("email"),
     phone: formData.get("phone"),
     yearsExperience: formData.get("yearsExperience") || undefined,
-    resumeLink: formData.get("resumeLink") || "",
     expectedPay: formData.get("expectedPay") || undefined,
     howHeard: formData.get("howHeard") || undefined,
   });
@@ -79,6 +78,22 @@ export async function submitApplication(
   }
   if (formData.get("followsSocial") !== "yes") {
     return { error: "Please confirm you follow us on social media before submitting." };
+  }
+
+  let resumeFile: { name: string; type: string; data: Uint8Array<ArrayBuffer> } | undefined;
+  const resumeFileRaw = formData.get("resumeFile");
+  if (resumeFileRaw instanceof File && resumeFileRaw.size > 0) {
+    if (resumeFileRaw.type !== "application/pdf") {
+      return { error: "Your CV must be a PDF file." };
+    }
+    if (resumeFileRaw.size > MAX_RESUME_FILE_BYTES) {
+      return { error: `Your CV is too large. Please keep it under ${MAX_RESUME_FILE_LABEL}.` };
+    }
+    resumeFile = {
+      name: resumeFileRaw.name,
+      type: resumeFileRaw.type,
+      data: new Uint8Array(await resumeFileRaw.arrayBuffer()) as Uint8Array<ArrayBuffer>,
+    };
   }
 
   const answers: { roleQuestionId: string; value: string }[] = [];
@@ -111,7 +126,9 @@ export async function submitApplication(
       email: parsed.data.email,
       phone: parsed.data.phone,
       yearsExperience: parsed.data.yearsExperience,
-      resumeLink: parsed.data.resumeLink || undefined,
+      resumeFileName: resumeFile?.name,
+      resumeFileType: resumeFile?.type,
+      resumeFileData: resumeFile?.data,
       expectedPay: parsed.data.expectedPay,
       howHeard: parsed.data.howHeard,
       source: "WEBSITE",

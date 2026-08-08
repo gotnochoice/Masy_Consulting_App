@@ -4,6 +4,7 @@ import { useActionState, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { RoleQuestion, QuestionSection } from "@/generated/prisma/client";
 import { SocialLinks, SocialLinksList } from "@/components/social-links";
+import { MAX_RESUME_FILE_BYTES, MAX_RESUME_FILE_LABEL } from "@/lib/resume";
 import type { ApplyState } from "./actions";
 
 const inputClass =
@@ -103,7 +104,25 @@ export function ApplyForm({
   const [state, formAction, isPending] = useActionState<ApplyState, FormData>(action, {});
   const [currentStep, setCurrentStep] = useState(0);
   const [showFollowPrompt, setShowFollowPrompt] = useState(false);
+  const [resumeFileError, setResumeFileError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  function handleResumeFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setResumeFileError(null);
+      return;
+    }
+    if (file.type !== "application/pdf") {
+      setResumeFileError("Please upload a PDF file.");
+      e.target.value = "";
+    } else if (file.size > MAX_RESUME_FILE_BYTES) {
+      setResumeFileError(`That file is too large. Please keep it under ${MAX_RESUME_FILE_LABEL}.`);
+      e.target.value = "";
+    } else {
+      setResumeFileError(null);
+    }
+  }
 
   const ungroupedQuestions = questions.filter((q) => !q.sectionId);
   const namedSections = questionSections
@@ -186,15 +205,17 @@ export function ApplyForm({
       label: "Application materials",
       content: (
         <div>
-          <label className={labelClass} htmlFor="resumeLink">Link to your CV / resume</label>
+          <label className={labelClass} htmlFor="resumeFile">Upload your CV / resume</label>
           <input
-            id="resumeLink"
-            name="resumeLink"
-            type="url"
-            placeholder="https://drive.google.com/..."
-            className={inputClass}
+            id="resumeFile"
+            name="resumeFile"
+            type="file"
+            accept="application/pdf"
+            onChange={handleResumeFileChange}
+            className={`${inputClass} file:mr-3 file:rounded-btn file:border-0 file:bg-indigo-tint file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo`}
           />
-          <p className="mt-1 text-xs text-slate-light">A shareable Google Drive, Dropbox, or LinkedIn link works.</p>
+          <p className="mt-1 text-xs text-slate-light">PDF only, up to {MAX_RESUME_FILE_LABEL}.</p>
+          {resumeFileError && <p className="mt-1 text-xs text-orange">{resumeFileError}</p>}
         </div>
       ),
     });

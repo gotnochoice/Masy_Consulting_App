@@ -12,7 +12,7 @@ type CandidateWithAnswers = {
   email: string | null;
   phone: string | null;
   yearsExperience: string | null;
-  resumeLink: string | null;
+  cvUrl: string | null;
   expectedPay: string | null;
   howHeard: string | null;
   notes: string | null;
@@ -49,9 +49,9 @@ export function CandidateCard({
       {candidate.phone && <p className="text-xs text-slate">{candidate.phone}</p>}
       {candidate.yearsExperience && <p className="text-xs text-slate">{candidate.yearsExperience} experience</p>}
       {candidate.expectedPay && <p className="text-xs text-slate">Expects {candidate.expectedPay}</p>}
-      {candidate.resumeLink && (
+      {candidate.cvUrl && (
         <a
-          href={candidate.resumeLink}
+          href={candidate.cvUrl}
           target="_blank"
           rel="noreferrer"
           className="mt-1 inline-block text-xs font-medium text-indigo hover:text-indigo-light"
@@ -130,11 +130,11 @@ export function CandidateCard({
                 <p className="mt-0.5 text-sm text-ink">{candidate.expectedPay}</p>
               </div>
             )}
-            {candidate.resumeLink && (
+            {candidate.cvUrl && (
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-light">CV / resume</p>
                 <a
-                  href={candidate.resumeLink}
+                  href={candidate.cvUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-0.5 block text-sm font-medium text-indigo hover:text-indigo-light"

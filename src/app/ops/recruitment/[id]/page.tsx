@@ -184,7 +184,24 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
       clientOrg: true,
       questions: { orderBy: { order: "asc" } },
       questionSections: { orderBy: { order: "asc" } },
-      candidates: { orderBy: { createdAt: "desc" }, include: { answers: { include: { roleQuestion: true } } } },
+      candidates: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          yearsExperience: true,
+          resumeLink: true,
+          resumeFileName: true,
+          expectedPay: true,
+          howHeard: true,
+          stage: true,
+          source: true,
+          notes: true,
+          answers: { include: { roleQuestion: true } },
+        },
+      },
     },
   });
   if (!role) notFound();
@@ -207,9 +224,14 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
     role.questionSections.map((s) => [s.id, role.questions.filter((q) => q.sectionId === s.id)]),
   );
 
+  const candidatesWithCvUrl = role.candidates.map((c) => ({
+    ...c,
+    cvUrl: c.resumeFileName ? `/ops/recruitment/candidates/${c.id}/resume` : c.resumeLink,
+  }));
+
   const columns = CANDIDATE_STAGE_ORDER.map((stage) => ({
     stage,
-    candidates: role.candidates.filter((c) => c.stage === stage),
+    candidates: candidatesWithCvUrl.filter((c) => c.stage === stage),
   }));
 
   return (

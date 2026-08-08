@@ -317,6 +317,9 @@ model Candidate {
   phone           String?
   yearsExperience String?
   resumeLink      String?
+  resumeFileName  String?
+  resumeFileType  String?
+  resumeFileData  Bytes?
   expectedPay     String?
   howHeard        String?
   stage           CandidateStage    @default(APPLIED)
