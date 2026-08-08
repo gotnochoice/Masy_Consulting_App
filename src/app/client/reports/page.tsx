@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Percent, CalendarDays, FileText, AlertTriangle } from "lucide-react";
 import { requireRole } from "@/lib/rbac";
 import { getMonthlyReportData, getStaffReportRows, monthLabelFor } from "@/lib/monthly-report";
@@ -74,7 +75,7 @@ export default async function ClientReportsPage({
                   Leave days
                 </th>
                 <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">
-                  Reviews released
+                  Latest review
                 </th>
               </tr>
             </thead>
@@ -85,7 +86,18 @@ export default async function ClientReportsPage({
                   <td className="px-5 py-3 text-slate">{row.roleTitle}</td>
                   <td className="px-5 py-3 text-slate">{row.attendancePct}%</td>
                   <td className="px-5 py-3 text-slate">{row.leaveDaysTaken}</td>
-                  <td className="px-5 py-3 text-slate">{row.reviewsReleased}</td>
+                  <td className="px-5 py-3 text-slate">
+                    {row.latestReleasedReviewId ? (
+                      <Link
+                        href={`/client/reviews#review-${row.latestReleasedReviewId}`}
+                        className="font-medium text-indigo hover:text-indigo-light"
+                      >
+                        Read review{row.reviewsReleased > 1 ? ` (${row.reviewsReleased})` : ""}
+                      </Link>
+                    ) : (
+                      <span className="text-slate-light">None yet</span>
+                    )}
+                  </td>
                 </tr>
               ))}
               {staffRows.length === 0 && (

@@ -30,7 +30,8 @@ export default async function ClientReviewsPage() {
           return (
             <article
               key={review.id}
-              className="overflow-hidden rounded-card border border-border bg-paper print:break-inside-avoid print:shadow-none"
+              id={`review-${review.id}`}
+              className="scroll-mt-4 overflow-hidden rounded-card border border-border bg-paper print:break-inside-avoid print:shadow-none"
             >
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border bg-paper-2 px-6 py-4">
                 <div>

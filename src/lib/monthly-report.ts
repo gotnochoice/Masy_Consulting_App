@@ -19,6 +19,7 @@ export type StaffReportRow = {
   attendancePct: number;
   leaveDaysTaken: number;
   reviewsReleased: number;
+  latestReleasedReviewId: string | null;
 };
 
 export function monthLabelFor(monthValue: string): string {
@@ -74,7 +75,7 @@ export async function getStaffReportRows(clientOrgId: string, monthValue: string
       leaveRequests: {
         where: { status: "APPROVED", startDate: { lt: monthEnd }, endDate: { gte: monthStart } },
       },
-      performanceReviews: { where: { status: "RELEASED" } },
+      performanceReviews: { where: { status: "RELEASED" }, orderBy: { updatedAt: "desc" } },
     },
   });
 
@@ -96,6 +97,7 @@ export async function getStaffReportRows(clientOrgId: string, monthValue: string
       attendancePct,
       leaveDaysTaken,
       reviewsReleased: employee.performanceReviews.length,
+      latestReleasedReviewId: employee.performanceReviews[0]?.id ?? null,
     };
   });
 }
