@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { RoleStageBadge } from "@/components/stage-badge";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { createRole, deleteRole } from "./actions";
+import { createRole, deleteRole, cloneRole } from "./actions";
 
 export default async function OpsRecruitmentPage() {
   await requireRole("MASY_OPS");
@@ -38,11 +38,13 @@ export default async function OpsRecruitmentPage() {
               <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Applications</th>
               <th className="px-4 py-2.5" />
               <th className="px-4 py-2.5" />
+              <th className="px-4 py-2.5" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {roles.map((role) => {
               const deleteRoleWithId = deleteRole.bind(null, role.id);
+              const cloneRoleWithId = cloneRole.bind(null, role.id);
               return (
                 <tr key={role.id} className="hover:bg-paper-2">
                   <td className="px-4 py-3 font-medium text-ink">{role.title}</td>
@@ -62,6 +64,13 @@ export default async function OpsRecruitmentPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-right">
+                    <form action={cloneRoleWithId}>
+                      <button type="submit" className="text-sm font-medium text-slate hover:text-ink">
+                        Clone
+                      </button>
+                    </form>
+                  </td>
+                  <td className="px-4 py-3 text-right">
                     <ConfirmSubmitButton
                       action={deleteRoleWithId}
                       confirmMessage={
@@ -79,7 +88,7 @@ export default async function OpsRecruitmentPage() {
             })}
             {roles.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-light">No open roles yet.</td>
+                <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-light">No open roles yet.</td>
               </tr>
             )}
           </tbody>

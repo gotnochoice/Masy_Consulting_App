@@ -16,6 +16,7 @@ import {
   updateCandidateStage,
   toggleAcceptingApplications,
   updateRoleTitle,
+  updateRoleCompany,
   updateRoleDescription,
   updateRoleDefaultFields,
   addQuestion,
@@ -178,33 +179,36 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   await requireRole("MASY_OPS");
   const { id } = await params;
 
-  const role = await db.openRole.findUnique({
-    where: { id },
-    include: {
-      clientOrg: true,
-      questions: { orderBy: { order: "asc" } },
-      questionSections: { orderBy: { order: "asc" } },
-      candidates: {
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          yearsExperience: true,
-          resumeLink: true,
-          resumeFileUrl: true,
-          expectedPay: true,
-          howHeard: true,
-          followedSocials: true,
-          stage: true,
-          source: true,
-          notes: true,
-          answers: { include: { roleQuestion: true } },
+  const [role, orgs] = await Promise.all([
+    db.openRole.findUnique({
+      where: { id },
+      include: {
+        clientOrg: true,
+        questions: { orderBy: { order: "asc" } },
+        questionSections: { orderBy: { order: "asc" } },
+        candidates: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            yearsExperience: true,
+            resumeLink: true,
+            resumeFileUrl: true,
+            expectedPay: true,
+            howHeard: true,
+            followedSocials: true,
+            stage: true,
+            source: true,
+            notes: true,
+            answers: { include: { roleQuestion: true } },
+          },
         },
       },
-    },
-  });
+    }),
+    db.clientOrg.findMany({ orderBy: { name: "asc" } }),
+  ]);
   if (!role) notFound();
 
   const origin = await getOrigin();
@@ -214,6 +218,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const addCandidateWithId = addCandidate.bind(null, role.id);
   const toggleAcceptingWithId = toggleAcceptingApplications.bind(null, role.id);
   const updateTitleWithId = updateRoleTitle.bind(null, role.id);
+  const updateCompanyWithId = updateRoleCompany.bind(null, role.id);
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
   const updateDefaultFieldsWithId = updateRoleDefaultFields.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
@@ -282,6 +287,21 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             </button>
           </div>
           <p className="text-xs text-slate-light">The public application link stays the same when you change this.</p>
+        </form>
+
+        <form action={updateCompanyWithId} className="space-y-1">
+          <label className={labelClass} htmlFor="clientOrgId">Company</label>
+          <div className="flex flex-wrap items-center gap-2">
+            <select id="clientOrgId" name="clientOrgId" defaultValue={role.clientOrgId} className={`${inputClass} max-w-sm`}>
+              {orgs.map((org) => (
+                <option key={org.id} value={org.id}>{org.name}</option>
+              ))}
+            </select>
+            <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+              Save company
+            </button>
+          </div>
+          <p className="text-xs text-slate-light">Changing this changes the public application link, since the company name is part of the URL.</p>
         </form>
 
         <form action={updateDescriptionWithId} className="space-y-1">

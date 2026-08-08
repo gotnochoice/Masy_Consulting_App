@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uniqueRoleSlug } from "@/lib/slug";
@@ -63,6 +64,73 @@ export async function deleteRole(roleId: string) {
   revalidatePath("/ops/recruitment");
 }
 
+export async function cloneRole(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  const source = await db.openRole.findUnique({
+    where: { id: roleId },
+    include: {
+      questionSections: { orderBy: { order: "asc" } },
+      questions: { orderBy: { order: "asc" } },
+    },
+  });
+  if (!source) throw new Error("Role not found");
+
+  const newTitle = `${source.title} (Copy)`;
+  const newSlug = await uniqueRoleSlug(newTitle, source.clientOrgId);
+  const newRoleId = await db.$transaction(async (tx) => {
+    const newRole = await tx.openRole.create({
+      data: {
+        clientOrgId: source.clientOrgId,
+        title: newTitle,
+        slug: newSlug,
+        description: source.description,
+        acceptingApplications: true,
+        askYearsExperience: source.askYearsExperience,
+        askExpectedPay: source.askExpectedPay,
+        askHowHeard: source.askHowHeard,
+        askResumeLink: source.askResumeLink,
+      },
+    });
+
+    const sectionIdMap = new Map<string, string>();
+    for (const section of source.questionSections) {
+      const newSection = await tx.questionSection.create({
+        data: { openRoleId: newRole.id, title: section.title, order: section.order },
+      });
+      sectionIdMap.set(section.id, newSection.id);
+    }
+
+    for (const question of source.questions) {
+      await tx.roleQuestion.create({
+        data: {
+          openRoleId: newRole.id,
+          sectionId: question.sectionId ? (sectionIdMap.get(question.sectionId) ?? null) : null,
+          label: question.label,
+          type: question.type,
+          options: question.options,
+          required: question.required,
+          order: question.order,
+        },
+      });
+    }
+
+    return newRole.id;
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.clone",
+      targetType: "OpenRole",
+      targetId: newRoleId,
+    },
+  });
+
+  revalidatePath("/ops/recruitment");
+  redirect(`/ops/recruitment/${newRoleId}`);
+}
+
 export async function updateRoleStage(roleId: string, formData: FormData) {
   await requireRole("MASY_OPS");
 
@@ -115,6 +183,40 @@ export async function updateRoleTitle(roleId: string, formData: FormData) {
     data: {
       actorId: session.user.id,
       action: "role.update_title",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/recruitment");
+}
+
+const updateCompanySchema = z.object({
+  clientOrgId: z.string().min(1, "Company is required"),
+});
+
+export async function updateRoleCompany(roleId: string, formData: FormData) {
+  const session = await requireRole("MASY_OPS");
+
+  const parsed = updateCompanySchema.safeParse({ clientOrgId: formData.get("clientOrgId") });
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid company");
+
+  const role = await db.openRole.findUnique({ where: { id: roleId }, select: { title: true } });
+  if (!role) throw new Error("Role not found");
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: {
+      clientOrgId: parsed.data.clientOrgId,
+      slug: await uniqueRoleSlug(role.title, parsed.data.clientOrgId),
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.update_company",
       targetType: "OpenRole",
       targetId: roleId,
     },
