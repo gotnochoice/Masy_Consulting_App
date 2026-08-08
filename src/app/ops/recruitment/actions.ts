@@ -99,6 +99,31 @@ export async function updateRoleDescription(roleId: string, formData: FormData) 
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
+const updateTitleSchema = z.object({
+  title: z.string().min(1, "Role title is required"),
+});
+
+export async function updateRoleTitle(roleId: string, formData: FormData) {
+  const session = await requireRole("MASY_OPS");
+
+  const parsed = updateTitleSchema.safeParse({ title: formData.get("title") });
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid role title");
+
+  await db.openRole.update({ where: { id: roleId }, data: { title: parsed.data.title } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.update_title",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/recruitment");
+}
+
 export async function updateRoleDefaultFields(roleId: string, formData: FormData) {
   await requireRole("MASY_OPS");
 

@@ -15,6 +15,7 @@ import {
   addCandidate,
   updateCandidateStage,
   toggleAcceptingApplications,
+  updateRoleTitle,
   updateRoleDescription,
   updateRoleDefaultFields,
   addQuestion,
@@ -194,6 +195,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const updateRoleStageWithId = updateRoleStage.bind(null, role.id);
   const addCandidateWithId = addCandidate.bind(null, role.id);
   const toggleAcceptingWithId = toggleAcceptingApplications.bind(null, role.id);
+  const updateTitleWithId = updateRoleTitle.bind(null, role.id);
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
   const updateDefaultFieldsWithId = updateRoleDefaultFields.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
@@ -247,6 +249,17 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             </form>
           </div>
         </div>
+
+        <form action={updateTitleWithId} className="space-y-1">
+          <label className={labelClass} htmlFor="title">Role title</label>
+          <div className="flex flex-wrap items-center gap-2">
+            <input id="title" name="title" required defaultValue={role.title} className={`${inputClass} max-w-sm`} />
+            <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+              Save title
+            </button>
+          </div>
+          <p className="text-xs text-slate-light">The public application link stays the same when you change this.</p>
+        </form>
 
         <form action={updateDescriptionWithId} className="space-y-1">
           <label className={labelClass} htmlFor="description">What candidates see on the application page</label>

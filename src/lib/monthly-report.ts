@@ -12,6 +12,15 @@ export type MonthlyReportData = {
   notes: string | null;
 };
 
+export type StaffReportRow = {
+  employeeId: string;
+  name: string;
+  roleTitle: string;
+  attendancePct: number;
+  leaveDaysTaken: number;
+  reviewsReleased: number;
+};
+
 export function monthLabelFor(monthValue: string): string {
   const [year, monthNum] = monthValue.split("-").map(Number);
   return new Date(Date.UTC(year, monthNum - 1, 1)).toLocaleDateString([], { year: "numeric", month: "long" });
@@ -50,4 +59,43 @@ export async function getMonthlyReportData(clientOrgId: string, monthValue: stri
     concernsReleased,
     notes: note?.notes ?? null,
   };
+}
+
+export async function getStaffReportRows(clientOrgId: string, monthValue: string): Promise<StaffReportRow[]> {
+  const [year, monthNum] = monthValue.split("-").map(Number);
+  const monthStart = new Date(Date.UTC(year, monthNum - 1, 1));
+  const monthEnd = new Date(Date.UTC(year, monthNum, 1));
+
+  const employees = await db.employee.findMany({
+    where: { clientOrgId },
+    orderBy: { name: "asc" },
+    include: {
+      attendanceRecords: { where: { date: { gte: monthStart, lt: monthEnd } } },
+      leaveRequests: {
+        where: { status: "APPROVED", startDate: { lt: monthEnd }, endDate: { gte: monthStart } },
+      },
+      performanceReviews: { where: { status: "RELEASED" } },
+    },
+  });
+
+  return employees.map((employee) => {
+    const completedDays = employee.attendanceRecords.filter((r) => r.clockOut).length;
+    const attendancePct =
+      employee.attendanceRecords.length > 0
+        ? Math.round((completedDays / employee.attendanceRecords.length) * 100)
+        : 0;
+    const leaveDaysTaken = employee.leaveRequests.reduce(
+      (sum, r) => sum + leaveDaysBetween(r.startDate, r.endDate),
+      0,
+    );
+
+    return {
+      employeeId: employee.id,
+      name: employee.name,
+      roleTitle: employee.roleTitle,
+      attendancePct,
+      leaveDaysTaken,
+      reviewsReleased: employee.performanceReviews.length,
+    };
+  });
 }
