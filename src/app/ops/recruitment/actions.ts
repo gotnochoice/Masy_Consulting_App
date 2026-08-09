@@ -192,6 +192,30 @@ export async function updateRoleTitle(roleId: string, formData: FormData) {
   revalidatePath("/ops/recruitment");
 }
 
+export async function regenerateRoleSlug(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  const role = await db.openRole.findUnique({ where: { id: roleId }, select: { title: true, clientOrgId: true } });
+  if (!role) throw new Error("Role not found");
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { slug: await uniqueRoleSlug(role.title, role.clientOrgId) },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.regenerate_slug",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/recruitment");
+}
+
 const updateCompanySchema = z.object({
   clientOrgId: z.string().min(1, "Company is required"),
 });

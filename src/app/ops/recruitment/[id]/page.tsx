@@ -17,6 +17,7 @@ import {
   toggleAcceptingApplications,
   updateRoleTitle,
   updateRoleCompany,
+  regenerateRoleSlug,
   updateRoleDescription,
   updateRoleDefaultFields,
   addQuestion,
@@ -218,6 +219,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const addCandidateWithId = addCandidate.bind(null, role.id);
   const toggleAcceptingWithId = toggleAcceptingApplications.bind(null, role.id);
   const updateTitleWithId = updateRoleTitle.bind(null, role.id);
+  const regenerateSlugWithId = regenerateRoleSlug.bind(null, role.id);
   const updateCompanyWithId = updateRoleCompany.bind(null, role.id);
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
   const updateDefaultFieldsWithId = updateRoleDefaultFields.bind(null, role.id);
@@ -256,6 +258,13 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           </div>
           <div className="flex items-center gap-2">
             <CopyLinkButton link={applyLink} />
+            <ConfirmSubmitButton
+              action={regenerateSlugWithId}
+              confirmMessage="Update the link to match the current title? Anyone with the old link will get a page-not-found instead, so only do this before you've shared it."
+              className="rounded-btn border border-border px-3 py-2 text-xs font-medium text-slate hover:text-ink"
+            >
+              Update link to match title
+            </ConfirmSubmitButton>
             <a
               href={`/ops/recruitment/${role.id}/export`}
               className="rounded-btn border border-border px-3 py-2 text-xs font-medium text-slate hover:text-ink"
@@ -286,7 +295,10 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
               Save title
             </button>
           </div>
-          <p className="text-xs text-slate-light">The public application link stays the same when you change this.</p>
+          <p className="text-xs text-slate-light">
+            The public application link stays the same when you change this. Use &ldquo;Update link to match
+            title&rdquo; above if you want the link to catch up.
+          </p>
         </form>
 
         <form action={updateCompanyWithId} className="space-y-1">
