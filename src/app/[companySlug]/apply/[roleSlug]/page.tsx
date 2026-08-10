@@ -49,6 +49,7 @@ export default async function ApplyPage({
                 <p className="mt-2 text-sm text-slate">
                   {role.clientOrg.name} · Recruitment managed by Masy Consulting
                 </p>
+                {role.location && <p className="mt-1 text-sm text-slate">📍 {role.location}</p>}
               </div>
 
               <div className="relative overflow-hidden rounded-card border border-border bg-paper p-6 shadow-[0_8px_30px_rgba(26,19,48,0.08)] sm:p-10">

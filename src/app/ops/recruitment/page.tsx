@@ -43,7 +43,10 @@ export default async function OpsRecruitmentPage() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-medium text-ink">{role.title}</p>
-                  <p className="text-xs text-slate">{role.clientOrg.name}</p>
+                  <p className="text-xs text-slate">
+                    {role.clientOrg.name}
+                    {role.location && ` · ${role.location}`}
+                  </p>
                 </div>
                 <RoleStageBadge stage={role.stage} />
               </div>
@@ -104,7 +107,10 @@ export default async function OpsRecruitmentPage() {
                 return (
                   <tr key={role.id} className="hover:bg-paper-2">
                     <td className="px-4 py-3 font-medium text-ink">{role.title}</td>
-                    <td className="px-4 py-3 text-slate">{role.clientOrg.name}</td>
+                    <td className="px-4 py-3 text-slate">
+                      {role.clientOrg.name}
+                      {role.location && <span className="block text-xs text-slate-light">{role.location}</span>}
+                    </td>
                     <td className="px-4 py-3"><RoleStageBadge stage={role.stage} /></td>
                     <td className="px-4 py-3 text-slate">{role._count.candidates}</td>
                     <td className="px-4 py-3 text-slate">

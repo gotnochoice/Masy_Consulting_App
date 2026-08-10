@@ -51,6 +51,7 @@ export default async function CareersPage() {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-light">{role.clientOrg.name}</p>
                     <p className="mt-1 text-base font-bold text-ink">{role.title}</p>
+                    {role.location && <p className="mt-0.5 text-xs text-slate">📍 {role.location}</p>}
                     {role.description && (
                       <p className="mt-1 line-clamp-1 text-sm text-slate">{stripBoldMarkers(role.description)}</p>
                     )}

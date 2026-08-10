@@ -62,6 +62,7 @@ export default async function ClientRecruitmentPage() {
                 <p className="text-xs text-slate-light">
                   {role.candidates.length} candidate{role.candidates.length === 1 ? "" : "s"}
                   {role.acceptingApplications ? " · accepting applications" : " · applications closed"}
+                  {role.location && ` · ${role.location}`}
                 </p>
               </div>
               <RoleStageBadge stage={role.stage} />

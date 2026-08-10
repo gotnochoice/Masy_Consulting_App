@@ -85,6 +85,7 @@ export async function cloneRole(roleId: string) {
         title: newTitle,
         slug: newSlug,
         description: source.description,
+        location: source.location,
         acceptingApplications: true,
         askYearsExperience: source.askYearsExperience,
         askExpectedPay: source.askExpectedPay,
@@ -165,6 +166,22 @@ export async function updateRoleDescription(roleId: string, formData: FormData) 
   await db.openRole.update({ where: { id: roleId }, data: { description: parsed.data.description } });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+const updateLocationSchema = z.object({
+  location: z.string().optional(),
+});
+
+export async function updateRoleLocation(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = updateLocationSchema.safeParse({ location: formData.get("location") || undefined });
+  if (!parsed.success) throw new Error("Invalid location");
+
+  await db.openRole.update({ where: { id: roleId }, data: { location: parsed.data.location } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/recruitment");
 }
 
 const updateTitleSchema = z.object({

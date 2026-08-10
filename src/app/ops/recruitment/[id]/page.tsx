@@ -18,6 +18,7 @@ import {
   updateRoleTitle,
   updateRoleCompany,
   regenerateRoleSlug,
+  updateRoleLocation,
   updateRoleDescription,
   updateRoleDefaultFields,
   addQuestion,
@@ -221,6 +222,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const updateTitleWithId = updateRoleTitle.bind(null, role.id);
   const regenerateSlugWithId = regenerateRoleSlug.bind(null, role.id);
   const updateCompanyWithId = updateRoleCompany.bind(null, role.id);
+  const updateLocationWithId = updateRoleLocation.bind(null, role.id);
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
   const updateDefaultFieldsWithId = updateRoleDefaultFields.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
@@ -247,7 +249,10 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
       <div>
         <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
         <h1 className="text-2xl font-bold tracking-tight text-ink">{role.title}</h1>
-        <p className="text-sm text-slate">{role.clientOrg.name}</p>
+        <p className="text-sm text-slate">
+          {role.clientOrg.name}
+          {role.location && ` · ${role.location}`}
+        </p>
       </div>
 
       <div className="rounded-card border border-border bg-paper p-5 space-y-4">
@@ -314,6 +319,23 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             </button>
           </div>
           <p className="text-xs text-slate-light">Changing this changes the public application link, since the company name is part of the URL.</p>
+        </form>
+
+        <form action={updateLocationWithId} className="space-y-1">
+          <label className={labelClass} htmlFor="location">Location</label>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              id="location"
+              name="location"
+              defaultValue={role.location ?? ""}
+              placeholder="e.g. Lekki Phase 1, Lagos, Nigeria"
+              className={`${inputClass} max-w-sm`}
+            />
+            <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+              Save location
+            </button>
+          </div>
+          <p className="text-xs text-slate-light">Shown to applicants on the public job listing.</p>
         </form>
 
         <form action={updateDescriptionWithId} className="space-y-1">

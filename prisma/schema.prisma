@@ -269,6 +269,7 @@ model OpenRole {
   title                   String
   slug                    String
   description             String?
+  location                String?
   stage                   RoleStage      @default(SOURCING)
   acceptingApplications   Boolean        @default(true)
   askYearsExperience      Boolean        @default(true)
