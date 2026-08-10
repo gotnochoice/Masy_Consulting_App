@@ -15,6 +15,7 @@ type UnreadAnnouncement = { id: string; title: string; body: string; authorLabel
 type UnresolvedConcern = { id: string; summary: string; updatedAt: string };
 type UnresolvedReview = { id: string; employeeName: string; cycle: string };
 type PendingLeave = { count: number; href: string };
+type NewApplicants = { count: number; href: string };
 
 export function DashboardHeader({
   roleLabel,
@@ -24,6 +25,7 @@ export function DashboardHeader({
   unresolvedConcerns = [],
   unresolvedReviews = [],
   pendingLeave,
+  newApplicants,
 }: {
   roleLabel: string;
   personName: string;
@@ -32,13 +34,18 @@ export function DashboardHeader({
   unresolvedConcerns?: UnresolvedConcern[];
   unresolvedReviews?: UnresolvedReview[];
   pendingLeave?: PendingLeave;
+  newApplicants?: NewApplicants;
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const initial = personName.trim().charAt(0).toUpperCase() || "M";
   const totalUnread =
-    unreadAnnouncements.length + unresolvedConcerns.length + unresolvedReviews.length + (pendingLeave?.count ?? 0);
+    unreadAnnouncements.length +
+    unresolvedConcerns.length +
+    unresolvedReviews.length +
+    (pendingLeave?.count ?? 0) +
+    (newApplicants?.count ?? 0);
 
   return (
     <header className="border-b border-border bg-paper shadow-sm">
@@ -85,6 +92,18 @@ export function DashboardHeader({
                           {pendingLeave.count} leave request{pendingLeave.count === 1 ? "" : "s"} awaiting your decision
                         </p>
                         <p className="text-[11px] text-slate-light">Tap to review</p>
+                      </Link>
+                    )}
+                    {newApplicants && newApplicants.count > 0 && (
+                      <Link
+                        href={newApplicants.href}
+                        onClick={() => setBellOpen(false)}
+                        className="block px-4 py-3 hover:bg-paper-2"
+                      >
+                        <p className="text-sm font-medium text-ink">
+                          {newApplicants.count} new applicant{newApplicants.count === 1 ? "" : "s"} to review
+                        </p>
+                        <p className="text-[11px] text-slate-light">Tap to view</p>
                       </Link>
                     )}
                     {unresolvedConcerns.map((c) => (

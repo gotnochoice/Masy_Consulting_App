@@ -3,20 +3,23 @@ import { db } from "@/lib/db";
 import { getUnreadAnnouncements } from "@/lib/announcements";
 import { getUnresolvedConcernsForClient } from "@/lib/concerns";
 import { getUnresolvedReviewsForClient } from "@/lib/reviews";
+import { getNewApplicantsCount } from "@/lib/recruitment";
 import { DashboardHeader } from "@/components/dashboard-header";
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const session = await requireRole("CLIENT");
 
-  const [org, pendingLeaveCount, unread, unresolvedConcerns, unresolvedReviews] = await Promise.all([
-    session.user.clientOrgId
-      ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } })
-      : null,
-    db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
-    getUnreadAnnouncements(session.user.id, session.user.clientOrgId),
-    getUnresolvedConcernsForClient(session),
-    getUnresolvedReviewsForClient(session),
-  ]);
+  const [org, pendingLeaveCount, unread, unresolvedConcerns, unresolvedReviews, newApplicantsCount] =
+    await Promise.all([
+      session.user.clientOrgId
+        ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } })
+        : null,
+      db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
+      getUnreadAnnouncements(session.user.id, session.user.clientOrgId),
+      getUnresolvedConcernsForClient(session),
+      getUnresolvedReviewsForClient(session),
+      getNewApplicantsCount(session.user.clientOrgId ?? "__none__"),
+    ]);
 
   return (
     <div className="min-h-screen bg-paper-2">
@@ -41,12 +44,13 @@ export default async function ClientLayout({ children }: { children: React.React
           cycle: r.cycle,
         }))}
         pendingLeave={{ count: pendingLeaveCount, href: "/client/leave" }}
+        newApplicants={{ count: newApplicantsCount, href: "/client/recruitment" }}
         nav={[
           { label: "Overview", href: "/client/staff" },
           { label: "Attendance", href: "/client/attendance" },
           { label: "Leave", href: "/client/leave", badge: pendingLeaveCount },
           { label: "Reviews", href: "/client/reviews", badge: unresolvedReviews.length },
-          { label: "Recruitment", href: "/client/recruitment" },
+          { label: "Recruitment", href: "/client/recruitment", badge: newApplicantsCount },
           { label: "Pulse", href: "/client/pulse" },
           { label: "Concerns", href: "/client/concerns", badge: unresolvedConcerns.length },
           { label: "Announcements", href: "/client/announcements", badge: unread.length },
