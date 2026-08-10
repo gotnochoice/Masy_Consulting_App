@@ -46,6 +46,7 @@ export default async function ClientLayout({ children }: { children: React.React
           { label: "Attendance", href: "/client/attendance" },
           { label: "Leave", href: "/client/leave", badge: pendingLeaveCount },
           { label: "Reviews", href: "/client/reviews", badge: unresolvedReviews.length },
+          { label: "Recruitment", href: "/client/recruitment" },
           { label: "Pulse", href: "/client/pulse" },
           { label: "Concerns", href: "/client/concerns", badge: unresolvedConcerns.length },
           { label: "Announcements", href: "/client/announcements", badge: unread.length },
