@@ -18,6 +18,7 @@ import {
   updateRoleTitle,
   updateRoleCompany,
   regenerateRoleSlug,
+  getShortLink,
   updateRoleLocation,
   updateRoleDescription,
   updateRoleDefaultFields,
@@ -215,12 +216,14 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
 
   const origin = await getOrigin();
   const applyLink = `${origin}/${role.clientOrg.slug}/apply/${role.slug}`;
+  const shortLink = role.shortCode ? `${origin}/go/${role.shortCode}` : null;
 
   const updateRoleStageWithId = updateRoleStage.bind(null, role.id);
   const addCandidateWithId = addCandidate.bind(null, role.id);
   const toggleAcceptingWithId = toggleAcceptingApplications.bind(null, role.id);
   const updateTitleWithId = updateRoleTitle.bind(null, role.id);
   const regenerateSlugWithId = regenerateRoleSlug.bind(null, role.id);
+  const getShortLinkWithId = getShortLink.bind(null, role.id);
   const updateCompanyWithId = updateRoleCompany.bind(null, role.id);
   const updateLocationWithId = updateRoleLocation.bind(null, role.id);
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
@@ -290,6 +293,27 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
               </button>
             </form>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+          <div>
+            <p className="text-sm font-semibold text-ink">Short link for sharing</p>
+            <p className="text-xs text-slate">
+              {shortLink ?? "Not generated yet — use this for social media and DMs instead of the long link above."}
+            </p>
+          </div>
+          {shortLink ? (
+            <CopyLinkButton link={shortLink} />
+          ) : (
+            <form action={getShortLinkWithId}>
+              <button
+                type="submit"
+                className="rounded-btn border border-border px-3 py-2 text-xs font-medium text-slate hover:text-ink"
+              >
+                Generate short link
+              </button>
+            </form>
+          )}
         </div>
 
         <form action={updateTitleWithId} className="space-y-1">

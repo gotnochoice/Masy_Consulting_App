@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uniqueRoleSlug } from "@/lib/slug";
+import { generateShortCode } from "@/lib/short-code";
 import { suggestRoleQuestions, type SuggestedQuestion } from "@/lib/ai";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
@@ -207,6 +208,36 @@ export async function updateRoleTitle(roleId: string, formData: FormData) {
 
   revalidatePath(`/ops/recruitment/${roleId}`);
   revalidatePath("/ops/recruitment");
+}
+
+export async function getShortLink(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  const role = await db.openRole.findUnique({ where: { id: roleId }, select: { shortCode: true } });
+  if (!role) throw new Error("Role not found");
+
+  if (!role.shortCode) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateShortCode();
+      try {
+        await db.openRole.update({ where: { id: roleId }, data: { shortCode: code } });
+        break;
+      } catch (err) {
+        if (attempt === 4) throw err;
+      }
+    }
+
+    await db.auditLog.create({
+      data: {
+        actorId: session.user.id,
+        action: "role.generate_short_link",
+        targetType: "OpenRole",
+        targetId: roleId,
+      },
+    });
+  }
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
 export async function regenerateRoleSlug(roleId: string) {
