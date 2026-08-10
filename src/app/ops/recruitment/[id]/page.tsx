@@ -97,7 +97,7 @@ function QuestionRow({
 
   return (
     <details className="rounded-btn border border-border px-3 py-2">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none flex-col gap-2 [&::-webkit-details-marker]:hidden sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <div>
           <p className="text-sm text-ink">{q.label}</p>
           <p className="text-xs text-slate-light">
@@ -105,7 +105,7 @@ function QuestionRow({
             {(q.type === "MULTIPLE_CHOICE" || q.type === "CHECKBOXES") && q.options.length > 0 && ` · ${q.options.join(", ")}`}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
           {sections.length > 0 && (
             <SectionMoveSelect action={moveToSectionWithIds} sections={sections} defaultValue={q.sectionId ?? ""} />
           )}
@@ -409,9 +409,9 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
               return (
                 <div key={section.id} className="rounded-btn border border-border bg-paper-2 p-3">
                   <details>
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                    <summary className="flex cursor-pointer list-none flex-col gap-2 [&::-webkit-details-marker]:hidden sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                       <p className="text-sm font-semibold text-ink">{section.title}</p>
-                      <div className="flex shrink-0 items-center gap-3">
+                      <div className="flex shrink-0 flex-wrap items-center gap-3">
                         <form action={moveSectionWithIds}>
                           <input type="hidden" name="direction" value="up" />
                           <button
