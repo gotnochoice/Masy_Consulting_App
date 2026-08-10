@@ -46,11 +46,13 @@ export default async function ClientRecruitmentPage() {
       )}
 
       {roles.map((role) => {
-        const candidatesWithCvUrl = role.candidates.map((c) => ({ ...c, cvUrl: c.resumeFileUrl ?? c.resumeLink }));
-        const columns = CANDIDATE_STAGE_ORDER.map((stage) => ({
+        const candidatesWithCvUrl = role.candidates
+          .map((c) => ({ ...c, cvUrl: c.resumeFileUrl ?? c.resumeLink }))
+          .sort((a, b) => CANDIDATE_STAGE_ORDER.indexOf(a.stage) - CANDIDATE_STAGE_ORDER.indexOf(b.stage));
+        const stageCounts = CANDIDATE_STAGE_ORDER.map((stage) => ({
           stage,
-          candidates: candidatesWithCvUrl.filter((c) => c.stage === stage),
-        }));
+          count: candidatesWithCvUrl.filter((c) => c.stage === stage).length,
+        })).filter(({ count }) => count > 0);
 
         return (
           <div key={role.id} className="space-y-4 rounded-card border border-border bg-paper p-5">
@@ -65,28 +67,25 @@ export default async function ClientRecruitmentPage() {
               <RoleStageBadge stage={role.stage} />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-              {columns.map(({ stage, candidates }) => (
-                <div key={stage} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
-                      {CANDIDATE_STAGE_LABELS[stage]}
-                    </p>
-                    <span className="text-xs text-slate-light">{candidates.length}</span>
-                  </div>
-                  <div className="space-y-3">
-                    {candidates.map((candidate) => (
-                      <ClientCandidateCard key={candidate.id} candidate={candidate} />
-                    ))}
-                    {candidates.length === 0 && (
-                      <p className="rounded-card border border-dashed border-border px-3 py-4 text-center text-xs text-slate-light">
-                        None
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            {stageCounts.length > 0 && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1 border-b border-border pb-4 text-xs text-slate">
+                {stageCounts.map(({ stage, count }) => (
+                  <span key={stage}>
+                    {CANDIDATE_STAGE_LABELS[stage]} <span className="font-medium text-ink">{count}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {candidatesWithCvUrl.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {candidatesWithCvUrl.map((candidate) => (
+                  <ClientCandidateCard key={candidate.id} candidate={candidate} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-light">No applicants yet.</p>
+            )}
           </div>
         );
       })}
