@@ -642,6 +642,8 @@ export async function updateCandidateStage(candidateId: string, roleId: string, 
   await db.candidate.update({ where: { id: candidateId }, data: { stage: stage.data } });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/applicants");
+  revalidatePath(`/ops/applicants/${candidateId}`);
 }
 
 export async function deleteCandidate(candidateId: string, roleId: string) {
@@ -650,6 +652,7 @@ export async function deleteCandidate(candidateId: string, roleId: string) {
   await db.candidate.delete({ where: { id: candidateId } });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/applicants");
 }
 
 export async function clearAllCandidates(roleId: string) {

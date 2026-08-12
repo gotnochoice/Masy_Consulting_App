@@ -593,7 +593,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                 </p>
                 <span className="text-xs text-slate-light">{candidates.length}</span>
               </div>
-              <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
+              <div className="space-y-3">
                 {candidates.map((candidate) => {
                   const updateStageWithIds = updateCandidateStage.bind(null, candidate.id, role.id);
                   const deleteWithIds = deleteCandidate.bind(null, candidate.id, role.id);

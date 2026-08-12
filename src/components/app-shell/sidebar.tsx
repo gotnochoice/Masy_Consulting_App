@@ -16,6 +16,7 @@ import {
   Activity,
   Megaphone,
   FileSignature,
+  UserSearch,
   X,
 } from "lucide-react";
 
@@ -27,6 +28,7 @@ const ICONS = {
   leave: CalendarDays,
   reviews: FileText,
   recruitment: Briefcase,
+  applicants: UserSearch,
   concerns: AlertTriangle,
   reports: BarChart3,
   onboarding: ClipboardCheck,
