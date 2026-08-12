@@ -584,7 +584,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             </ConfirmSubmitButton>
           )}
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {columns.map(({ stage, candidates }) => (
             <div key={stage} className="space-y-3">
               <div className="flex items-center justify-between">
@@ -593,7 +593,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                 </p>
                 <span className="text-xs text-slate-light">{candidates.length}</span>
               </div>
-              <div className="space-y-3">
+              <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
                 {candidates.map((candidate) => {
                   const updateStageWithIds = updateCandidateStage.bind(null, candidate.id, role.id);
                   const deleteWithIds = deleteCandidate.bind(null, candidate.id, role.id);
