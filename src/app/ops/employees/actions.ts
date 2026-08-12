@@ -228,3 +228,41 @@ export async function inviteEmployeeUser(
   // next real navigation to this page picks up the change.
   return { email: employee.email, password };
 }
+
+export async function offboardEmployee(employeeId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.employee.update({ where: { id: employeeId }, data: { status: "OFFBOARDED" } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "employee.offboard",
+      targetType: "Employee",
+      targetId: employeeId,
+    },
+  });
+
+  revalidatePath("/ops/employees");
+  revalidatePath("/ops/overview");
+  revalidatePath("/client/staff");
+}
+
+export async function reactivateEmployee(employeeId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.employee.update({ where: { id: employeeId }, data: { status: "ACTIVE" } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "employee.reactivate",
+      targetType: "Employee",
+      targetId: employeeId,
+    },
+  });
+
+  revalidatePath("/ops/employees");
+  revalidatePath("/ops/overview");
+  revalidatePath("/client/staff");
+}

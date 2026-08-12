@@ -30,6 +30,8 @@ export default async function ClientStaffPage() {
     db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
   ]);
 
+  const currentEmployees = employees.filter((e) => e.status !== "OFFBOARDED");
+  const formerEmployees = employees.filter((e) => e.status === "OFFBOARDED");
   const activeCount = employees.filter((e) => e.status === "ACTIVE").length;
   const onLeaveCount = employees.filter((e) => e.status === "ON_LEAVE").length;
   const today = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
@@ -51,7 +53,7 @@ export default async function ClientStaffPage() {
       <SuccessBanner />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Team size" value={employees.length} icon={Users} />
+        <StatCard label="Team size" value={currentEmployees.length} icon={Users} />
         <StatCard label="Active" value={activeCount} icon={UserCheck} />
         <StatCard label="On leave" value={onLeaveCount} icon={CalendarDays} />
         <StatCard label="Pending leave" value={pendingLeaveCount} icon={Clock3} tone="orange" />
@@ -121,7 +123,7 @@ export default async function ClientStaffPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {employees.map((employee) => (
+              {currentEmployees.map((employee) => (
                 <tr key={employee.id}>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -140,7 +142,7 @@ export default async function ClientStaffPage() {
                   </td>
                 </tr>
               ))}
-              {employees.length === 0 && (
+              {currentEmployees.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-5 py-8 text-center text-sm text-slate-light">No staff on record yet.</td>
                 </tr>
@@ -149,6 +151,34 @@ export default async function ClientStaffPage() {
           </table>
         </div>
       </div>
+
+      {formerEmployees.length > 0 && (
+        <details className="rounded-card border border-border bg-paper">
+          <summary className="cursor-pointer list-none px-5 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            Former staff ({formerEmployees.length})
+          </summary>
+          <div className="overflow-x-auto border-t border-border">
+            <table className="min-w-full divide-y divide-border text-sm">
+              <tbody className="divide-y divide-border">
+                {formerEmployees.map((employee) => (
+                  <tr key={employee.id}>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-paper-2 text-xs font-semibold text-slate">
+                          {employee.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-medium text-slate">{employee.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-slate">{employee.roleTitle}</td>
+                    <td className="px-5 py-3"><StatusBadge status={employee.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
     </div>
   );
 }
