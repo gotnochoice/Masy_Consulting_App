@@ -78,6 +78,7 @@ export default async function OpsApplicantsPage({
 
       <p className="text-xs text-slate-light">
         {candidates.length} applicant{candidates.length === 1 ? "" : "s"}
+        {!hasFilters && " · every stage, all time. The Recruitment/Applicants badge only counts those still unreviewed."}
       </p>
 
       {/* Mobile: stacked cards */}
