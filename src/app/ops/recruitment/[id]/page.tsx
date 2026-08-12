@@ -53,7 +53,7 @@ const QUESTION_TYPE_OPTIONS = [
 const DEFAULT_FIELD_OPTIONS = [
   { name: "askApplicantLocation", label: "Applicant's location" },
   { name: "askYearsExperience", label: "Years of experience" },
-  { name: "askExpectedPay", label: "Expected pay range" },
+  { name: "askExpectedPay", label: "Expected pay (₦, monthly)" },
   { name: "askHowHeard", label: "How they heard about the role" },
   { name: "askResumeLink", label: "Link to CV / resume" },
 ] as const;

@@ -199,11 +199,12 @@ export function ApplyForm({
           )}
           {askExpectedPay && (
             <div>
-              <label className={labelClass} htmlFor="expectedPay">Expected pay range</label>
+              <label className={labelClass} htmlFor="expectedPay">Expected pay (₦, monthly)</label>
               <input
                 id="expectedPay"
                 name="expectedPay"
                 required={active}
+                placeholder="e.g. ₦250,000"
                 className={inputClass}
               />
             </div>

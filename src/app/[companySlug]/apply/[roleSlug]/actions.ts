@@ -78,7 +78,7 @@ export async function submitApplication(
     return { error: "Years of experience is required." };
   }
   if (role.askExpectedPay && !parsed.data.expectedPay) {
-    return { error: "Expected pay range is required." };
+    return { error: "Expected pay is required." };
   }
   if (role.askHowHeard && !parsed.data.howHeard) {
     return { error: "Please tell us how you heard about this role." };
