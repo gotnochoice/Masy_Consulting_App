@@ -69,6 +69,7 @@ export default async function ApplyPage({
                   askExpectedPay={role.askExpectedPay}
                   askHowHeard={role.askHowHeard}
                   askResumeLink={role.askResumeLink}
+                  askApplicantLocation={role.askApplicantLocation}
                 />
               </div>
             </>

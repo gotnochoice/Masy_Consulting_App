@@ -277,6 +277,7 @@ model OpenRole {
   askExpectedPay          Boolean        @default(true)
   askHowHeard             Boolean        @default(true)
   askResumeLink           Boolean        @default(true)
+  askApplicantLocation    Boolean        @default(true)
   questions               RoleQuestion[]
   questionSections        QuestionSection[]
   candidates              Candidate[]
@@ -318,6 +319,7 @@ model Candidate {
   email           String?
   phone           String?
   yearsExperience String?
+  location        String?
   resumeLink      String?
   resumeFileName  String?
   resumeFileUrl   String?

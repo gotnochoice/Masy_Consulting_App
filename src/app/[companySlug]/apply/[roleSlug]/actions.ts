@@ -21,6 +21,7 @@ const baseSchema = z.object({
   yearsExperience: z.string().optional(),
   expectedPay: z.string().optional(),
   howHeard: z.string().optional(),
+  location: z.string().optional(),
 });
 
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
@@ -68,6 +69,7 @@ export async function submitApplication(
     yearsExperience: formData.get("yearsExperience") || undefined,
     expectedPay: formData.get("expectedPay") || undefined,
     howHeard: formData.get("howHeard") || undefined,
+    location: formData.get("location") || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Please check your answers." };
@@ -80,6 +82,9 @@ export async function submitApplication(
   }
   if (role.askHowHeard && !parsed.data.howHeard) {
     return { error: "Please tell us how you heard about this role." };
+  }
+  if (role.askApplicantLocation && !parsed.data.location) {
+    return { error: "Please tell us your location." };
   }
   const followedSocials = [...new Set(formData.getAll("followedSocials").filter((v): v is string => typeof v === "string"))];
   if (followedSocials.some((s) => !VALID_SOCIAL_NAMES.has(s))) {
@@ -140,6 +145,7 @@ export async function submitApplication(
       email: parsed.data.email,
       phone: parsed.data.phone,
       yearsExperience: parsed.data.yearsExperience,
+      location: parsed.data.location,
       resumeFileName: resumeFile?.name,
       resumeFileUrl: resumeFile?.url,
       expectedPay: parsed.data.expectedPay,
@@ -156,6 +162,7 @@ export async function submitApplication(
     `Email: ${parsed.data.email}`,
     `Phone: ${parsed.data.phone}`,
     parsed.data.yearsExperience && `Experience: ${parsed.data.yearsExperience}`,
+    parsed.data.location && `Location: ${parsed.data.location}`,
     parsed.data.expectedPay && `Expected pay: ${parsed.data.expectedPay}`,
     parsed.data.howHeard && `Heard about it via: ${parsed.data.howHeard}`,
   ].filter(Boolean);

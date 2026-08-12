@@ -12,6 +12,7 @@ type CandidateWithAnswers = {
   email: string | null;
   phone: string | null;
   yearsExperience: string | null;
+  location: string | null;
   cvUrl: string | null;
   expectedPay: string | null;
   howHeard: string | null;
@@ -49,6 +50,7 @@ export function CandidateCard({
       {candidate.email && <p className="truncate text-xs text-slate">{candidate.email}</p>}
       {candidate.phone && <p className="text-xs text-slate">{candidate.phone}</p>}
       {candidate.yearsExperience && <p className="text-xs text-slate">{candidate.yearsExperience} experience</p>}
+      {candidate.location && <p className="text-xs text-slate">📍 {candidate.location}</p>}
       {candidate.expectedPay && <p className="text-xs text-slate">Expects {candidate.expectedPay}</p>}
       {candidate.followedSocials.length > 0 && (
         <p className="text-xs text-slate-light">Says they follow: {candidate.followedSocials.join(", ")}</p>
@@ -126,6 +128,12 @@ export function CandidateCard({
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Experience</p>
                 <p className="mt-0.5 text-sm text-ink">{candidate.yearsExperience}</p>
+              </div>
+            )}
+            {candidate.location && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Location</p>
+                <p className="mt-0.5 text-sm text-ink">{candidate.location}</p>
               </div>
             )}
             {candidate.expectedPay && (

@@ -91,6 +91,7 @@ export function ApplyForm({
   askExpectedPay,
   askHowHeard,
   askResumeLink,
+  askApplicantLocation,
 }: {
   action: (prevState: ApplyState, formData: FormData) => Promise<ApplyState>;
   questions: RoleQuestion[];
@@ -101,6 +102,7 @@ export function ApplyForm({
   askExpectedPay: boolean;
   askHowHeard: boolean;
   askResumeLink: boolean;
+  askApplicantLocation: boolean;
 }) {
   const [state, formAction, isPending] = useActionState<ApplyState, FormData>(action, {});
   const [currentStep, setCurrentStep] = useState(0);
@@ -177,6 +179,18 @@ export function ApplyForm({
             <label className={labelClass} htmlFor="phone">Phone</label>
             <input id="phone" name="phone" required={active} className={inputClass} />
           </div>
+          {askApplicantLocation && (
+            <div>
+              <label className={labelClass} htmlFor="location">Where are you located?</label>
+              <input
+                id="location"
+                name="location"
+                required={active}
+                placeholder="e.g. Lekki, Lagos"
+                className={inputClass}
+              />
+            </div>
+          )}
           {askYearsExperience && (
             <div>
               <label className={labelClass} htmlFor="yearsExperience">Years of experience in this kind of role</label>

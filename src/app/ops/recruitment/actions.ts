@@ -92,6 +92,7 @@ export async function cloneRole(roleId: string) {
         askExpectedPay: source.askExpectedPay,
         askHowHeard: source.askHowHeard,
         askResumeLink: source.askResumeLink,
+        askApplicantLocation: source.askApplicantLocation,
       },
     });
 
@@ -308,6 +309,7 @@ export async function updateRoleDefaultFields(roleId: string, formData: FormData
       askExpectedPay: formData.get("askExpectedPay") === "on",
       askHowHeard: formData.get("askHowHeard") === "on",
       askResumeLink: formData.get("askResumeLink") === "on",
+      askApplicantLocation: formData.get("askApplicantLocation") === "on",
     },
   });
 
@@ -586,6 +588,7 @@ const addCandidateSchema = z.object({
   email: z.string().email("Enter a valid email").optional().or(z.literal("")),
   phone: z.string().optional(),
   yearsExperience: z.string().optional(),
+  location: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -597,6 +600,7 @@ export async function addCandidate(roleId: string, formData: FormData) {
     email: formData.get("email") || "",
     phone: formData.get("phone") || undefined,
     yearsExperience: formData.get("yearsExperience") || undefined,
+    location: formData.get("location") || undefined,
     notes: formData.get("notes") || undefined,
   });
   if (!parsed.success) {
@@ -610,6 +614,7 @@ export async function addCandidate(roleId: string, formData: FormData) {
       email: parsed.data.email || undefined,
       phone: parsed.data.phone,
       yearsExperience: parsed.data.yearsExperience,
+      location: parsed.data.location,
       notes: parsed.data.notes,
       source: "MASY_SOURCED",
       stage: "APPLIED",

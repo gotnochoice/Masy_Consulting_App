@@ -51,6 +51,7 @@ const QUESTION_TYPE_OPTIONS = [
 ];
 
 const DEFAULT_FIELD_OPTIONS = [
+  { name: "askApplicantLocation", label: "Applicant's location" },
   { name: "askYearsExperience", label: "Years of experience" },
   { name: "askExpectedPay", label: "Expected pay range" },
   { name: "askHowHeard", label: "How they heard about the role" },
@@ -197,6 +198,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             email: true,
             phone: true,
             yearsExperience: true,
+            location: true,
             resumeLink: true,
             resumeFileUrl: true,
             expectedPay: true,
@@ -634,6 +636,10 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           <div>
             <label className={labelClass} htmlFor="yearsExperience">Years of experience (optional)</label>
             <input id="yearsExperience" name="yearsExperience" placeholder="e.g. 3 years" className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="location">Location (optional)</label>
+            <input id="location" name="location" placeholder="e.g. Lekki, Lagos" className={inputClass} />
           </div>
           <div>
             <label className={labelClass} htmlFor="notes">Notes (optional)</label>
