@@ -85,6 +85,42 @@ export async function inviteClientUser(
   return { email: parsed.data.email, password };
 }
 
+export async function deactivateCompany(clientOrgId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.clientOrg.update({ where: { id: clientOrgId }, data: { status: "inactive" } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "company.deactivate",
+      targetType: "ClientOrg",
+      targetId: clientOrgId,
+    },
+  });
+
+  revalidatePath("/ops/companies");
+  revalidatePath("/ops/overview");
+}
+
+export async function reactivateCompany(clientOrgId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.clientOrg.update({ where: { id: clientOrgId }, data: { status: "active" } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "company.reactivate",
+      targetType: "ClientOrg",
+      targetId: clientOrgId,
+    },
+  });
+
+  revalidatePath("/ops/companies");
+  revalidatePath("/ops/overview");
+}
+
 export async function deleteCompany(clientOrgId: string) {
   const session = await requireRole("MASY_OPS");
 

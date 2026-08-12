@@ -17,6 +17,7 @@ import {
   Megaphone,
   FileSignature,
   UserSearch,
+  History,
   X,
 } from "lucide-react";
 
@@ -35,6 +36,7 @@ const ICONS = {
   announcements: Megaphone,
   documents: FileSignature,
   pulse: Activity,
+  audit: History,
 } as const;
 
 export type NavIconName = keyof typeof ICONS;
