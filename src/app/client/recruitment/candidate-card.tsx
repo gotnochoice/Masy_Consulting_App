@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import { CandidateSourceBadge, CandidateStageBadge } from "@/components/stage-badge";
+import { CandidateSourceBadge, CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
 import type { CandidateStage } from "@/generated/prisma/client";
+import { inputClass } from "@/lib/form-styles";
 
 type CandidateWithAnswers = {
   id: string;
@@ -20,7 +21,13 @@ type CandidateWithAnswers = {
   answers: { id: string; value: string; roleQuestion: { label: string } }[];
 };
 
-export function ClientCandidateCard({ candidate }: { candidate: CandidateWithAnswers }) {
+export function ClientCandidateCard({
+  candidate,
+  updateStage,
+}: {
+  candidate: CandidateWithAnswers;
+  updateStage: (formData: FormData) => Promise<void>;
+}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const hasDetails = candidate.answers.length > 0 || !!candidate.howHeard;
 
@@ -62,9 +69,18 @@ export function ClientCandidateCard({ candidate }: { candidate: CandidateWithAns
         </button>
       )}
 
-      <div className="mt-3">
-        <CandidateStageBadge stage={candidate.stage} />
-      </div>
+      <form action={updateStage} className="mt-3">
+        <select
+          name="stage"
+          defaultValue={candidate.stage}
+          onChange={(e) => e.currentTarget.form?.requestSubmit()}
+          className={`${inputClass} py-1.5 text-xs`}
+        >
+          {CANDIDATE_STAGE_ORDER.map((stage) => (
+            <option key={stage} value={stage}>{CANDIDATE_STAGE_LABELS[stage]}</option>
+          ))}
+        </select>
+      </form>
 
       <dialog
         ref={dialogRef}

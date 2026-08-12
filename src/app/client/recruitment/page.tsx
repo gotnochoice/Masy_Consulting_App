@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { RoleStageBadge, CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
 import { ClientCandidateCard } from "./candidate-card";
+import { updateCandidateStage } from "./actions";
 
 export default async function ClientRecruitmentPage() {
   const session = await requireRole("CLIENT");
@@ -81,9 +82,12 @@ export default async function ClientRecruitmentPage() {
 
             {candidatesWithCvUrl.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {candidatesWithCvUrl.map((candidate) => (
-                  <ClientCandidateCard key={candidate.id} candidate={candidate} />
-                ))}
+                {candidatesWithCvUrl.map((candidate) => {
+                  const updateStageWithId = updateCandidateStage.bind(null, candidate.id);
+                  return (
+                    <ClientCandidateCard key={candidate.id} candidate={candidate} updateStage={updateStageWithId} />
+                  );
+                })}
               </div>
             ) : (
               <p className="text-sm text-slate-light">No applicants yet.</p>
