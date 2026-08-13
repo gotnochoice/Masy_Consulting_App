@@ -9,6 +9,7 @@ import { StatCard } from "@/components/stat-card";
 import { SuccessBanner } from "@/components/success-banner";
 import { MilestonesPanel } from "@/components/milestones-panel";
 import { approveLeave, denyLeave } from "../leave/actions";
+import { EmployeeAvatar } from "@/components/employee-avatar";
 
 export default async function ClientStaffPage() {
   const session = await requireRole("CLIENT");
@@ -127,9 +128,7 @@ export default async function ClientStaffPage() {
                 <tr key={employee.id}>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-tint text-xs font-semibold text-indigo">
-                        {employee.name.charAt(0).toUpperCase()}
-                      </div>
+                      <EmployeeAvatar name={employee.name} photoUrl={employee.photoUrl} />
                       <span className="font-medium text-ink">{employee.name}</span>
                     </div>
                   </td>
@@ -164,9 +163,7 @@ export default async function ClientStaffPage() {
                   <tr key={employee.id}>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-paper-2 text-xs font-semibold text-slate">
-                          {employee.name.charAt(0).toUpperCase()}
-                        </div>
+                        <EmployeeAvatar name={employee.name} photoUrl={employee.photoUrl} />
                         <span className="font-medium text-slate">{employee.name}</span>
                       </div>
                     </td>

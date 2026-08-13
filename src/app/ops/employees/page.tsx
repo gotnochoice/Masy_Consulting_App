@@ -8,6 +8,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { createEmployee, offboardEmployee, reactivateEmployee } from "./actions";
 import { EmployeeForm } from "./employee-form";
 import { InviteEmployeeForm } from "./invite-employee-form";
+import { EmployeeAvatar } from "@/components/employee-avatar";
 
 export default async function OpsEmployeesPage({
   searchParams,
@@ -54,7 +55,12 @@ export default async function OpsEmployeesPage({
               const reactivateWithId = reactivateEmployee.bind(null, employee.id);
               return (
                 <tr key={employee.id} className={`hover:bg-paper-2 ${isOffboarded ? "opacity-60" : ""}`}>
-                  <td className="px-4 py-3 font-medium text-ink">{employee.name}</td>
+                  <td className="px-4 py-3 font-medium text-ink">
+                    <div className="flex items-center gap-3">
+                      <EmployeeAvatar name={employee.name} photoUrl={employee.photoUrl} />
+                      {employee.name}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-slate">{employee.clientOrg.name}</td>
                   <td className="px-4 py-3 text-slate">{employee.roleTitle}</td>
                   <td className="px-4 py-3"><StatusBadge status={employee.status} /></td>

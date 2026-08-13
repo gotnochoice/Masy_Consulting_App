@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
+import { uploadEmployeePhoto } from "@/lib/photo";
 
 const updateSchema = z.object({
   email: z.string().email("Valid email required"),
@@ -37,6 +38,14 @@ export async function updateMyDetails(formData: FormData) {
 
   const { dateOfBirth, phone, gender, address, emergencyContactName, emergencyContactPhone, email, startDate } = parsed.data;
 
+  let photoUrl: string | undefined;
+  const photoFile = formData.get("photo");
+  if (photoFile instanceof File && photoFile.size > 0) {
+    const result = await uploadEmployeePhoto(photoFile);
+    if ("error" in result) throw new Error(result.error);
+    photoUrl = result.url;
+  }
+
   await db.$transaction(async (tx) => {
     await tx.employee.update({
       where: { id: session.user.employeeId! },
@@ -49,6 +58,7 @@ export async function updateMyDetails(formData: FormData) {
         address: address ?? null,
         emergencyContactName: emergencyContactName ?? null,
         emergencyContactPhone: emergencyContactPhone ?? null,
+        ...(photoUrl ? { photoUrl } : {}),
       },
     });
 

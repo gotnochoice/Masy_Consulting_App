@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { generateTemporaryPassword } from "@/lib/password";
 import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
+import { uploadEmployeePhoto } from "@/lib/photo";
 
 const baseFields = {
   clientOrgId: z.string().min(1, "Organization is required"),
@@ -72,6 +73,14 @@ export async function createEmployee(formData: FormData) {
     ...rest
   } = parsed.data;
 
+  let photoUrl: string | null = null;
+  const photoFile = formData.get("photo");
+  if (photoFile instanceof File && photoFile.size > 0) {
+    const result = await uploadEmployeePhoto(photoFile);
+    if ("error" in result) throw new Error(result.error);
+    photoUrl = result.url;
+  }
+
   const employee = await db.employee.create({
     data: {
       ...rest,
@@ -85,6 +94,7 @@ export async function createEmployee(formData: FormData) {
       emergencyContactName: emergencyContactName ?? null,
       emergencyContactPhone: emergencyContactPhone ?? null,
       salary: salary ?? null,
+      photoUrl,
     },
   });
 
@@ -144,6 +154,14 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
 
   const existingUser = await db.user.findUnique({ where: { employeeId } });
 
+  let photoUrl: string | undefined;
+  const photoFile = formData.get("photo");
+  if (photoFile instanceof File && photoFile.size > 0) {
+    const result = await uploadEmployeePhoto(photoFile);
+    if ("error" in result) throw new Error(result.error);
+    photoUrl = result.url;
+  }
+
   await db.employee.update({
     where: { id: employeeId },
     data: {
@@ -158,6 +176,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
       emergencyContactName: emergencyContactName ?? null,
       emergencyContactPhone: emergencyContactPhone ?? null,
       salary: salary ?? null,
+      ...(photoUrl ? { photoUrl } : {}),
     },
   });
 
