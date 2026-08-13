@@ -25,6 +25,9 @@ const baseFields = {
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
   salary: z.coerce.number().min(0, "Salary can't be negative").optional(),
+  bankAccountNumber: z.string().optional(),
+  bankName: z.string().optional(),
+  bankAccountHolderName: z.string().optional(),
 };
 
 const leaveBalanceField = { leaveBalanceDays: z.coerce.number().int().min(0, "Leave balance can't be negative") };
@@ -54,6 +57,9 @@ export async function createEmployee(formData: FormData) {
     emergencyContactName: formData.get("emergencyContactName") || undefined,
     emergencyContactPhone: formData.get("emergencyContactPhone") || undefined,
     salary: formData.get("salary") || undefined,
+    bankAccountNumber: formData.get("bankAccountNumber") || undefined,
+    bankName: formData.get("bankName") || undefined,
+    bankAccountHolderName: formData.get("bankAccountHolderName") || undefined,
     leaveBalanceDays: formData.get("leaveBalanceDays"),
   });
   if (!parsed.success) {
@@ -132,6 +138,9 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     emergencyContactName: formData.get("emergencyContactName") || undefined,
     emergencyContactPhone: formData.get("emergencyContactPhone") || undefined,
     salary: formData.get("salary") || undefined,
+    bankAccountNumber: formData.get("bankAccountNumber") || undefined,
+    bankName: formData.get("bankName") || undefined,
+    bankAccountHolderName: formData.get("bankAccountHolderName") || undefined,
     status: formData.get("status"),
     leaveBalanceDays: formData.get("leaveBalanceDays"),
   });
@@ -149,6 +158,9 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     emergencyContactName,
     emergencyContactPhone,
     salary,
+    bankAccountNumber,
+    bankName,
+    bankAccountHolderName,
     ...rest
   } = parsed.data;
 
@@ -176,6 +188,9 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
       emergencyContactName: emergencyContactName ?? null,
       emergencyContactPhone: emergencyContactPhone ?? null,
       salary: salary ?? null,
+      bankAccountNumber: bankAccountNumber ?? null,
+      bankName: bankName ?? null,
+      bankAccountHolderName: bankAccountHolderName ?? null,
       ...(photoUrl ? { photoUrl } : {}),
     },
   });

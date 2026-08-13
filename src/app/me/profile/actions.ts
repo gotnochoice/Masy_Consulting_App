@@ -16,6 +16,9 @@ const updateSchema = z.object({
   address: z.string().optional(),
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
+  bankAccountNumber: z.string().optional(),
+  bankName: z.string().optional(),
+  bankAccountHolderName: z.string().optional(),
 });
 
 export async function updateMyDetails(formData: FormData) {
@@ -31,12 +34,27 @@ export async function updateMyDetails(formData: FormData) {
     address: formData.get("address") || undefined,
     emergencyContactName: formData.get("emergencyContactName") || undefined,
     emergencyContactPhone: formData.get("emergencyContactPhone") || undefined,
+    bankAccountNumber: formData.get("bankAccountNumber") || undefined,
+    bankName: formData.get("bankName") || undefined,
+    bankAccountHolderName: formData.get("bankAccountHolderName") || undefined,
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid details");
   }
 
-  const { dateOfBirth, phone, gender, address, emergencyContactName, emergencyContactPhone, email, startDate } = parsed.data;
+  const {
+    dateOfBirth,
+    phone,
+    gender,
+    address,
+    emergencyContactName,
+    emergencyContactPhone,
+    bankAccountNumber,
+    bankName,
+    bankAccountHolderName,
+    email,
+    startDate,
+  } = parsed.data;
 
   let photoUrl: string | undefined;
   const photoFile = formData.get("photo");
@@ -58,6 +76,9 @@ export async function updateMyDetails(formData: FormData) {
         address: address ?? null,
         emergencyContactName: emergencyContactName ?? null,
         emergencyContactPhone: emergencyContactPhone ?? null,
+        bankAccountNumber: bankAccountNumber ?? null,
+        bankName: bankName ?? null,
+        bankAccountHolderName: bankAccountHolderName ?? null,
         ...(photoUrl ? { photoUrl } : {}),
       },
     });

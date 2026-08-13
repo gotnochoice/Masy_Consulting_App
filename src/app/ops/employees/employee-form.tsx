@@ -157,7 +157,7 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
       </div>
 
       <div className="space-y-4">
-        <p className={sectionLabelClass}>Compensation (admin only)</p>
+        <p className={sectionLabelClass}>Compensation & bank details (admin only)</p>
         <div className="sm:w-1/2 sm:pr-2">
           <label className={labelClass} htmlFor="salary">Salary / pay rate</label>
           <input
@@ -169,7 +169,34 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
             defaultValue={salaryValue}
             className={inputClass}
           />
-          <p className="mt-1 text-xs text-slate-light">Visible to Masy Ops only. Not shown to the client or the employee.</p>
+          <p className="mt-1 text-xs text-slate-light">
+            Visible to Masy Ops and the client&rsquo;s Payroll page. Not shown to the employee.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelClass} htmlFor="bankName">Bank name</label>
+            <input id="bankName" name="bankName" defaultValue={employee?.bankName ?? ""} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="bankAccountNumber">Account number</label>
+            <input
+              id="bankAccountNumber"
+              name="bankAccountNumber"
+              defaultValue={employee?.bankAccountNumber ?? ""}
+              className={inputClass}
+            />
+          </div>
+        </div>
+        <div className="sm:w-1/2 sm:pr-2">
+          <label className={labelClass} htmlFor="bankAccountHolderName">Account holder name</label>
+          <input
+            id="bankAccountHolderName"
+            name="bankAccountHolderName"
+            defaultValue={employee?.bankAccountHolderName ?? ""}
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-slate-light">The employee can also add or correct this from their own profile.</p>
         </div>
       </div>
 

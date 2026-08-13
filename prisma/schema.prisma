@@ -152,6 +152,9 @@ model Employee {
   emergencyContactName  String?
   emergencyContactPhone String?
   photoUrl           String?
+  bankAccountNumber  String?
+  bankName           String?
+  bankAccountHolderName String?
   salary             Decimal?            @db.Decimal(12, 2)
   leaveBalanceDays   Int                 @default(0)
   reviewTemplate     Json?

@@ -47,6 +47,7 @@ export default async function ClientLayout({ children }: { children: React.React
         newApplicants={{ count: newApplicantsCount, href: "/client/recruitment" }}
         nav={[
           { label: "Overview", href: "/client/staff" },
+          { label: "Payroll", href: "/client/payroll" },
           { label: "Attendance", href: "/client/attendance" },
           { label: "Leave", href: "/client/leave", badge: pendingLeaveCount },
           { label: "Reviews", href: "/client/reviews", badge: unresolvedReviews.length },

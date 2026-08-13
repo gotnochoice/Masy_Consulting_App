@@ -97,6 +97,39 @@ export function MyDetailsForm({ employee, action }: Props) {
         </div>
       </div>
 
+      <div className="space-y-4">
+        <p className={sectionLabelClass}>Bank details (for payroll)</p>
+        <p className="text-xs text-slate-light">
+          Used by Masy to pay your salary. Only Masy Ops and {"your organization's"} owner can see this &mdash; never
+          shown to other staff.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelClass} htmlFor="bankName">Bank name</label>
+            <input id="bankName" name="bankName" defaultValue={employee.bankName ?? ""} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="bankAccountNumber">Account number</label>
+            <input
+              id="bankAccountNumber"
+              name="bankAccountNumber"
+              defaultValue={employee.bankAccountNumber ?? ""}
+              className={inputClass}
+            />
+          </div>
+        </div>
+        <div className="sm:w-1/2 sm:pr-2">
+          <label className={labelClass} htmlFor="bankAccountHolderName">Account holder name</label>
+          <input
+            id="bankAccountHolderName"
+            name="bankAccountHolderName"
+            defaultValue={employee.bankAccountHolderName ?? ""}
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-slate-light">Only fill this in if it&rsquo;s different from your name above.</p>
+        </div>
+      </div>
+
       <button type="submit" className={buttonClass}>Save changes</button>
     </form>
   );

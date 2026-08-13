@@ -18,6 +18,7 @@ import {
   FileSignature,
   UserSearch,
   History,
+  Wallet,
   X,
 } from "lucide-react";
 
@@ -37,6 +38,7 @@ const ICONS = {
   documents: FileSignature,
   pulse: Activity,
   audit: History,
+  payroll: Wallet,
 } as const;
 
 export type NavIconName = keyof typeof ICONS;
