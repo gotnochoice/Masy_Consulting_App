@@ -35,17 +35,17 @@ export default async function OpsEmployeesPage({
       </div>
 
       <div className="overflow-x-auto rounded-card border border-border bg-paper">
-        <table className="min-w-full divide-y divide-border text-sm">
+        <table className="min-w-full divide-y divide-border text-xs">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Start date</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Tenure</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Login</th>
-              <th className="px-4 py-2.5" />
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Start date</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Tenure</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Login</th>
+              <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -55,18 +55,18 @@ export default async function OpsEmployeesPage({
               const reactivateWithId = reactivateEmployee.bind(null, employee.id);
               return (
                 <tr key={employee.id} className={`hover:bg-paper-2 ${isOffboarded ? "opacity-60" : ""}`}>
-                  <td className="px-4 py-3 font-medium text-ink">
+                  <td className="px-3 py-2.5 font-medium text-ink">
                     <div className="flex items-center gap-3">
                       <EmployeeAvatar name={employee.name} photoUrl={employee.photoUrl} />
                       {employee.name}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate">{employee.clientOrg.name}</td>
-                  <td className="px-4 py-3 text-slate">{employee.roleTitle}</td>
-                  <td className="px-4 py-3"><StatusBadge status={employee.status} /></td>
-                  <td className="px-4 py-3 text-xs text-slate">{employee.startDate.toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-slate">{formatTenure(employee.startDate)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2.5 text-slate">{employee.clientOrg.name}</td>
+                  <td className="px-3 py-2.5 text-slate">{employee.roleTitle}</td>
+                  <td className="px-3 py-2.5"><StatusBadge status={employee.status} /></td>
+                  <td className="px-3 py-2.5 text-xs text-slate">{employee.startDate.toLocaleDateString()}</td>
+                  <td className="px-3 py-2.5 text-slate">{formatTenure(employee.startDate)}</td>
+                  <td className="px-3 py-2.5">
                     {employee.user ? (
                       <div className="flex items-center justify-end gap-3">
                         <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 text-xs font-medium text-indigo">
@@ -78,7 +78,7 @@ export default async function OpsEmployeesPage({
                       <InviteEmployeeForm employeeId={employee.id} />
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2.5">
                     <div className="flex items-center justify-end gap-3">
                       {isOffboarded ? (
                         <form action={reactivateWithId}>

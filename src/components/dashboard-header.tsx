@@ -20,6 +20,7 @@ type NewApplicants = { count: number; href: string };
 export function DashboardHeader({
   roleLabel,
   personName,
+  logoUrl,
   nav,
   unreadAnnouncements = [],
   unresolvedConcerns = [],
@@ -29,6 +30,7 @@ export function DashboardHeader({
 }: {
   roleLabel: string;
   personName: string;
+  logoUrl?: string | null;
   nav: NavItem[];
   unreadAnnouncements?: UnreadAnnouncement[];
   unresolvedConcerns?: UnresolvedConcern[];
@@ -164,9 +166,14 @@ export function DashboardHeader({
             )}
           </div>
           <div className="hidden items-center gap-2.5 sm:flex">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-tint font-semibold text-indigo">
-              {initial}
-            </div>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- external Blob URL thumbnail, not worth next/image config
+              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-full border border-border bg-paper object-contain p-1" />
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-tint font-semibold text-indigo">
+                {initial}
+              </div>
+            )}
             <div className="leading-tight">
               <p className="text-sm font-medium text-ink">{personName}</p>
               <p className="text-[10px] uppercase tracking-wide text-slate-light">{roleLabel}</p>

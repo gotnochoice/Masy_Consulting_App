@@ -66,15 +66,15 @@ export default async function ClientReportsPage({
           <table className="min-w-full divide-y divide-border text-sm">
             <thead className="bg-indigo-tint">
               <tr>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Role</th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">
+                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Role</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">
                   Attendance
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">
+                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">
                   Leave days
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">
+                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">
                   Latest review
                 </th>
               </tr>
@@ -82,11 +82,11 @@ export default async function ClientReportsPage({
             <tbody className="divide-y divide-border">
               {staffRows.map((row) => (
                 <tr key={row.employeeId}>
-                  <td className="px-5 py-3 font-medium text-ink">{row.name}</td>
-                  <td className="px-5 py-3 text-slate">{row.roleTitle}</td>
-                  <td className="px-5 py-3 text-slate">{row.attendancePct}%</td>
-                  <td className="px-5 py-3 text-slate">{row.leaveDaysTaken}</td>
-                  <td className="px-5 py-3 text-slate">
+                  <td className="px-4 py-2.5 font-medium text-ink">{row.name}</td>
+                  <td className="px-4 py-2.5 text-slate">{row.roleTitle}</td>
+                  <td className="px-4 py-2.5 text-slate">{row.attendancePct}%</td>
+                  <td className="px-4 py-2.5 text-slate">{row.leaveDaysTaken}</td>
+                  <td className="px-4 py-2.5 text-slate">
                     {row.latestReleasedReviewId ? (
                       <Link
                         href={`/client/reviews#review-${row.latestReleasedReviewId}`}

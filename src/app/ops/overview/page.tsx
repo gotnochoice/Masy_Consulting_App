@@ -7,6 +7,7 @@ import { StatCard } from "@/components/stat-card";
 import { Panel, PanelEmptyRow } from "@/components/panel";
 import { MilestonesPanel } from "@/components/milestones-panel";
 import { CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
+import { ClientLogo } from "@/components/client-logo";
 
 const FUNNEL_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED"] as const;
 
@@ -108,9 +109,12 @@ export default async function OpsOverviewPage() {
         <Panel title="Client organizations">
           {orgs.map((org) => (
             <div key={org.id} className="flex items-center justify-between px-5 py-3">
-              <div>
-                <p className="text-sm font-medium text-ink">{org.name}</p>
-                <p className="text-xs text-slate">{org._count.employees} employees</p>
+              <div className="flex items-center gap-3">
+                <ClientLogo name={org.name} logoUrl={org.logoUrl} />
+                <div>
+                  <p className="text-sm font-medium text-ink">{org.name}</p>
+                  <p className="text-xs text-slate">{org._count.employees} employees</p>
+                </div>
               </div>
               <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 text-xs font-medium text-indigo">
                 {org.status}

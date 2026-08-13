@@ -112,30 +112,30 @@ export default async function OpsApplicantsPage({
       {/* Desktop: table */}
       {candidates.length > 0 && (
         <div className="hidden overflow-x-auto rounded-card border border-border bg-paper sm:block">
-          <table className="min-w-full divide-y divide-border text-sm">
+          <table className="min-w-full divide-y divide-border text-xs">
             <thead className="bg-paper-2">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Company</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Source</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Applied</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Company</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Source</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Applied</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {candidates.map((c) => (
                 <tr key={c.id} className="hover:bg-paper-2">
-                  <td className="px-4 py-3 font-medium text-ink">
+                  <td className="px-3 py-2.5 font-medium text-ink">
                     <Link href={`/ops/applicants/${c.id}`} className="block hover:text-indigo">
                       {c.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-slate">{c.openRole.title}</td>
-                  <td className="px-4 py-3 text-slate">{c.openRole.clientOrg.name}</td>
-                  <td className="px-4 py-3"><CandidateStageBadge stage={c.stage} /></td>
-                  <td className="px-4 py-3"><CandidateSourceBadge source={c.source} /></td>
-                  <td className="px-4 py-3 text-xs text-slate">{formatDateShort(c.createdAt)}</td>
+                  <td className="px-3 py-2.5 text-slate">{c.openRole.title}</td>
+                  <td className="px-3 py-2.5 text-slate">{c.openRole.clientOrg.name}</td>
+                  <td className="px-3 py-2.5"><CandidateStageBadge stage={c.stage} /></td>
+                  <td className="px-3 py-2.5"><CandidateSourceBadge source={c.source} /></td>
+                  <td className="px-3 py-2.5 text-xs text-slate">{formatDateShort(c.createdAt)}</td>
                 </tr>
               ))}
             </tbody>

@@ -93,20 +93,20 @@ export default async function ClientAttendancePage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-indigo-tint">
             <tr>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Days present</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Total hours</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Incomplete days</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Work done</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Days present</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Total hours</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Incomplete days</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Work done</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {rows.map((row) => (
               <tr key={row.employeeId}>
-                <td className="px-5 py-3 font-medium text-ink">{row.name}</td>
-                <td className="px-5 py-3 text-slate">{row.daysPresent}</td>
-                <td className="px-5 py-3 text-xs text-slate">{(row.totalHoursMs / 3_600_000).toFixed(1)}h</td>
-                <td className="px-5 py-3 text-slate">
+                <td className="px-4 py-2.5 font-medium text-ink">{row.name}</td>
+                <td className="px-4 py-2.5 text-slate">{row.daysPresent}</td>
+                <td className="px-4 py-2.5 text-xs text-slate">{(row.totalHoursMs / 3_600_000).toFixed(1)}h</td>
+                <td className="px-4 py-2.5 text-slate">
                   {row.incompleteDays > 0 ? (
                     <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 text-xs font-medium text-orange">
                       {row.incompleteDays}
@@ -115,7 +115,7 @@ export default async function ClientAttendancePage() {
                     "–"
                   )}
                 </td>
-                <td className="px-5 py-3 text-slate">
+                <td className="px-4 py-2.5 text-slate">
                   {row.workNotes.length > 0 ? (
                     <ul className="space-y-1">
                       {row.workNotes.map((note, i) => (

@@ -31,31 +31,31 @@ export default async function ClientPayrollPage() {
       </div>
 
       <div className="overflow-x-auto rounded-card border border-border bg-paper">
-        <table className="min-w-full divide-y divide-border text-sm">
+        <table className="min-w-full divide-y divide-border text-xs">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-5 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
-              <th className="px-5 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
-              <th className="px-5 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Salary</th>
-              <th className="px-5 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Bank</th>
-              <th className="px-5 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Account name</th>
-              <th className="px-5 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Account number</th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Salary</th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Bank</th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Account name</th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Account number</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {employees.map((employee) => (
               <tr key={employee.id} className="hover:bg-paper-2">
-                <td className="px-5 py-3">
+                <td className="px-4 py-2.5">
                   <div className="flex items-center gap-3">
                     <EmployeeAvatar name={employee.name} photoUrl={employee.photoUrl} />
                     <span className="font-medium text-ink">{employee.name}</span>
                   </div>
                 </td>
-                <td className="px-5 py-3 text-slate">{employee.roleTitle}</td>
-                <td className="px-5 py-3 text-slate">{formatNaira(employee.salary)}</td>
-                <td className="px-5 py-3 text-slate">{employee.bankName || "-"}</td>
-                <td className="px-5 py-3 text-slate">{employee.bankAccountHolderName || employee.name}</td>
-                <td className="px-5 py-3 text-slate">{employee.bankAccountNumber || "-"}</td>
+                <td className="px-4 py-2.5 text-slate">{employee.roleTitle}</td>
+                <td className="px-4 py-2.5 text-slate">{formatNaira(employee.salary)}</td>
+                <td className="px-4 py-2.5 text-slate">{employee.bankName || "-"}</td>
+                <td className="px-4 py-2.5 text-slate">{employee.bankAccountHolderName || employee.name}</td>
+                <td className="px-4 py-2.5 text-slate">{employee.bankAccountNumber || "-"}</td>
               </tr>
             ))}
             {employees.length === 0 && (

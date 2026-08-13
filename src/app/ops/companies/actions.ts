@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { generateTemporaryPassword } from "@/lib/password";
 import { uniqueCompanySlug } from "@/lib/slug";
+import { uploadClientLogo } from "@/lib/logo";
 
 const createSchema = z.object({
   name: z.string().min(1, "Company name is required"),
@@ -83,6 +84,31 @@ export async function inviteClientUser(
   // row from the server as "already has a login," wiping the one-time password display
   // (InviteClientForm) before it's ever seen. The next real navigation picks up the change.
   return { email: parsed.data.email, password };
+}
+
+export async function updateCompanyLogo(clientOrgId: string, formData: FormData) {
+  const session = await requireRole("MASY_OPS");
+
+  const logoFile = formData.get("logo");
+  if (!(logoFile instanceof File) || logoFile.size === 0) {
+    throw new Error("Please choose a logo image to upload");
+  }
+
+  const result = await uploadClientLogo(logoFile);
+  if ("error" in result) throw new Error(result.error);
+
+  await db.clientOrg.update({ where: { id: clientOrgId }, data: { logoUrl: result.url } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "company.update_logo",
+      targetType: "ClientOrg",
+      targetId: clientOrgId,
+    },
+  });
+
+  revalidatePath("/ops/companies");
 }
 
 export async function deactivateCompany(clientOrgId: string) {

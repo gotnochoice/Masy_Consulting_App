@@ -54,10 +54,10 @@ export default async function OpsAuditPage() {
           <table className="min-w-full divide-y divide-border text-sm">
             <thead className="bg-paper-2">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">When</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Actor</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Action</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Target</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">When</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Actor</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Action</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Target</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -65,10 +65,10 @@ export default async function OpsAuditPage() {
                 const actor = actorById.get(log.actorId);
                 return (
                   <tr key={log.id} className="hover:bg-paper-2">
-                    <td className="px-4 py-3 text-xs text-slate">{log.timestamp.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-slate">{actor?.email ?? "Unknown user"}</td>
-                    <td className="px-4 py-3 capitalize text-ink">{humanizeAction(log.action)}</td>
-                    <td className="px-4 py-3 text-xs text-slate-light">
+                    <td className="px-3 py-2.5 text-xs text-slate">{log.timestamp.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-slate">{actor?.email ?? "Unknown user"}</td>
+                    <td className="px-3 py-2.5 capitalize text-ink">{humanizeAction(log.action)}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-light">
                       {log.targetType} · {log.targetId}
                     </td>
                   </tr>

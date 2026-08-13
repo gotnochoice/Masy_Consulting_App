@@ -12,7 +12,7 @@ export default async function ClientLayout({ children }: { children: React.React
   const [org, pendingLeaveCount, unread, unresolvedConcerns, unresolvedReviews, newApplicantsCount] =
     await Promise.all([
       session.user.clientOrgId
-        ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } })
+        ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true, logoUrl: true } })
         : null,
       db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
       getUnreadAnnouncements(session.user.id, session.user.clientOrgId),
@@ -26,6 +26,7 @@ export default async function ClientLayout({ children }: { children: React.React
       <DashboardHeader
         roleLabel="Client"
         personName={org?.name ?? "Client"}
+        logoUrl={org?.logoUrl}
         unreadAnnouncements={unread.map((a) => ({
           id: a.id,
           title: a.title,

@@ -87,17 +87,17 @@ export default async function OpsRecruitmentPage() {
       {/* Desktop: table */}
       {roles.length > 0 && (
         <div className="hidden overflow-x-auto rounded-card border border-border bg-paper sm:block">
-          <table className="min-w-full divide-y divide-border text-sm">
+          <table className="min-w-full divide-y divide-border text-xs">
             <thead className="bg-paper-2">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Candidates</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Applications</th>
-                <th className="px-4 py-2.5" />
-                <th className="px-4 py-2.5" />
-                <th className="px-4 py-2.5" />
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Candidates</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Applications</th>
+                <th className="px-3 py-2" />
+                <th className="px-3 py-2" />
+                <th className="px-3 py-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -106,33 +106,33 @@ export default async function OpsRecruitmentPage() {
                 const cloneRoleWithId = cloneRole.bind(null, role.id);
                 return (
                   <tr key={role.id} className="hover:bg-paper-2">
-                    <td className="px-4 py-3 font-medium text-ink">{role.title}</td>
-                    <td className="px-4 py-3 text-slate">
+                    <td className="px-3 py-2.5 font-medium text-ink">{role.title}</td>
+                    <td className="px-3 py-2.5 text-slate">
                       {role.clientOrg.name}
                       {role.location && <span className="block text-xs text-slate-light">{role.location}</span>}
                     </td>
-                    <td className="px-4 py-3"><RoleStageBadge stage={role.stage} /></td>
-                    <td className="px-4 py-3 text-slate">{role._count.candidates}</td>
-                    <td className="px-4 py-3 text-slate">
+                    <td className="px-3 py-2.5"><RoleStageBadge stage={role.stage} /></td>
+                    <td className="px-3 py-2.5 text-slate">{role._count.candidates}</td>
+                    <td className="px-3 py-2.5 text-slate">
                       {role.acceptingApplications ? (
                         <span>{websiteCountByRole.get(role.id) ?? 0} online</span>
                       ) : (
                         <span className="text-slate-light">Closed</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-2.5 text-right">
                       <Link href={`/ops/recruitment/${role.id}`} className="text-sm font-medium text-indigo hover:text-indigo-light">
                         View pipeline
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-2.5 text-right">
                       <form action={cloneRoleWithId}>
                         <button type="submit" className="text-sm font-medium text-slate hover:text-ink">
                           Clone
                         </button>
                       </form>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-2.5 text-right">
                       <ConfirmSubmitButton
                         action={deleteRoleWithId}
                         confirmMessage={
