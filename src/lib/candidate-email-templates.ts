@@ -9,7 +9,8 @@ export function rejectionEmail(candidateName: string, roleTitle: string, company
       `After careful review, we've decided to move forward with other candidates for this particular role. This isn't a reflection of your abilities, we simply had a specific fit in mind for this position.\n\n` +
       `We'll keep your application on file and would welcome you applying for future roles that match your experience.\n\n` +
       `Wishing you the best in your search.\n\n` +
-      `Best regards,\nThe ${companyName} Hiring Team\n(via Masy Consulting)`,
+      `Best regards,\nThe ${companyName} Hiring Team\n(via Masy Consulting)\n\n` +
+      `This is an automated message — please don't reply to this email.`,
   };
 }
 
