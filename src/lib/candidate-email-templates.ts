@@ -10,7 +10,7 @@ export function rejectionEmail(candidateName: string, roleTitle: string, company
       `We'll keep your application on file and would welcome you applying for future roles that match your experience.\n\n` +
       `Wishing you the best in your search.\n\n` +
       `Best regards,\nThe ${companyName} Hiring Team\n(via Masy Consulting)\n\n` +
-      `This is an automated message — please don't reply to this email.`,
+      `This is an automated message. Please don't reply to this email.`,
   };
 }
 

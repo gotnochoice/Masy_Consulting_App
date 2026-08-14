@@ -398,7 +398,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             <div>
               <p className="text-sm font-semibold text-ink">Short link for sharing</p>
               <p className="text-xs text-slate">
-                {shortLink ?? "Not generated yet — use this for social media and DMs instead of the long link above."}
+                {shortLink ?? "Not generated yet. Use this for social media and DMs instead of the long link above."}
               </p>
             </div>
             {shortLink ? (

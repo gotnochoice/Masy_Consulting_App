@@ -55,7 +55,7 @@ export default async function OpsApplicantsPage({
           <select id="roleId" name="roleId" defaultValue={roleId ?? ""} className={inputClass}>
             <option value="">All roles</option>
             {roles.map((r) => (
-              <option key={r.id} value={r.id}>{r.title} — {r.clientOrg.name}</option>
+              <option key={r.id} value={r.id}>{r.title}, {r.clientOrg.name}</option>
             ))}
           </select>
         </div>
