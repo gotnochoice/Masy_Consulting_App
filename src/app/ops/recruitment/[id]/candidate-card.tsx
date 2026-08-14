@@ -37,24 +37,28 @@ export function CandidateCard({
 
   return (
     <div id={`candidate-${candidate.id}`} className="rounded-card border border-border bg-paper p-4 scroll-mt-4">
-      <div className="mb-2 flex items-start justify-between gap-2">
+      <div className="mb-3">
         <button
           type="button"
           onClick={() => dialogRef.current?.showModal()}
-          className="text-left text-sm font-medium text-ink hover:text-indigo"
+          className="text-left text-sm font-medium leading-snug text-ink hover:text-indigo"
         >
           {candidate.name}
         </button>
-        <CandidateSourceBadge source={candidate.source} />
+        <div className="mt-1.5">
+          <CandidateSourceBadge source={candidate.source} />
+        </div>
       </div>
-      {candidate.email && <p className="truncate text-xs text-slate">{candidate.email}</p>}
-      {candidate.phone && <p className="text-xs text-slate">{candidate.phone}</p>}
-      {candidate.yearsExperience && <p className="text-xs text-slate">{candidate.yearsExperience} experience</p>}
-      {candidate.location && <p className="text-xs text-slate">📍 {candidate.location}</p>}
-      {candidate.expectedPay && <p className="text-xs text-slate">Expects {candidate.expectedPay}</p>}
-      {candidate.followedSocials.length > 0 && (
-        <p className="text-xs text-slate-light">Says they follow: {candidate.followedSocials.join(", ")}</p>
-      )}
+      <div className="space-y-1">
+        {candidate.email && <p className="truncate text-xs text-slate">{candidate.email}</p>}
+        {candidate.phone && <p className="text-xs text-slate">{candidate.phone}</p>}
+        {candidate.yearsExperience && <p className="text-xs text-slate">{candidate.yearsExperience} experience</p>}
+        {candidate.location && <p className="text-xs text-slate">📍 {candidate.location}</p>}
+        {candidate.expectedPay && <p className="text-xs text-slate">Expects {candidate.expectedPay}</p>}
+        {candidate.followedSocials.length > 0 && (
+          <p className="text-xs text-slate-light">Says they follow: {candidate.followedSocials.join(", ")}</p>
+        )}
+      </div>
       {candidate.cvUrl && (
         <a
           href={candidate.cvUrl}

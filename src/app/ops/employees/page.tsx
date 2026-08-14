@@ -79,10 +79,10 @@ export default async function OpsEmployeesPage({
                     )}
                   </td>
                   <td className="px-3 py-2.5">
-                    <div className="flex items-center justify-end gap-3">
+                    <div className="flex items-center justify-end gap-2.5">
                       {isOffboarded ? (
                         <form action={reactivateWithId}>
-                          <button type="submit" className="text-sm font-medium text-indigo hover:text-indigo-light">
+                          <button type="submit" className="text-xs font-medium text-indigo hover:text-indigo-light">
                             Reactivate
                           </button>
                         </form>
@@ -90,12 +90,12 @@ export default async function OpsEmployeesPage({
                         <ConfirmSubmitButton
                           action={offboardWithId}
                           confirmMessage={`Mark ${employee.name} as offboarded? They'll lose access to their employee portal immediately, and ${employee.clientOrg.name} will stop seeing them as active staff.`}
-                          className="text-sm font-medium text-slate hover:text-orange"
+                          className="text-xs font-medium text-slate hover:text-orange"
                         >
                           Offboard
                         </ConfirmSubmitButton>
                       )}
-                      <Link href={`/ops/employees/${employee.id}/edit`} className="text-sm font-medium text-indigo hover:text-indigo-light">
+                      <Link href={`/ops/employees/${employee.id}/edit`} className="text-xs font-medium text-indigo hover:text-indigo-light">
                         Edit
                       </Link>
                     </div>
