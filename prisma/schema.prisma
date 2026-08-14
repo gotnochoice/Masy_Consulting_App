@@ -283,6 +283,7 @@ model OpenRole {
   askHowHeard             Boolean        @default(true)
   askResumeLink           Boolean        @default(true)
   askApplicantLocation    Boolean        @default(true)
+  schedulingLink          String?
   questions               RoleQuestion[]
   questionSections        QuestionSection[]
   candidates              Candidate[]
@@ -334,6 +335,9 @@ model Candidate {
   stage           CandidateStage    @default(APPLIED)
   source          CandidateSource   @default(MASY_SOURCED)
   notes           String?
+  rejectionEmailSentAt   DateTime?
+  interviewInviteSentAt  DateTime?
+  offerEmailSentAt       DateTime?
   answers         CandidateAnswer[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt

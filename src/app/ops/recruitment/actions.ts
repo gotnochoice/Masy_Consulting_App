@@ -8,6 +8,8 @@ import { requireRole } from "@/lib/rbac";
 import { uniqueRoleSlug } from "@/lib/slug";
 import { generateShortCode } from "@/lib/short-code";
 import { suggestRoleQuestions, type SuggestedQuestion } from "@/lib/ai";
+import { sendNotification } from "@/lib/email";
+import { rejectionEmail, interviewInviteEmail, offerEmail } from "@/lib/candidate-email-templates";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
 const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
@@ -184,6 +186,24 @@ export async function updateRoleLocation(roleId: string, formData: FormData) {
 
   revalidatePath(`/ops/recruitment/${roleId}`);
   revalidatePath("/ops/recruitment");
+}
+
+const updateSchedulingLinkSchema = z.object({
+  schedulingLink: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+});
+
+export async function updateRoleSchedulingLink(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = updateSchedulingLinkSchema.safeParse({ schedulingLink: formData.get("schedulingLink") || undefined });
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid link");
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { schedulingLink: parsed.data.schedulingLink || null },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
 const updateTitleSchema = z.object({
@@ -661,4 +681,67 @@ export async function clearAllCandidates(roleId: string) {
   await db.candidate.deleteMany({ where: { openRoleId: roleId } });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+async function loadCandidateForEmail(candidateId: string) {
+  const candidate = await db.candidate.findUnique({
+    where: { id: candidateId },
+    include: { openRole: { include: { clientOrg: true } } },
+  });
+  if (!candidate) throw new Error("Candidate not found");
+  if (!candidate.email) throw new Error(`${candidate.name} has no email address on file`);
+  return candidate;
+}
+
+export async function sendCandidateRejectionEmail(candidateId: string, roleId: string) {
+  const session = await requireRole("MASY_OPS");
+  const candidate = await loadCandidateForEmail(candidateId);
+
+  const { subject, body } = rejectionEmail(candidate.name, candidate.openRole.title, candidate.openRole.clientOrg.name);
+  await sendNotification(candidate.email!, subject, body);
+
+  await db.candidate.update({ where: { id: candidateId }, data: { rejectionEmailSentAt: new Date() } });
+  await db.auditLog.create({
+    data: { actorId: session.user.id, action: "candidate.send_rejection_email", targetType: "Candidate", targetId: candidateId },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath(`/ops/applicants/${candidateId}`);
+}
+
+export async function sendCandidateInterviewInviteEmail(candidateId: string, roleId: string) {
+  const session = await requireRole("MASY_OPS");
+  const candidate = await loadCandidateForEmail(candidateId);
+
+  const { subject, body } = interviewInviteEmail(
+    candidate.name,
+    candidate.openRole.title,
+    candidate.openRole.clientOrg.name,
+    candidate.openRole.schedulingLink,
+  );
+  await sendNotification(candidate.email!, subject, body);
+
+  await db.candidate.update({ where: { id: candidateId }, data: { interviewInviteSentAt: new Date() } });
+  await db.auditLog.create({
+    data: { actorId: session.user.id, action: "candidate.send_interview_invite", targetType: "Candidate", targetId: candidateId },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath(`/ops/applicants/${candidateId}`);
+}
+
+export async function sendCandidateOfferEmail(candidateId: string, roleId: string) {
+  const session = await requireRole("MASY_OPS");
+  const candidate = await loadCandidateForEmail(candidateId);
+
+  const { subject, body } = offerEmail(candidate.name, candidate.openRole.title, candidate.openRole.clientOrg.name);
+  await sendNotification(candidate.email!, subject, body);
+
+  await db.candidate.update({ where: { id: candidateId }, data: { offerEmailSentAt: new Date() } });
+  await db.auditLog.create({
+    data: { actorId: session.user.id, action: "candidate.send_offer_email", targetType: "Candidate", targetId: candidateId },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath(`/ops/applicants/${candidateId}`);
 }

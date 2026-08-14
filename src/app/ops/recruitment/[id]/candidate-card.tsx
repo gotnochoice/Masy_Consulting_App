@@ -20,6 +20,9 @@ type CandidateWithAnswers = {
   notes: string | null;
   source: "WEBSITE" | "MASY_SOURCED";
   stage: CandidateStage;
+  rejectionEmailSentAt: Date | null;
+  interviewInviteSentAt: Date | null;
+  offerEmailSentAt: Date | null;
   answers: { id: string; value: string; roleQuestion: { label: string } }[];
 };
 
@@ -27,10 +30,16 @@ export function CandidateCard({
   candidate,
   updateStage,
   deleteCandidate,
+  sendRejectionEmail,
+  sendInterviewInviteEmail,
+  sendOfferEmail,
 }: {
   candidate: CandidateWithAnswers;
   updateStage: (formData: FormData) => Promise<void>;
   deleteCandidate: (formData: FormData) => Promise<void>;
+  sendRejectionEmail: (formData: FormData) => Promise<void>;
+  sendInterviewInviteEmail: (formData: FormData) => Promise<void>;
+  sendOfferEmail: (formData: FormData) => Promise<void>;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const hasDetails = candidate.answers.length > 0 || !!candidate.notes || !!candidate.howHeard;
@@ -92,6 +101,34 @@ export function CandidateCard({
           ))}
         </select>
       </form>
+
+      {candidate.stage === "REJECTED" && (
+        <EmailAction
+          action={sendRejectionEmail}
+          sentAt={candidate.rejectionEmailSentAt}
+          hasEmail={!!candidate.email}
+          confirmMessage={`Send a rejection email to ${candidate.name}${candidate.email ? ` at ${candidate.email}` : ""}?`}
+          label="rejection email"
+        />
+      )}
+      {candidate.stage === "INTERVIEWING" && (
+        <EmailAction
+          action={sendInterviewInviteEmail}
+          sentAt={candidate.interviewInviteSentAt}
+          hasEmail={!!candidate.email}
+          confirmMessage={`Send an interview invite to ${candidate.name}${candidate.email ? ` at ${candidate.email}` : ""}?`}
+          label="interview invite"
+        />
+      )}
+      {candidate.stage === "OFFER" && (
+        <EmailAction
+          action={sendOfferEmail}
+          sentAt={candidate.offerEmailSentAt}
+          hasEmail={!!candidate.email}
+          confirmMessage={`Send an offer email to ${candidate.name}${candidate.email ? ` at ${candidate.email}` : ""}?`}
+          label="offer email"
+        />
+      )}
 
       <ConfirmSubmitButton
         action={deleteCandidate}
@@ -195,6 +232,41 @@ export function CandidateCard({
           )}
         </div>
       </dialog>
+    </div>
+  );
+}
+
+function EmailAction({
+  action,
+  sentAt,
+  hasEmail,
+  confirmMessage,
+  label,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  sentAt: Date | null;
+  hasEmail: boolean;
+  confirmMessage: string;
+  label: string;
+}) {
+  if (!hasEmail) {
+    return <p className="mt-2 text-xs text-slate-light">No email on file, can&rsquo;t send {label}.</p>;
+  }
+
+  return (
+    <div className="mt-2">
+      <ConfirmSubmitButton
+        action={action}
+        confirmMessage={confirmMessage}
+        className="text-xs font-medium text-indigo hover:text-indigo-light"
+      >
+        {sentAt ? `Resend ${label}` : `Send ${label}`}
+      </ConfirmSubmitButton>
+      {sentAt && (
+        <p className="mt-0.5 text-[11px] text-slate-light">
+          Sent {sentAt.toLocaleDateString([], { month: "short", day: "numeric" })}
+        </p>
+      )}
     </div>
   );
 }

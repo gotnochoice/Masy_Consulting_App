@@ -20,6 +20,7 @@ import {
   regenerateRoleSlug,
   getShortLink,
   updateRoleLocation,
+  updateRoleSchedulingLink,
   updateRoleDescription,
   updateRoleDefaultFields,
   addQuestion,
@@ -33,6 +34,9 @@ import {
   moveQuestionSection,
   deleteCandidate,
   clearAllCandidates,
+  sendCandidateRejectionEmail,
+  sendCandidateInterviewInviteEmail,
+  sendCandidateOfferEmail,
 } from "../actions";
 
 const ROLE_STAGE_OPTIONS = [
@@ -207,6 +211,9 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             stage: true,
             source: true,
             notes: true,
+            rejectionEmailSentAt: true,
+            interviewInviteSentAt: true,
+            offerEmailSentAt: true,
             answers: { include: { roleQuestion: true } },
           },
         },
@@ -228,6 +235,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const getShortLinkWithId = getShortLink.bind(null, role.id);
   const updateCompanyWithId = updateRoleCompany.bind(null, role.id);
   const updateLocationWithId = updateRoleLocation.bind(null, role.id);
+  const updateSchedulingLinkWithId = updateRoleSchedulingLink.bind(null, role.id);
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
   const updateDefaultFieldsWithId = updateRoleDefaultFields.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
@@ -302,12 +310,18 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                 {candidates.map((candidate) => {
                   const updateStageWithIds = updateCandidateStage.bind(null, candidate.id, role.id);
                   const deleteWithIds = deleteCandidate.bind(null, candidate.id, role.id);
+                  const sendRejectionWithIds = sendCandidateRejectionEmail.bind(null, candidate.id, role.id);
+                  const sendInterviewInviteWithIds = sendCandidateInterviewInviteEmail.bind(null, candidate.id, role.id);
+                  const sendOfferWithIds = sendCandidateOfferEmail.bind(null, candidate.id, role.id);
                   return (
                     <CandidateCard
                       key={candidate.id}
                       candidate={candidate}
                       updateStage={updateStageWithIds}
                       deleteCandidate={deleteWithIds}
+                      sendRejectionEmail={sendRejectionWithIds}
+                      sendInterviewInviteEmail={sendInterviewInviteWithIds}
+                      sendOfferEmail={sendOfferWithIds}
                     />
                   );
                 })}
@@ -480,6 +494,26 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
               Save description
             </button>
+          </form>
+
+          <form action={updateSchedulingLinkWithId} className="space-y-1 border-t border-border pt-4">
+            <label className={labelClass} htmlFor="schedulingLink">Interview scheduling link</label>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                id="schedulingLink"
+                name="schedulingLink"
+                type="url"
+                defaultValue={role.schedulingLink ?? ""}
+                placeholder="e.g. https://calendly.com/your-team/interview"
+                className={`${inputClass} max-w-sm`}
+              />
+              <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+                Save link
+              </button>
+            </div>
+            <p className="text-xs text-slate-light">
+              Included in interview invite emails. Leave blank to just ask candidates to reply with their availability.
+            </p>
           </form>
 
           <form action={updateDefaultFieldsWithId} className="space-y-2 border-t border-border pt-4">
