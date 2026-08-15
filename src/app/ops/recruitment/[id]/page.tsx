@@ -21,6 +21,8 @@ import {
   getShortLink,
   updateRoleLocation,
   updateRoleSchedulingLink,
+  updateRoleCustomInterviewMessage,
+  updateRoleCustomOfferMessage,
   updateRoleDescription,
   updateRoleDefaultFields,
   addQuestion,
@@ -236,6 +238,8 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const updateCompanyWithId = updateRoleCompany.bind(null, role.id);
   const updateLocationWithId = updateRoleLocation.bind(null, role.id);
   const updateSchedulingLinkWithId = updateRoleSchedulingLink.bind(null, role.id);
+  const updateCustomInterviewMessageWithId = updateRoleCustomInterviewMessage.bind(null, role.id);
+  const updateCustomOfferMessageWithId = updateRoleCustomOfferMessage.bind(null, role.id);
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
   const updateDefaultFieldsWithId = updateRoleDefaultFields.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
@@ -514,6 +518,43 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             <p className="text-xs text-slate-light">
               Included in interview invite emails. Leave blank to just ask candidates to reply with their availability.
             </p>
+          </form>
+
+          <form action={updateCustomInterviewMessageWithId} className="space-y-1 border-t border-border pt-4">
+            <label className={labelClass} htmlFor="customInterviewMessage">Custom interview invite message</label>
+            <textarea
+              id="customInterviewMessage"
+              name="customInterviewMessage"
+              rows={4}
+              defaultValue={role.customInterviewMessage ?? ""}
+              placeholder="e.g. Please record a 2-minute video introducing yourself and send us the link. Once we've watched it, we'll follow up on scheduling a call."
+              className={inputClass}
+            />
+            <p className="text-xs text-slate-light">
+              Replaces the standard invite wording for this role only. Leave blank to use the normal &ldquo;we&rsquo;d
+              like to invite you to an interview&rdquo; message. The greeting and sign-off stay automatic either way.
+            </p>
+            <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+              Save message
+            </button>
+          </form>
+
+          <form action={updateCustomOfferMessageWithId} className="space-y-1 border-t border-border pt-4">
+            <label className={labelClass} htmlFor="customOfferMessage">Custom offer email message</label>
+            <textarea
+              id="customOfferMessage"
+              name="customOfferMessage"
+              rows={4}
+              defaultValue={role.customOfferMessage ?? ""}
+              placeholder="e.g. Specific next steps or details for this role's offer."
+              className={inputClass}
+            />
+            <p className="text-xs text-slate-light">
+              Replaces the standard offer wording for this role only. Leave blank to use the normal offer message.
+            </p>
+            <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+              Save message
+            </button>
           </form>
 
           <form action={updateDefaultFieldsWithId} className="space-y-2 border-t border-border pt-4">

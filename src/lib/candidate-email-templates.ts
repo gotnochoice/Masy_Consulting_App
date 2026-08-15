@@ -19,29 +19,42 @@ export function interviewInviteEmail(
   roleTitle: string,
   companyName: string,
   schedulingLink?: string | null,
+  customMessage?: string | null,
 ): EmailContent {
   const schedulingLine = schedulingLink
     ? `Please use the link below to pick a time that works for you:\n${schedulingLink}`
     : `Please reply to this email with a couple of times that work for you over the next few days, and we'll confirm a slot.`;
 
+  const middle = customMessage
+    ? customMessage.trim()
+    : `Thank you for applying for the ${roleTitle} role at ${companyName}. We were impressed with your application and would like to invite you to an interview.\n\n${schedulingLine}`;
+
   return {
     subject: `Interview invitation: ${roleTitle} at ${companyName}`,
     body:
       `Hi ${candidateName},\n\n` +
-      `Thank you for applying for the ${roleTitle} role at ${companyName}. We were impressed with your application and would like to invite you to an interview.\n\n` +
-      `${schedulingLine}\n\n` +
-      `Looking forward to speaking with you.\n\n` +
+      `${middle}\n\n` +
+      `Looking forward to hearing from you.\n\n` +
       `Best regards,\nThe ${companyName} Hiring Team\n(via Masy Consulting)`,
   };
 }
 
-export function offerEmail(candidateName: string, roleTitle: string, companyName: string): EmailContent {
+export function offerEmail(
+  candidateName: string,
+  roleTitle: string,
+  companyName: string,
+  customMessage?: string | null,
+): EmailContent {
+  const middle = customMessage
+    ? customMessage.trim()
+    : `We're pleased to let you know that ${companyName} would like to move forward with an offer for the ${roleTitle} role.\n\n` +
+      `Someone from our team will be in touch shortly with the full offer details. In the meantime, please don't hesitate to reach out if you have any questions.`;
+
   return {
     subject: `Good news about your application for ${roleTitle} at ${companyName}`,
     body:
       `Hi ${candidateName},\n\n` +
-      `We're pleased to let you know that ${companyName} would like to move forward with an offer for the ${roleTitle} role.\n\n` +
-      `Someone from our team will be in touch shortly with the full offer details. In the meantime, please don't hesitate to reach out if you have any questions.\n\n` +
+      `${middle}\n\n` +
       `Congratulations, and we're looking forward to the possibility of working together.\n\n` +
       `Best regards,\nThe ${companyName} Hiring Team\n(via Masy Consulting)`,
   };

@@ -284,6 +284,8 @@ model OpenRole {
   askResumeLink           Boolean        @default(true)
   askApplicantLocation    Boolean        @default(true)
   schedulingLink          String?
+  customInterviewMessage  String?
+  customOfferMessage      String?
   questions               RoleQuestion[]
   questionSections        QuestionSection[]
   candidates              Candidate[]

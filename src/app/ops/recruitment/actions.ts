@@ -206,6 +206,32 @@ export async function updateRoleSchedulingLink(roleId: string, formData: FormDat
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
+export async function updateRoleCustomInterviewMessage(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const customInterviewMessage = (formData.get("customInterviewMessage") as string | null)?.trim() || null;
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { customInterviewMessage },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function updateRoleCustomOfferMessage(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const customOfferMessage = (formData.get("customOfferMessage") as string | null)?.trim() || null;
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { customOfferMessage },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
 const updateTitleSchema = z.object({
   title: z.string().min(1, "Role title is required"),
 });
@@ -718,6 +744,7 @@ export async function sendCandidateInterviewInviteEmail(candidateId: string, rol
     candidate.openRole.title,
     candidate.openRole.clientOrg.name,
     candidate.openRole.schedulingLink,
+    candidate.openRole.customInterviewMessage,
   );
   await sendNotification(candidate.email!, subject, body);
 
@@ -734,7 +761,12 @@ export async function sendCandidateOfferEmail(candidateId: string, roleId: strin
   const session = await requireRole("MASY_OPS");
   const candidate = await loadCandidateForEmail(candidateId);
 
-  const { subject, body } = offerEmail(candidate.name, candidate.openRole.title, candidate.openRole.clientOrg.name);
+  const { subject, body } = offerEmail(
+    candidate.name,
+    candidate.openRole.title,
+    candidate.openRole.clientOrg.name,
+    candidate.openRole.customOfferMessage,
+  );
   await sendNotification(candidate.email!, subject, body);
 
   await db.candidate.update({ where: { id: candidateId }, data: { offerEmailSentAt: new Date() } });
