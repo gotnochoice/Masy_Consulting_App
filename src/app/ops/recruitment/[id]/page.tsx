@@ -384,7 +384,14 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-ink">Public application link</p>
-              <p className="text-xs text-slate">{applyLink}</p>
+              <a
+                href={applyLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-slate underline hover:text-orange"
+              >
+                {applyLink}
+              </a>
             </div>
             <div className="flex items-center gap-2">
               <CopyLinkButton link={applyLink} />
@@ -401,9 +408,20 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
             <div>
               <p className="text-sm font-semibold text-ink">Short link for sharing</p>
-              <p className="text-xs text-slate">
-                {shortLink ?? "Not generated yet. Use this for social media and DMs instead of the long link above."}
-              </p>
+              {shortLink ? (
+                <a
+                  href={shortLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-slate underline hover:text-orange"
+                >
+                  {shortLink}
+                </a>
+              ) : (
+                <p className="text-xs text-slate">
+                  Not generated yet. Use this for social media and DMs instead of the long link above.
+                </p>
+              )}
             </div>
             {shortLink ? (
               <CopyLinkButton link={shortLink} />
