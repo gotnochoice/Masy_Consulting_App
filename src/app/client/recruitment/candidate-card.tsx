@@ -18,7 +18,7 @@ type CandidateWithAnswers = {
   followedSocials: string[];
   source: "WEBSITE" | "MASY_SOURCED";
   stage: CandidateStage;
-  answers: { id: string; value: string; roleQuestion: { label: string } }[];
+  answers: { id: string; value: string; roleQuestion: { label: string; type: string } }[];
 };
 
 export function ClientCandidateCard({
@@ -163,7 +163,18 @@ export function ClientCandidateCard({
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
                     {a.roleQuestion.label}
                   </p>
-                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{a.value}</p>
+                  {a.roleQuestion.type === "LINK" ? (
+                    <a
+                      href={/^https?:\/\//i.test(a.value) ? a.value : `https://${a.value}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 block break-all text-sm font-medium text-indigo hover:text-indigo-light"
+                    >
+                      {a.value}
+                    </a>
+                  ) : (
+                    <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{a.value}</p>
+                  )}
                 </div>
               ))}
             </div>
