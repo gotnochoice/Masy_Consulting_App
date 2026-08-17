@@ -5,6 +5,7 @@ import { CandidateSourceBadge, CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } f
 import type { CandidateStage } from "@/generated/prisma/client";
 import { inputClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { linkify } from "@/lib/linkify";
 
 type CandidateWithAnswers = {
   id: string;
@@ -23,7 +24,7 @@ type CandidateWithAnswers = {
   rejectionEmailSentAt: Date | null;
   interviewInviteSentAt: Date | null;
   offerEmailSentAt: Date | null;
-  answers: { id: string; value: string; roleQuestion: { label: string; type: string } }[];
+  answers: { id: string; value: string; roleQuestion: { label: string } }[];
 };
 
 export function CandidateCard({
@@ -211,7 +212,9 @@ export function CandidateCard({
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
                     How they heard about it
                   </p>
-                  <p className="mt-1 text-sm leading-relaxed text-ink">{candidate.howHeard}</p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">
+                    {linkify(candidate.howHeard)}
+                  </p>
                 </div>
               )}
               {candidate.answers.map((a) => (
@@ -219,24 +222,15 @@ export function CandidateCard({
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
                     {a.roleQuestion.label}
                   </p>
-                  {a.roleQuestion.type === "LINK" ? (
-                    <a
-                      href={/^https?:\/\//i.test(a.value) ? a.value : `https://${a.value}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 block break-all text-sm font-medium text-indigo hover:text-indigo-light"
-                    >
-                      {a.value}
-                    </a>
-                  ) : (
-                    <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{a.value}</p>
-                  )}
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(a.value)}</p>
                 </div>
               ))}
               {candidate.notes && (
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Notes</p>
-                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{candidate.notes}</p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">
+                    {linkify(candidate.notes)}
+                  </p>
                 </div>
               )}
             </div>
