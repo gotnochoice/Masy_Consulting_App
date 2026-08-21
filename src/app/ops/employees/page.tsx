@@ -8,6 +8,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { createEmployee, offboardEmployee, reactivateEmployee } from "./actions";
 import { EmployeeForm } from "./employee-form";
 import { InviteEmployeeForm } from "./invite-employee-form";
+import { OnboardingLinkForm } from "./onboarding-link-form";
 import { EmployeeAvatar } from "@/components/employee-avatar";
 
 export default async function OpsEmployeesPage({
@@ -75,7 +76,10 @@ export default async function OpsEmployeesPage({
                         <ResetPasswordForm userId={employee.user.id} />
                       </div>
                     ) : (
-                      <InviteEmployeeForm employeeId={employee.id} />
+                      <div className="flex items-start justify-end gap-3">
+                        <OnboardingLinkForm employeeId={employee.id} />
+                        <InviteEmployeeForm employeeId={employee.id} />
+                      </div>
                     )}
                   </td>
                   <td className="px-3 py-2.5">

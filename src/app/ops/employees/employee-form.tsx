@@ -58,18 +58,28 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
+            <label className={labelClass} htmlFor="whatsappNumber">WhatsApp number</label>
+            <input
+              id="whatsappNumber"
+              name="whatsappNumber"
+              type="tel"
+              defaultValue={employee?.whatsappNumber ?? ""}
+              className={inputClass}
+            />
+          </div>
+          <div>
             <label className={labelClass} htmlFor="dateOfBirth">Date of birth</label>
             <input id="dateOfBirth" name="dateOfBirth" type="date" defaultValue={dateOfBirthValue} className={inputClass} />
           </div>
-          <div>
-            <label className={labelClass} htmlFor="gender">Gender</label>
-            <select id="gender" name="gender" defaultValue={employee?.gender ?? ""} className={inputClass}>
-              <option value="">Not specified</option>
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-              <option value="OTHER">Other</option>
-            </select>
-          </div>
+        </div>
+        <div className="sm:w-1/2 sm:pr-2">
+          <label className={labelClass} htmlFor="gender">Gender</label>
+          <select id="gender" name="gender" defaultValue={employee?.gender ?? ""} className={inputClass}>
+            <option value="">Not specified</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+            <option value="OTHER">Other</option>
+          </select>
         </div>
       </div>
 

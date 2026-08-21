@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
@@ -8,6 +9,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { generateTemporaryPassword } from "@/lib/password";
 import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
+import { getOrigin } from "@/lib/url";
 import { uploadEmployeePhoto } from "@/lib/photo";
 
 const baseFields = {
@@ -18,6 +20,7 @@ const baseFields = {
   startDate: z.string().min(1, "Start date is required"),
   dateOfBirth: z.string().optional(),
   phone: z.string().optional(),
+  whatsappNumber: z.string().optional(),
   staffId: z.string().optional(),
   department: z.string().optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
@@ -50,6 +53,7 @@ export async function createEmployee(formData: FormData) {
     startDate: formData.get("startDate"),
     dateOfBirth: formData.get("dateOfBirth") || undefined,
     phone: formData.get("phone") || undefined,
+    whatsappNumber: formData.get("whatsappNumber") || undefined,
     staffId: formData.get("staffId") || undefined,
     department: formData.get("department") || undefined,
     gender: formData.get("gender") || undefined,
@@ -69,6 +73,7 @@ export async function createEmployee(formData: FormData) {
   const {
     dateOfBirth,
     phone,
+    whatsappNumber,
     staffId,
     department,
     gender,
@@ -93,6 +98,7 @@ export async function createEmployee(formData: FormData) {
       startDate: new Date(parsed.data.startDate),
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
       phone: phone ?? null,
+      whatsappNumber: whatsappNumber ?? null,
       staffId: staffId ?? null,
       department: department ?? null,
       gender: gender ?? null,
@@ -131,6 +137,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     startDate: formData.get("startDate"),
     dateOfBirth: formData.get("dateOfBirth") || undefined,
     phone: formData.get("phone") || undefined,
+    whatsappNumber: formData.get("whatsappNumber") || undefined,
     staffId: formData.get("staffId") || undefined,
     department: formData.get("department") || undefined,
     gender: formData.get("gender") || undefined,
@@ -151,6 +158,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
   const {
     dateOfBirth,
     phone,
+    whatsappNumber,
     staffId,
     department,
     gender,
@@ -181,6 +189,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
       startDate: new Date(parsed.data.startDate),
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
       phone: phone ?? null,
+      whatsappNumber: whatsappNumber ?? null,
       staffId: staffId ?? null,
       department: department ?? null,
       gender: gender ?? null,
@@ -261,6 +270,33 @@ export async function inviteEmployeeUser(
   // server as "Active," wiping the one-time password display before it's ever seen. The
   // next real navigation to this page picks up the change.
   return { email: employee.email, password };
+}
+
+export type OnboardingLinkState = { link: string } | { error: string } | undefined;
+
+export async function generateOnboardingLink(
+  employeeId: string,
+  _prevState: OnboardingLinkState,
+): Promise<OnboardingLinkState> {
+  await requireRole("MASY_OPS");
+
+  const employee = await db.employee.findUnique({ where: { id: employeeId } });
+  if (!employee) return { error: "Employee not found" };
+
+  const existingUser = await db.user.findUnique({ where: { email: employee.email } });
+  if (existingUser) return { error: "This employee already has a login." };
+
+  const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await db.onboardingInvite.upsert({
+    where: { employeeId },
+    create: { employeeId, token, expiresAt },
+    update: { token, expiresAt, completedAt: null },
+  });
+
+  const origin = await getOrigin();
+  return { link: `${origin}/onboard/${token}` };
 }
 
 export async function offboardEmployee(employeeId: string) {
