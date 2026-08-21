@@ -10,6 +10,7 @@ import { generateShortCode } from "@/lib/short-code";
 import { suggestRoleQuestions, type SuggestedQuestion } from "@/lib/ai";
 import { sendNotification } from "@/lib/email";
 import { rejectionEmail, interviewInviteEmail, offerEmail } from "@/lib/candidate-email-templates";
+import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
 const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
@@ -707,6 +708,86 @@ export async function clearAllCandidates(roleId: string) {
   await db.candidate.deleteMany({ where: { openRoleId: roleId } });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export type ConvertToEmployeeState = { employeeId: string } | { error: string } | undefined;
+
+const convertToEmployeeSchema = z.object({
+  startDate: z.string().min(1, "Start date is required"),
+  roleTitle: z.string().min(1, "Role title is required"),
+  email: z.string().email("Valid email required"),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+});
+
+export async function convertCandidateToEmployee(
+  candidateId: string,
+  roleId: string,
+  _prevState: ConvertToEmployeeState,
+  formData: FormData,
+): Promise<ConvertToEmployeeState> {
+  const session = await requireRole("MASY_OPS");
+
+  const candidate = await db.candidate.findUnique({
+    where: { id: candidateId },
+    include: { openRole: true },
+  });
+  if (!candidate) return { error: "Candidate not found" };
+  if (candidate.stage !== "HIRED") return { error: "Only hired candidates can be converted to an employee" };
+  if (candidate.convertedEmployeeId) return { error: "Already converted to an employee" };
+
+  const parsed = convertToEmployeeSchema.safeParse({
+    startDate: formData.get("startDate"),
+    roleTitle: formData.get("roleTitle"),
+    email: formData.get("email"),
+    phone: formData.get("phone") || undefined,
+    address: formData.get("address") || undefined,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
+  }
+
+  const existingUser = await db.user.findUnique({ where: { email: parsed.data.email } });
+  if (existingUser) return { error: "That email already has a login on the platform. Use a different email." };
+
+  const employee = await db.$transaction(async (tx) => {
+    const created = await tx.employee.create({
+      data: {
+        clientOrgId: candidate.openRole.clientOrgId,
+        name: candidate.name,
+        roleTitle: parsed.data.roleTitle,
+        email: parsed.data.email,
+        phone: parsed.data.phone ?? null,
+        address: parsed.data.address ?? null,
+        startDate: new Date(parsed.data.startDate),
+      },
+    });
+
+    await tx.onboardingTask.createMany({
+      data: DEFAULT_ONBOARDING_TASKS.map((label) => ({ employeeId: created.id, label })),
+    });
+
+    await tx.candidate.update({
+      where: { id: candidateId },
+      data: { convertedEmployeeId: created.id, convertedAt: new Date() },
+    });
+
+    return created;
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "candidate.convert_to_employee",
+      targetType: "Employee",
+      targetId: employee.id,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/employees");
+
+  return { employeeId: employee.id };
 }
 
 async function loadCandidateForEmail(candidateId: string) {

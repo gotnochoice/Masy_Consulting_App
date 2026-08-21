@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useActionState, useRef } from "react";
+import Link from "next/link";
 import { CandidateSourceBadge, CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
 import type { CandidateStage } from "@/generated/prisma/client";
 import { inputClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { linkify } from "@/lib/linkify";
+import type { ConvertToEmployeeState } from "../actions";
 
 type CandidateWithAnswers = {
   id: string;
@@ -24,23 +26,28 @@ type CandidateWithAnswers = {
   rejectionEmailSentAt: Date | null;
   interviewInviteSentAt: Date | null;
   offerEmailSentAt: Date | null;
+  convertedEmployeeId: string | null;
   answers: { id: string; value: string; roleQuestion: { label: string } }[];
 };
 
 export function CandidateCard({
   candidate,
+  roleTitle,
   updateStage,
   deleteCandidate,
   sendRejectionEmail,
   sendInterviewInviteEmail,
   sendOfferEmail,
+  convertToEmployee,
 }: {
   candidate: CandidateWithAnswers;
+  roleTitle: string;
   updateStage: (formData: FormData) => Promise<void>;
   deleteCandidate: (formData: FormData) => Promise<void>;
   sendRejectionEmail: (formData: FormData) => Promise<void>;
   sendInterviewInviteEmail: (formData: FormData) => Promise<void>;
   sendOfferEmail: (formData: FormData) => Promise<void>;
+  convertToEmployee: (prevState: ConvertToEmployeeState, formData: FormData) => Promise<ConvertToEmployeeState>;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const hasDetails = candidate.answers.length > 0 || !!candidate.notes || !!candidate.howHeard;
@@ -129,6 +136,9 @@ export function CandidateCard({
           confirmMessage={`Send an offer email to ${candidate.name}${candidate.email ? ` at ${candidate.email}` : ""}?`}
           label="offer email"
         />
+      )}
+      {candidate.stage === "HIRED" && (
+        <ConvertToEmployeeAction candidate={candidate} roleTitle={roleTitle} action={convertToEmployee} />
       )}
 
       <ConfirmSubmitButton
@@ -273,5 +283,71 @@ function EmailAction({
         </p>
       )}
     </div>
+  );
+}
+
+function ConvertToEmployeeAction({
+  candidate,
+  roleTitle,
+  action,
+}: {
+  candidate: CandidateWithAnswers;
+  roleTitle: string;
+  action: (prevState: ConvertToEmployeeState, formData: FormData) => Promise<ConvertToEmployeeState>;
+}) {
+  const [state, formAction, isPending] = useActionState<ConvertToEmployeeState, FormData>(action, undefined);
+
+  const employeeId = candidate.convertedEmployeeId ?? (state && "employeeId" in state ? state.employeeId : null);
+  if (employeeId) {
+    return (
+      <div className="mt-2">
+        <Link
+          href={`/ops/employees/${employeeId}/edit`}
+          className="text-xs font-medium text-indigo hover:text-indigo-light"
+        >
+          {candidate.convertedEmployeeId ? "View employee record" : "✓ Employee record created"} →
+        </Link>
+      </div>
+    );
+  }
+
+  if (!candidate.email) {
+    return (
+      <p className="mt-2 text-xs text-slate-light">Add an email to this candidate to create an employee record.</p>
+    );
+  }
+
+  const todayValue = new Date().toISOString().slice(0, 10);
+
+  return (
+    <form action={formAction} className="mt-2 space-y-1.5">
+      <input type="hidden" name="roleTitle" value={roleTitle} />
+      <input type="hidden" name="phone" value={candidate.phone ?? ""} />
+      <input type="hidden" name="address" value={candidate.location ?? ""} />
+      <div className="grid grid-cols-2 gap-1.5">
+        <input
+          type="date"
+          name="startDate"
+          defaultValue={todayValue}
+          required
+          className={`${inputClass} px-2 py-1 text-xs`}
+        />
+        <input
+          type="email"
+          name="email"
+          defaultValue={candidate.email}
+          required
+          className={`${inputClass} px-2 py-1 text-xs`}
+        />
+      </div>
+      {state && "error" in state && <p className="text-xs text-orange">{state.error}</p>}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="text-xs font-medium text-indigo hover:text-indigo-light disabled:opacity-50"
+      >
+        {isPending ? "Creating…" : "Create employee record"}
+      </button>
+    </form>
   );
 }

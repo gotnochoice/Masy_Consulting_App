@@ -39,6 +39,7 @@ import {
   sendCandidateRejectionEmail,
   sendCandidateInterviewInviteEmail,
   sendCandidateOfferEmail,
+  convertCandidateToEmployee,
 } from "../actions";
 
 const ROLE_STAGE_OPTIONS = [
@@ -216,6 +217,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             rejectionEmailSentAt: true,
             interviewInviteSentAt: true,
             offerEmailSentAt: true,
+            convertedEmployeeId: true,
             answers: { include: { roleQuestion: true } },
           },
         },
@@ -317,15 +319,18 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                   const sendRejectionWithIds = sendCandidateRejectionEmail.bind(null, candidate.id, role.id);
                   const sendInterviewInviteWithIds = sendCandidateInterviewInviteEmail.bind(null, candidate.id, role.id);
                   const sendOfferWithIds = sendCandidateOfferEmail.bind(null, candidate.id, role.id);
+                  const convertToEmployeeWithIds = convertCandidateToEmployee.bind(null, candidate.id, role.id);
                   return (
                     <CandidateCard
                       key={candidate.id}
                       candidate={candidate}
+                      roleTitle={role.title}
                       updateStage={updateStageWithIds}
                       deleteCandidate={deleteWithIds}
                       sendRejectionEmail={sendRejectionWithIds}
                       sendInterviewInviteEmail={sendInterviewInviteWithIds}
                       sendOfferEmail={sendOfferWithIds}
+                      convertToEmployee={convertToEmployeeWithIds}
                     />
                   );
                 })}
