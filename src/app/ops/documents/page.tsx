@@ -4,14 +4,29 @@ import { DOCUMENT_TYPE_LABELS } from "@/lib/documents";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
 import { inputClass, buttonClass } from "@/lib/form-styles";
 import { markInProgress, respondToDocumentRequest } from "./actions";
+import { SendDocumentForm } from "./send-document-form";
 
 export default async function OpsDocumentsPage() {
   await requireRole("MASY_OPS");
 
-  const requests = await db.documentRequest.findMany({
-    include: { employee: { include: { clientOrg: true } } },
-    orderBy: [{ status: "asc" }, { requestedAt: "desc" }],
-  });
+  const [requests, orgs] = await Promise.all([
+    db.documentRequest.findMany({
+      include: { employee: { include: { clientOrg: true } } },
+      orderBy: [{ status: "asc" }, { requestedAt: "desc" }],
+    }),
+    db.clientOrg.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        employees: {
+          where: { status: "ACTIVE" },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true, roleTitle: true },
+        },
+      },
+    }),
+  ]);
+
+  const groups = orgs.map((org) => ({ orgId: org.id, orgName: org.name, employees: org.employees }));
 
   return (
     <div className="space-y-8">
@@ -20,6 +35,15 @@ export default async function OpsDocumentsPage() {
         <h1 className="text-2xl font-bold tracking-tight text-ink">Documents & letters</h1>
         <p className="text-sm text-slate">Employment letters, references, and other requests staff have sent in.</p>
       </div>
+
+      <details className="rounded-card border border-border bg-paper">
+        <summary className="cursor-pointer list-none px-5 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+          + Send a document
+        </summary>
+        <div className="border-t border-border p-6">
+          <SendDocumentForm groups={groups} />
+        </div>
+      </details>
 
       <div className="space-y-4">
         {requests.map((r) => {
