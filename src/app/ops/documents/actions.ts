@@ -8,6 +8,7 @@ import { getOrigin } from "@/lib/url";
 import { sendNotification } from "@/lib/email";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/documents";
 import { uploadEmployeeDocumentFile } from "@/lib/employee-documents";
+import { notifyEmployeeDocumentsShared } from "@/lib/notify-document";
 
 export async function markInProgress(requestId: string) {
   const session = await requireRole("MASY_OPS");
@@ -124,6 +125,8 @@ export async function sendDocumentToEmployees(formData: FormData) {
       targetId: document.id,
     })),
   });
+
+  await notifyEmployeeDocumentsShared(parsed.data.employeeIds, parsed.data.label);
 
   revalidatePath("/ops/documents");
   revalidatePath("/ops/employees");

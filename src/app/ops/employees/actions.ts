@@ -12,6 +12,7 @@ import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
 import { getOrigin } from "@/lib/url";
 import { uploadEmployeePhoto } from "@/lib/photo";
 import { uploadEmployeeDocumentFile } from "@/lib/employee-documents";
+import { notifyEmployeeDocumentsShared } from "@/lib/notify-document";
 
 const baseFields = {
   clientOrgId: z.string().min(1, "Organization is required"),
@@ -381,6 +382,8 @@ export async function uploadEmployeeDocument(employeeId: string, formData: FormD
       targetId: document.id,
     },
   });
+
+  await notifyEmployeeDocumentsShared([employeeId], parsed.data.label);
 
   revalidatePath(`/ops/employees/${employeeId}/edit`);
   revalidatePath("/me/documents");

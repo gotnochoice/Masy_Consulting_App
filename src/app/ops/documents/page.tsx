@@ -1,15 +1,18 @@
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/documents";
+import { EMPLOYEE_DOCUMENT_CATEGORY_LABELS } from "@/lib/employee-documents";
 import { DocumentStatusBadge } from "@/components/document-status-badge";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { inputClass, buttonClass } from "@/lib/form-styles";
 import { markInProgress, respondToDocumentRequest } from "./actions";
+import { deleteEmployeeDocument } from "../employees/actions";
 import { SendDocumentForm } from "./send-document-form";
 
 export default async function OpsDocumentsPage() {
   await requireRole("MASY_OPS");
 
-  const [requests, orgs] = await Promise.all([
+  const [requests, orgs, sentDocuments] = await Promise.all([
     db.documentRequest.findMany({
       include: { employee: { include: { clientOrg: true } } },
       orderBy: [{ status: "asc" }, { requestedAt: "desc" }],
@@ -23,6 +26,11 @@ export default async function OpsDocumentsPage() {
           select: { id: true, name: true, roleTitle: true },
         },
       },
+    }),
+    db.employeeDocument.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 25,
+      include: { employee: { select: { name: true, clientOrg: { select: { name: true } } } } },
     }),
   ]);
 
@@ -46,6 +54,53 @@ export default async function OpsDocumentsPage() {
       </details>
 
       <div className="space-y-4">
+        <h2 className="text-sm font-semibold text-ink">Recently sent documents</h2>
+        {sentDocuments.length > 0 ? (
+          <div className="space-y-2">
+            {sentDocuments.map((doc) => {
+              const deleteWithIds = deleteEmployeeDocument.bind(null, doc.id, doc.employeeId);
+              return (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between gap-3 rounded-card border border-border bg-paper px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-ink">{doc.label}</p>
+                    <p className="text-xs text-slate-light">
+                      {doc.employee.name} · {doc.employee.clientOrg.name} · {EMPLOYEE_DOCUMENT_CATEGORY_LABELS[doc.category]} ·{" "}
+                      {doc.createdAt.toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <a
+                      href={doc.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-medium text-indigo hover:text-indigo-light"
+                    >
+                      View
+                    </a>
+                    <ConfirmSubmitButton
+                      action={deleteWithIds}
+                      confirmMessage={`Delete "${doc.label}" for ${doc.employee.name}? This can't be undone.`}
+                      className="text-xs font-medium text-slate-light hover:text-orange"
+                    >
+                      Delete
+                    </ConfirmSubmitButton>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
+            No documents sent yet.
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-sm font-semibold text-ink">Requests from staff</h2>
         {requests.map((r) => {
           const respond = respondToDocumentRequest.bind(null, r.id);
           return (
