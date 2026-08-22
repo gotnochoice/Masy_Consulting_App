@@ -9,11 +9,13 @@ import { MasyLogo } from "@/components/masy-logo";
 import { acknowledgeAnnouncement } from "@/lib/actions/announcements";
 import { acknowledgeConcern } from "@/lib/actions/concerns";
 import { acknowledgeReview } from "@/lib/actions/reviews";
+import { acknowledgeEmployeeDocument } from "@/lib/actions/employee-documents";
 
 type NavItem = { label: string; href: string; badge?: number };
 type UnreadAnnouncement = { id: string; title: string; body: string; authorLabel: string; createdAt: string };
 type UnresolvedConcern = { id: string; summary: string; updatedAt: string };
 type UnresolvedReview = { id: string; employeeName: string; cycle: string };
+type UnreadDocument = { id: string; label: string; employeeName: string; createdAt: string };
 type PendingLeave = { count: number; href: string };
 type NewApplicants = { count: number; href: string };
 
@@ -25,6 +27,7 @@ export function DashboardHeader({
   unreadAnnouncements = [],
   unresolvedConcerns = [],
   unresolvedReviews = [],
+  unreadDocuments = [],
   pendingLeave,
   newApplicants,
 }: {
@@ -35,6 +38,7 @@ export function DashboardHeader({
   unreadAnnouncements?: UnreadAnnouncement[];
   unresolvedConcerns?: UnresolvedConcern[];
   unresolvedReviews?: UnresolvedReview[];
+  unreadDocuments?: UnreadDocument[];
   pendingLeave?: PendingLeave;
   newApplicants?: NewApplicants;
 }) {
@@ -46,6 +50,7 @@ export function DashboardHeader({
     unreadAnnouncements.length +
     unresolvedConcerns.length +
     unresolvedReviews.length +
+    unreadDocuments.length +
     (pendingLeave?.count ?? 0) +
     (newApplicants?.count ?? 0);
 
@@ -138,6 +143,24 @@ export function DashboardHeader({
                             className="rounded-btn bg-indigo px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-light"
                           >
                             Mark as resolved
+                          </button>
+                        </form>
+                      </div>
+                    ))}
+                    {unreadDocuments.map((d) => (
+                      <div key={d.id} className="px-4 py-3">
+                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-light">
+                          New document
+                        </p>
+                        <p className="mb-2 text-xs text-slate">
+                          {d.label} · {d.employeeName} · {d.createdAt}
+                        </p>
+                        <form action={acknowledgeEmployeeDocument.bind(null, d.id)}>
+                          <button
+                            type="submit"
+                            className="rounded-btn bg-indigo px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-light"
+                          >
+                            Mark as seen
                           </button>
                         </form>
                       </div>

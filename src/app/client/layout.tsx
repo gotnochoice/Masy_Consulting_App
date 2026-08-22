@@ -4,12 +4,13 @@ import { getUnreadAnnouncements } from "@/lib/announcements";
 import { getUnresolvedConcernsForClient } from "@/lib/concerns";
 import { getUnresolvedReviewsForClient } from "@/lib/reviews";
 import { getNewApplicantsCount } from "@/lib/recruitment";
+import { getUnreadDocumentsForClient } from "@/lib/employee-documents";
 import { DashboardHeader } from "@/components/dashboard-header";
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const session = await requireRole("CLIENT");
 
-  const [org, pendingLeaveCount, unread, unresolvedConcerns, unresolvedReviews, newApplicantsCount] =
+  const [org, pendingLeaveCount, unread, unresolvedConcerns, unresolvedReviews, newApplicantsCount, unreadDocuments] =
     await Promise.all([
       session.user.clientOrgId
         ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true, logoUrl: true } })
@@ -19,6 +20,7 @@ export default async function ClientLayout({ children }: { children: React.React
       getUnresolvedConcernsForClient(session),
       getUnresolvedReviewsForClient(session),
       getNewApplicantsCount(session.user.clientOrgId ?? "__none__"),
+      getUnreadDocumentsForClient(session),
     ]);
 
   return (
@@ -46,6 +48,12 @@ export default async function ClientLayout({ children }: { children: React.React
         }))}
         pendingLeave={{ count: pendingLeaveCount, href: "/client/leave" }}
         newApplicants={{ count: newApplicantsCount, href: "/client/recruitment" }}
+        unreadDocuments={unreadDocuments.map((d) => ({
+          id: d.id,
+          label: d.label,
+          employeeName: d.employee.name,
+          createdAt: d.createdAt.toLocaleDateString(),
+        }))}
         nav={[
           { label: "Overview", href: "/client/staff" },
           { label: "Payroll", href: "/client/payroll" },
@@ -55,6 +63,7 @@ export default async function ClientLayout({ children }: { children: React.React
           { label: "Recruitment", href: "/client/recruitment", badge: newApplicantsCount },
           { label: "Pulse", href: "/client/pulse" },
           { label: "Concerns", href: "/client/concerns", badge: unresolvedConcerns.length },
+          { label: "Documents", href: "/client/documents", badge: unreadDocuments.length },
           { label: "Announcements", href: "/client/announcements", badge: unread.length },
           { label: "Reports", href: "/client/reports" },
         ]}

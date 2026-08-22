@@ -1,5 +1,8 @@
 import { put } from "@vercel/blob";
+import { db } from "@/lib/db";
+import { scopedEmployeeWhere } from "@/lib/rbac";
 import type { EmployeeDocumentCategory } from "@/generated/prisma/client";
+import type { Session } from "next-auth";
 
 export const MAX_DOCUMENT_FILE_BYTES = 15 * 1024 * 1024; // 15MB
 export const MAX_DOCUMENT_FILE_LABEL = "15MB";
@@ -36,4 +39,15 @@ export async function uploadEmployeeDocumentFile(file: File): Promise<{ url: str
     console.error("[employee-documents] failed to upload:", err);
     return { error: "We couldn't upload that file right now. Please try again in a moment." };
   }
+}
+
+export async function getUnreadDocumentsForClient(session: Session) {
+  return db.employeeDocument.findMany({
+    where: {
+      employee: scopedEmployeeWhere(session),
+      NOT: { acks: { some: { userId: session.user.id } } },
+    },
+    include: { employee: true },
+    orderBy: { createdAt: "desc" },
+  });
 }

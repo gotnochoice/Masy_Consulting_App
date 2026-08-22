@@ -131,6 +131,7 @@ model User {
   announcementAcks  AnnouncementAck[]
   concernAcks       ConcernAck[]
   performanceReviewAcks PerformanceReviewAck[]
+  employeeDocumentAcks EmployeeDocumentAck[]
 }
 
 model PasswordResetToken {
@@ -193,6 +194,18 @@ model EmployeeDocument {
   fileName     String
   uploadedById String
   createdAt    DateTime                 @default(now())
+  acks         EmployeeDocumentAck[]
+}
+
+model EmployeeDocumentAck {
+  id                 String           @id @default(cuid())
+  employeeDocumentId String
+  employeeDocument   EmployeeDocument @relation(fields: [employeeDocumentId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  acknowledgedAt     DateTime         @default(now())
+
+  @@unique([employeeDocumentId, userId])
 }
 
 model OnboardingInvite {
