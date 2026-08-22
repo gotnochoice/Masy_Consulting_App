@@ -89,6 +89,14 @@ enum DocumentRequestStatus {
   DECLINED
 }
 
+enum EmployeeDocumentCategory {
+  EMPLOYMENT_LETTER
+  ONBOARDING
+  IDENTIFICATION
+  CONTRACT
+  OTHER
+}
+
 enum Gender {
   MALE
   FEMALE
@@ -168,10 +176,23 @@ model Employee {
   pulseCheckIns      PulseCheckIn[]
   onboardingTasks    OnboardingTask[]
   documentRequests   DocumentRequest[]
+  documents          EmployeeDocument[]
   onboardingInvite   OnboardingInvite?
   sourceCandidate    Candidate?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+}
+
+model EmployeeDocument {
+  id           String                   @id @default(cuid())
+  employeeId   String
+  employee     Employee                 @relation(fields: [employeeId], references: [id])
+  label        String
+  category     EmployeeDocumentCategory @default(OTHER)
+  fileUrl      String
+  fileName     String
+  uploadedById String
+  createdAt    DateTime                 @default(now())
 }
 
 model OnboardingInvite {

@@ -11,6 +11,7 @@ import { generateTemporaryPassword } from "@/lib/password";
 import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
 import { getOrigin } from "@/lib/url";
 import { uploadEmployeePhoto } from "@/lib/photo";
+import { uploadEmployeeDocumentFile } from "@/lib/employee-documents";
 
 const baseFields = {
   clientOrgId: z.string().min(1, "Organization is required"),
@@ -335,4 +336,70 @@ export async function reactivateEmployee(employeeId: string) {
   revalidatePath("/ops/employees");
   revalidatePath("/ops/overview");
   revalidatePath("/client/staff");
+}
+
+const uploadDocumentSchema = z.object({
+  label: z.string().min(1, "Give the document a label"),
+  category: z.enum(["EMPLOYMENT_LETTER", "ONBOARDING", "IDENTIFICATION", "CONTRACT", "OTHER"]),
+});
+
+export async function uploadEmployeeDocument(employeeId: string, formData: FormData) {
+  const session = await requireRole("MASY_OPS");
+
+  const parsed = uploadDocumentSchema.safeParse({
+    label: formData.get("label"),
+    category: formData.get("category"),
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid document details");
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Choose a file to upload");
+  }
+
+  const result = await uploadEmployeeDocumentFile(file);
+  if ("error" in result) throw new Error(result.error);
+
+  const document = await db.employeeDocument.create({
+    data: {
+      employeeId,
+      label: parsed.data.label,
+      category: parsed.data.category,
+      fileUrl: result.url,
+      fileName: file.name,
+      uploadedById: session.user.id,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "employee_document.upload",
+      targetType: "EmployeeDocument",
+      targetId: document.id,
+    },
+  });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+  revalidatePath("/me/documents");
+}
+
+export async function deleteEmployeeDocument(documentId: string, employeeId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.employeeDocument.delete({ where: { id: documentId } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "employee_document.delete",
+      targetType: "EmployeeDocument",
+      targetId: documentId,
+    },
+  });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+  revalidatePath("/me/documents");
 }
