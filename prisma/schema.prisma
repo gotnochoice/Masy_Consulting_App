@@ -427,11 +427,12 @@ model AuditLog {
 }
 
 model ApplicationAttempt {
-  id        String   @id @default(cuid())
-  ip        String
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  ip         String
+  openRoleId String?
+  createdAt  DateTime @default(now())
 
-  @@index([ip, createdAt])
+  @@index([ip, openRoleId, createdAt])
 }
 
 model Announcement {

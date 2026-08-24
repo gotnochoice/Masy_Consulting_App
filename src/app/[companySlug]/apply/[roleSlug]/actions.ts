@@ -24,7 +24,7 @@ const baseSchema = z.object({
   location: z.string().optional(),
 });
 
-const RATE_LIMIT_MAX_ATTEMPTS = 5;
+const RATE_LIMIT_MAX_ATTEMPTS = 20;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
 async function getClientIp(): Promise<string> {
@@ -45,15 +45,6 @@ export async function submitApplication(
     return { success: true };
   }
 
-  const ip = await getClientIp();
-  const recentAttempts = await db.applicationAttempt.count({
-    where: { ip, createdAt: { gte: new Date(Date.now() - RATE_LIMIT_WINDOW_MS) } },
-  });
-  if (recentAttempts >= RATE_LIMIT_MAX_ATTEMPTS) {
-    return { error: "Too many applications submitted recently. Please try again in a little while." };
-  }
-  await db.applicationAttempt.create({ data: { ip } });
-
   const role = await db.openRole.findFirst({
     where: { slug: roleSlug, clientOrg: { slug: companySlug } },
     include: { questions: true, clientOrg: true },
@@ -61,6 +52,15 @@ export async function submitApplication(
   if (!role || !role.acceptingApplications) {
     return { error: "This role is no longer accepting applications." };
   }
+
+  const ip = await getClientIp();
+  const recentAttempts = await db.applicationAttempt.count({
+    where: { ip, openRoleId: role.id, createdAt: { gte: new Date(Date.now() - RATE_LIMIT_WINDOW_MS) } },
+  });
+  if (recentAttempts >= RATE_LIMIT_MAX_ATTEMPTS) {
+    return { error: "Too many applications submitted recently. Please try again in a little while." };
+  }
+  await db.applicationAttempt.create({ data: { ip, openRoleId: role.id } });
 
   const parsed = baseSchema.safeParse({
     name: formData.get("name"),
