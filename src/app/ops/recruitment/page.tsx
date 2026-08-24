@@ -1,21 +1,26 @@
 import Link from "next/link";
+import { Briefcase, Users, UserPlus } from "lucide-react";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { RoleStageBadge } from "@/components/stage-badge";
+import { StatCard } from "@/components/stat-card";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { getNewApplicantsCount } from "@/lib/recruitment";
 import { createRole, deleteRole, cloneRole } from "./actions";
 
 export default async function OpsRecruitmentPage() {
   await requireRole("MASY_OPS");
 
-  const [roles, orgs, websiteCounts] = await Promise.all([
+  const [roles, orgs, websiteCounts, totalCandidates, newApplicants] = await Promise.all([
     db.openRole.findMany({
       include: { clientOrg: true, _count: { select: { candidates: true } } },
       orderBy: [{ clientOrg: { name: "asc" } }, { createdAt: "desc" }],
     }),
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
     db.candidate.groupBy({ by: ["openRoleId"], where: { source: "WEBSITE" }, _count: { _all: true } }),
+    db.candidate.count(),
+    getNewApplicantsCount(),
   ]);
   const websiteCountByRole = new Map(websiteCounts.map((c) => [c.openRoleId, c._count._all]));
 
@@ -25,6 +30,17 @@ export default async function OpsRecruitmentPage() {
         <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
         <h1 className="text-2xl font-bold tracking-tight text-ink">Recruitment</h1>
         <p className="text-sm text-slate">Open roles and candidate pipelines across every client organization.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Open roles" value={roles.length} icon={Briefcase} />
+        <StatCard label="Total candidates" value={totalCandidates} icon={Users} />
+        <StatCard
+          label="New applicants to review"
+          value={newApplicants}
+          icon={UserPlus}
+          tone="orange"
+        />
       </div>
 
       {roles.length === 0 && (
