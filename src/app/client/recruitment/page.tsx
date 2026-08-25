@@ -22,6 +22,7 @@ export default async function ClientRecruitmentPage() {
           location: true,
           resumeLink: true,
           resumeFileUrl: true,
+          workSampleUrl: true,
           expectedPay: true,
           howHeard: true,
           followedSocials: true,

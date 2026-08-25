@@ -1,13 +1,13 @@
 "use server";
 
 import { z } from "zod";
-import { headers } from "next/headers";
 import { put } from "@vercel/blob";
 import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
 import { sendOpsNotification } from "@/lib/email";
 import { MAX_RESUME_FILE_BYTES, MAX_RESUME_FILE_LABEL } from "@/lib/resume";
 import { SOCIAL_PLATFORMS } from "@/components/social-links";
+import { checkApplicationRateLimit } from "@/lib/application-rate-limit";
 
 const MIN_FOLLOWED_SOCIALS = 2;
 const VALID_SOCIAL_NAMES = new Set(SOCIAL_PLATFORMS.map((s) => s.name));
@@ -23,16 +23,6 @@ const baseSchema = z.object({
   howHeard: z.string().optional(),
   location: z.string().optional(),
 });
-
-const RATE_LIMIT_MAX_ATTEMPTS = 20;
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-
-async function getClientIp(): Promise<string> {
-  const h = await headers();
-  const forwarded = h.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  return h.get("x-real-ip") ?? "unknown";
-}
 
 export async function submitApplication(
   companySlug: string,
@@ -53,14 +43,10 @@ export async function submitApplication(
     return { error: "This role is no longer accepting applications." };
   }
 
-  const ip = await getClientIp();
-  const recentAttempts = await db.applicationAttempt.count({
-    where: { ip, openRoleId: role.id, createdAt: { gte: new Date(Date.now() - RATE_LIMIT_WINDOW_MS) } },
-  });
-  if (recentAttempts >= RATE_LIMIT_MAX_ATTEMPTS) {
+  const { allowed } = await checkApplicationRateLimit(role.id);
+  if (!allowed) {
     return { error: "Too many applications submitted recently. Please try again in a little while." };
   }
-  await db.applicationAttempt.create({ data: { ip, openRoleId: role.id } });
 
   const parsed = baseSchema.safeParse({
     name: formData.get("name"),

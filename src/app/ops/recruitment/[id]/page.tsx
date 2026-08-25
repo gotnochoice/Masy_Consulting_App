@@ -25,6 +25,8 @@ import {
   updateRoleCustomOfferMessage,
   updateRoleDescription,
   updateRoleDefaultFields,
+  updateRoleMode,
+  updateRoleWorkSampleLabel,
   addQuestion,
   updateQuestion,
   moveQuestion,
@@ -208,6 +210,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             location: true,
             resumeLink: true,
             resumeFileUrl: true,
+            workSampleUrl: true,
             expectedPay: true,
             howHeard: true,
             followedSocials: true,
@@ -244,6 +247,8 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const updateCustomOfferMessageWithId = updateRoleCustomOfferMessage.bind(null, role.id);
   const updateDescriptionWithId = updateRoleDescription.bind(null, role.id);
   const updateDefaultFieldsWithId = updateRoleDefaultFields.bind(null, role.id);
+  const updateModeWithId = updateRoleMode.bind(null, role.id);
+  const updateWorkSampleLabelWithId = updateRoleWorkSampleLabel.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
   const createSectionWithId = createQuestionSection.bind(null, role.id);
   const clearAllWithId = clearAllCandidates.bind(null, role.id);
@@ -579,6 +584,37 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
               Save message
             </button>
           </form>
+
+          <form action={updateModeWithId} className="space-y-2 border-t border-border pt-4">
+            <label className={labelClass} htmlFor="mode">Application type</label>
+            <select id="mode" name="mode" defaultValue={role.mode} className={inputClass}>
+              <option value="FORMAL">Formal (application form with custom questions)</option>
+              <option value="INFORMAL">Informal (name, phone, photo of their work)</option>
+            </select>
+            <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+              Save type
+            </button>
+          </form>
+
+          {role.mode === "INFORMAL" && (
+            <form action={updateWorkSampleLabelWithId} className="space-y-1 border-t border-border pt-4">
+              <label className={labelClass} htmlFor="workSampleLabel">What should they show a photo of?</label>
+              <input
+                id="workSampleLabel"
+                name="workSampleLabel"
+                defaultValue={role.workSampleLabel ?? ""}
+                placeholder="e.g. Photo of the best outfit you've made"
+                className={inputClass}
+              />
+              <p className="text-xs text-slate-light">
+                Shown to applicants on the public form. Tailor it per role, e.g. best pair of shoes for a
+                shoemaker, best hairstyle for a hairdresser.
+              </p>
+              <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+                Save prompt
+              </button>
+            </form>
+          )}
 
           <form action={updateDefaultFieldsWithId} className="space-y-2 border-t border-border pt-4">
             <p className={labelClass}>Default fields shown to every applicant</p>

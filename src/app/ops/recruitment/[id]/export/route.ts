@@ -28,6 +28,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
           location: true,
           resumeLink: true,
           resumeFileUrl: true,
+          workSampleUrl: true,
           expectedPay: true,
           howHeard: true,
           source: true,
@@ -60,7 +61,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const rows = role.candidates.map((c) => {
     const answerByQuestionId = new Map(c.answers.map((a) => [a.roleQuestionId, a.value]));
-    const resumeUrl = c.resumeFileUrl ?? c.resumeLink ?? "";
+    const resumeUrl = c.resumeFileUrl ?? c.resumeLink ?? c.workSampleUrl ?? "";
     return [
       c.name,
       c.email ?? "",

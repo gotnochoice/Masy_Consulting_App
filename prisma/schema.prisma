@@ -53,6 +53,11 @@ enum RoleStage {
   FILLED
 }
 
+enum RecruitmentMode {
+  FORMAL
+  INFORMAL
+}
+
 enum CandidateStage {
   APPLIED
   SCREENING
@@ -324,6 +329,8 @@ model OpenRole {
   location                String?
   shortCode               String?        @unique
   stage                   RoleStage      @default(SOURCING)
+  mode                    RecruitmentMode @default(FORMAL)
+  workSampleLabel         String?
   acceptingApplications   Boolean        @default(true)
   askYearsExperience      Boolean        @default(true)
   askExpectedPay          Boolean        @default(true)
@@ -378,6 +385,7 @@ model Candidate {
   resumeLink      String?
   resumeFileName  String?
   resumeFileUrl   String?
+  workSampleUrl   String?
   expectedPay     String?
   howHeard        String?
   followedSocials String[]          @default([])

@@ -4,6 +4,8 @@ import { CareersHeader } from "@/components/careers-header";
 import { formatBoldText } from "@/lib/format-text";
 import { ApplyForm } from "./apply-form";
 import { submitApplication } from "./actions";
+import { InformalApplyForm } from "./informal-apply-form";
+import { submitInformalApplication } from "./informal-actions";
 
 export default async function ApplyPage({
   params,
@@ -24,6 +26,7 @@ export default async function ApplyPage({
   if (!role) notFound();
 
   const submitWithSlugs = submitApplication.bind(null, companySlug, roleSlug);
+  const submitInformalWithSlugs = submitInformalApplication.bind(null, companySlug, roleSlug);
 
   return (
     <main className="min-h-screen bg-paper-2">
@@ -59,18 +62,27 @@ export default async function ApplyPage({
                     {formatBoldText(role.description)}
                   </p>
                 )}
-                <ApplyForm
-                  action={submitWithSlugs}
-                  questions={role.questions}
-                  questionSections={role.questionSections}
-                  roleTitle={role.title}
-                  companyName={role.clientOrg.name}
-                  askYearsExperience={role.askYearsExperience}
-                  askExpectedPay={role.askExpectedPay}
-                  askHowHeard={role.askHowHeard}
-                  askResumeLink={role.askResumeLink}
-                  askApplicantLocation={role.askApplicantLocation}
-                />
+                {role.mode === "INFORMAL" ? (
+                  <InformalApplyForm
+                    action={submitInformalWithSlugs}
+                    roleTitle={role.title}
+                    companyName={role.clientOrg.name}
+                    workSampleLabel={role.workSampleLabel ?? "Photo of your best work"}
+                  />
+                ) : (
+                  <ApplyForm
+                    action={submitWithSlugs}
+                    questions={role.questions}
+                    questionSections={role.questionSections}
+                    roleTitle={role.title}
+                    companyName={role.clientOrg.name}
+                    askYearsExperience={role.askYearsExperience}
+                    askExpectedPay={role.askExpectedPay}
+                    askHowHeard={role.askHowHeard}
+                    askResumeLink={role.askResumeLink}
+                    askApplicantLocation={role.askApplicantLocation}
+                  />
+                )}
               </div>
             </>
           )}

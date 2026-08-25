@@ -19,6 +19,7 @@ const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "C
 const createRoleSchema = z.object({
   clientOrgId: z.string().min(1, "Company is required"),
   title: z.string().min(1, "Role title is required"),
+  mode: z.enum(["FORMAL", "INFORMAL"]).default("FORMAL"),
 });
 
 export async function createRole(formData: FormData) {
@@ -27,6 +28,7 @@ export async function createRole(formData: FormData) {
   const parsed = createRoleSchema.safeParse({
     clientOrgId: formData.get("clientOrgId"),
     title: formData.get("title"),
+    mode: formData.get("mode") || undefined,
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid role data");
@@ -187,6 +189,27 @@ export async function updateRoleLocation(roleId: string, formData: FormData) {
 
   revalidatePath(`/ops/recruitment/${roleId}`);
   revalidatePath("/ops/recruitment");
+}
+
+export async function updateRoleMode(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const mode = z.enum(["FORMAL", "INFORMAL"]).safeParse(formData.get("mode"));
+  if (!mode.success) throw new Error("Invalid recruitment type");
+
+  await db.openRole.update({ where: { id: roleId }, data: { mode: mode.data } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function updateRoleWorkSampleLabel(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const workSampleLabel = (formData.get("workSampleLabel") as string | null)?.trim() || null;
+
+  await db.openRole.update({ where: { id: roleId }, data: { workSampleLabel } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
 const updateSchedulingLinkSchema = z.object({

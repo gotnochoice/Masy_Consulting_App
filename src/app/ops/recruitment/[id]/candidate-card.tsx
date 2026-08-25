@@ -17,6 +17,7 @@ type CandidateWithAnswers = {
   yearsExperience: string | null;
   location: string | null;
   cvUrl: string | null;
+  workSampleUrl: string | null;
   expectedPay: string | null;
   howHeard: string | null;
   followedSocials: string[];
@@ -76,6 +77,16 @@ export function CandidateCard({
           <p className="text-xs text-slate-light">Says they follow: {candidate.followedSocials.join(", ")}</p>
         )}
       </div>
+      {candidate.workSampleUrl && (
+        <a href={candidate.workSampleUrl} target="_blank" rel="noreferrer" className="mt-2 block">
+          {/* eslint-disable-next-line @next/next/no-img-element -- external Blob URL thumbnail, not worth next/image config */}
+          <img
+            src={candidate.workSampleUrl}
+            alt={`${candidate.name}'s work sample`}
+            className="h-28 w-full rounded-btn border border-border object-cover"
+          />
+        </a>
+      )}
       {candidate.cvUrl && (
         <a
           href={candidate.cvUrl}
@@ -204,6 +215,19 @@ export function CandidateCard({
                   className="mt-0.5 block text-sm font-medium text-indigo hover:text-indigo-light"
                 >
                   View
+                </a>
+              </div>
+            )}
+            {candidate.workSampleUrl && (
+              <div className="col-span-2 sm:col-span-3">
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-light">Work sample</p>
+                <a href={candidate.workSampleUrl} target="_blank" rel="noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- external Blob URL, not worth next/image config */}
+                  <img
+                    src={candidate.workSampleUrl}
+                    alt={`${candidate.name}'s work sample`}
+                    className="max-h-72 rounded-card border border-border object-contain"
+                  />
                 </a>
               </div>
             )}

@@ -1,0 +1,121 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import { CheckCircle2, Camera, User, Phone, Mail, MapPin } from "lucide-react";
+import type { InformalApplyState } from "./informal-actions";
+
+const inputClass =
+  "w-full rounded-btn border border-border bg-paper px-4 py-3.5 text-base text-ink transition-shadow focus:border-indigo focus:outline-none focus:ring-4 focus:ring-indigo-tint";
+const labelClass = "mb-2 flex items-center gap-2 text-base font-semibold text-ink";
+const buttonClass =
+  "w-full rounded-btn bg-indigo px-4 py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-indigo-light disabled:cursor-not-allowed disabled:opacity-50";
+
+export function InformalApplyForm({
+  action,
+  roleTitle,
+  companyName,
+  workSampleLabel,
+}: {
+  action: (prevState: InformalApplyState, formData: FormData) => Promise<InformalApplyState>;
+  roleTitle: string;
+  companyName: string;
+  workSampleLabel: string;
+}) {
+  const [state, formAction, isPending] = useActionState<InformalApplyState, FormData>(action, {});
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  if (state && "success" in state) {
+    return (
+      <div className="py-4 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-tint">
+          <CheckCircle2 className="h-8 w-8 text-indigo" strokeWidth={2} />
+        </div>
+        <h2 className="mt-5 text-2xl font-extrabold text-ink">We got it!</h2>
+        <p className="mx-auto mt-3 max-w-sm text-base leading-relaxed text-slate">
+          {state.name ? `Thank you, ${state.name}. ` : "Thank you. "}
+          Your application for <span className="font-medium text-ink">{roleTitle}</span> has been received.
+        </p>
+        <p className="mx-auto mt-4 max-w-sm text-base leading-relaxed text-slate">
+          If they want to talk to you, someone from {companyName} or Masy Consulting will call or WhatsApp you.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form action={formAction} className="space-y-6">
+      <div className="hidden" aria-hidden="true">
+        <input id="hp_gate" name="hp_gate" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
+
+      <div>
+        <label className={labelClass} htmlFor="name">
+          <User className="h-5 w-5 text-indigo" strokeWidth={2} />
+          Your full name
+        </label>
+        <input id="name" name="name" required autoComplete="name" className={inputClass} />
+      </div>
+
+      <div>
+        <label className={labelClass} htmlFor="phone">
+          <Phone className="h-5 w-5 text-indigo" strokeWidth={2} />
+          Your phone number
+        </label>
+        <input id="phone" name="phone" type="tel" required autoComplete="tel" className={inputClass} />
+      </div>
+
+      <div>
+        <label className={labelClass} htmlFor="email">
+          <Mail className="h-5 w-5 text-indigo" strokeWidth={2} />
+          Email <span className="text-sm font-normal text-slate-light">(only if you have one)</span>
+        </label>
+        <input id="email" name="email" type="email" autoComplete="email" className={inputClass} />
+      </div>
+
+      <div>
+        <label className={labelClass} htmlFor="location">
+          <MapPin className="h-5 w-5 text-indigo" strokeWidth={2} />
+          Where are you? <span className="text-sm font-normal text-slate-light">e.g. Maryland, Lagos</span>
+        </label>
+        <input id="location" name="location" className={inputClass} />
+      </div>
+
+      <div>
+        <label className={labelClass} htmlFor="workSamplePhoto">
+          <Camera className="h-5 w-5 text-indigo" strokeWidth={2} />
+          {workSampleLabel}
+        </label>
+        <p className="mb-2 text-sm text-slate">Take a photo now, or choose one you already have.</p>
+        {photoPreview && (
+          // eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a remote asset
+          <img
+            src={photoPreview}
+            alt="Your uploaded photo"
+            className="mb-3 h-48 w-full rounded-card border border-border object-cover"
+          />
+        )}
+        <input
+          id="workSamplePhoto"
+          name="workSamplePhoto"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          required
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            setPhotoPreview(file ? URL.createObjectURL(file) : null);
+          }}
+          className={`${inputClass} file:mr-3 file:rounded-btn file:border-0 file:bg-indigo-tint file:px-4 file:py-2.5 file:text-base file:font-semibold file:text-indigo`}
+        />
+      </div>
+
+      {state && "error" in state && (
+        <p className="rounded-btn bg-orange-light/40 px-4 py-3 text-base font-medium text-orange">{state.error}</p>
+      )}
+
+      <button type="submit" disabled={isPending} className={buttonClass}>
+        {isPending ? "Sending..." : "Send my application"}
+      </button>
+    </form>
+  );
+}

@@ -185,8 +185,20 @@ export default async function OpsRecruitmentPage() {
               ))}
             </select>
           </div>
+          <div className="flex-1">
+            <label className={labelClass} htmlFor="mode">Type</label>
+            <select id="mode" name="mode" defaultValue="FORMAL" className={inputClass}>
+              <option value="FORMAL">Formal (application form)</option>
+              <option value="INFORMAL">Informal (name, phone, photo of work)</option>
+            </select>
+          </div>
           <button type="submit" className={buttonClass}>Open role</button>
         </form>
+        <p className="mt-3 text-xs text-slate-light">
+          Informal roles get a super simple public form: name, phone, optional email, location, and a photo of
+          their best work, built for applicants like tailors, hairdressers, or shoemakers applying from Instagram
+          or TikTok who may not read or write much.
+        </p>
       </div>
     </div>
   );
