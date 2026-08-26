@@ -653,6 +653,16 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         </div>
       </details>
 
+      {role.mode === "INFORMAL" ? (
+        <div className="rounded-card border border-border bg-paper p-5">
+          <p className="text-sm font-semibold text-ink">Application questions</p>
+          <p className="mt-1 text-sm text-slate">
+            Informal roles use a fixed, simple form (name, phone, email, location, and a photo of their work) and
+            don&rsquo;t support custom questions, that&rsquo;s deliberate, to keep it easy for applicants who may not
+            read or write much. Switch this role&rsquo;s type back to Formal above if you need custom questions.
+          </p>
+        </div>
+      ) : (
       <details className="rounded-card border border-border bg-paper">
         <summary className="cursor-pointer list-none px-5 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
           Application questions {role.questions.length > 0 && `(${role.questions.length})`}
@@ -807,6 +817,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
           </form>
         </div>
       </details>
+      )}
     </div>
   );
 }
