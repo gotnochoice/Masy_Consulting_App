@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { CheckCircle2, Camera, User, Phone, Mail, MapPin } from "lucide-react";
+import { SocialLinksList } from "@/components/social-links";
 import type { InformalApplyState } from "./informal-actions";
 
 const inputClass =
@@ -38,6 +39,12 @@ export function InformalApplyForm({
         <p className="mx-auto mt-4 max-w-sm text-base leading-relaxed text-slate">
           If they want to talk to you, someone from {companyName} or Masy Consulting will call or WhatsApp you.
         </p>
+
+        <div className="mx-auto mt-8 max-w-sm border-t border-border pt-6">
+          <p className="text-base font-semibold text-ink">Follow us for more jobs like this</p>
+          <p className="mt-1 text-sm text-slate">We post new opportunities on these pages every week.</p>
+          <SocialLinksList className="mt-4" />
+        </div>
       </div>
     );
   }
@@ -107,6 +114,12 @@ export function InformalApplyForm({
           }}
           className={`${inputClass} file:mr-3 file:rounded-btn file:border-0 file:bg-indigo-tint file:px-4 file:py-2.5 file:text-base file:font-semibold file:text-indigo`}
         />
+      </div>
+
+      <div className="rounded-card border border-border bg-paper-2 p-4">
+        <p className="text-base font-semibold text-ink">Are you following us?</p>
+        <p className="mt-1 text-sm text-slate">Follow us so you don&rsquo;t miss more jobs like this one.</p>
+        <SocialLinksList className="mt-3" />
       </div>
 
       {state && "error" in state && (
