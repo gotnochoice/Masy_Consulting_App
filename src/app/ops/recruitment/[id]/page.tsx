@@ -27,6 +27,8 @@ import {
   updateRoleDefaultFields,
   updateRoleMode,
   updateRoleWorkSampleLabel,
+  enableGoogleFormIntake,
+  disableGoogleFormIntake,
   addQuestion,
   updateQuestion,
   moveQuestion,
@@ -233,6 +235,21 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const origin = await getOrigin();
   const applyLink = `${origin}/${role.clientOrg.slug}/apply/${role.slug}`;
   const shortLink = role.shortCode ? `${origin}/go/${role.shortCode}` : null;
+  const googleFormWebhookUrl = role.googleFormWebhookToken
+    ? `${origin}/api/webhooks/google-form/${role.googleFormWebhookToken}`
+    : null;
+  const googleFormAppsScript = `function onFormSubmit(e) {
+  var answers = {};
+  e.response.getItemResponses().forEach(function (item) {
+    answers[item.getItem().getTitle()] = item.getResponse();
+  });
+
+  UrlFetchApp.fetch("${googleFormWebhookUrl ?? "PASTE_YOUR_WEBHOOK_URL_HERE"}", {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({ answers: answers }),
+  });
+}`;
 
   const updateRoleStageWithId = updateRoleStage.bind(null, role.id);
   const addCandidateWithId = addCandidate.bind(null, role.id);
@@ -249,6 +266,8 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const updateDefaultFieldsWithId = updateRoleDefaultFields.bind(null, role.id);
   const updateModeWithId = updateRoleMode.bind(null, role.id);
   const updateWorkSampleLabelWithId = updateRoleWorkSampleLabel.bind(null, role.id);
+  const enableGoogleFormIntakeWithId = enableGoogleFormIntake.bind(null, role.id);
+  const disableGoogleFormIntakeWithId = disableGoogleFormIntake.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
   const createSectionWithId = createQuestionSection.bind(null, role.id);
   const clearAllWithId = clearAllCandidates.bind(null, role.id);
@@ -615,6 +634,60 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
               </button>
             </form>
           )}
+
+          <div className="space-y-3 border-t border-border pt-4">
+            <p className={labelClass}>Google Form intake</p>
+            <p className="text-xs text-slate-light">
+              People are more familiar with Google Forms than a new site. Point a Google Form at this role and
+              submissions land here alongside everyone else, so Ops still reviews everyone from one place.
+            </p>
+            {googleFormWebhookUrl ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input readOnly value={googleFormWebhookUrl} className={`${inputClass} font-mono text-xs`} />
+                  <CopyLinkButton link={googleFormWebhookUrl} />
+                </div>
+                <details className="rounded-card border border-border p-3">
+                  <summary className="cursor-pointer text-xs font-medium text-slate hover:text-ink">
+                    How to connect a Google Form
+                  </summary>
+                  <ol className="mt-3 list-decimal space-y-2 pl-4 text-xs text-slate">
+                    <li>Open your Google Form, then Extensions → Apps Script.</li>
+                    <li>Delete anything in the editor and paste the script below, then save it.</li>
+                    <li>
+                      Click the clock icon (Triggers) → Add Trigger → choose <code>onFormSubmit</code>, event source
+                      &ldquo;From form&rdquo;, event type &ldquo;On form submit&rdquo; → Save.
+                    </li>
+                    <li>Submit a test response on the form to confirm it shows up in the pipeline below.</li>
+                  </ol>
+                  <div className="mt-3 flex items-start gap-2">
+                    <pre className="max-h-64 flex-1 overflow-auto rounded-btn bg-paper-2 p-3 text-[11px] leading-relaxed text-ink">
+                      {googleFormAppsScript}
+                    </pre>
+                    <CopyLinkButton link={googleFormAppsScript} />
+                  </div>
+                </details>
+                <div className="flex gap-2">
+                  <ConfirmSubmitButton
+                    action={disableGoogleFormIntakeWithId}
+                    confirmMessage="Turn off Google Form intake for this role? The current link will stop working."
+                    className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink"
+                  >
+                    Turn off
+                  </ConfirmSubmitButton>
+                  <form action={enableGoogleFormIntakeWithId}>
+                    <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+                      Regenerate link
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <form action={enableGoogleFormIntakeWithId}>
+                <button type="submit" className={buttonClass}>Turn on Google Form intake</button>
+              </form>
+            )}
+          </div>
 
           <form action={updateDefaultFieldsWithId} className="space-y-2 border-t border-border pt-4">
             <p className={labelClass}>Default fields shown to every applicant</p>

@@ -22,7 +22,7 @@ type CandidateWithAnswers = {
   howHeard: string | null;
   followedSocials: string[];
   notes: string | null;
-  source: "WEBSITE" | "MASY_SOURCED";
+  source: "WEBSITE" | "MASY_SOURCED" | "GOOGLE_FORM";
   stage: CandidateStage;
   rejectionEmailSentAt: Date | null;
   interviewInviteSentAt: Date | null;

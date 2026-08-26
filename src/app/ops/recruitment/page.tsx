@@ -18,7 +18,11 @@ export default async function OpsRecruitmentPage() {
       orderBy: [{ clientOrg: { name: "asc" } }, { createdAt: "desc" }],
     }),
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
-    db.candidate.groupBy({ by: ["openRoleId"], where: { source: "WEBSITE" }, _count: { _all: true } }),
+    db.candidate.groupBy({
+      by: ["openRoleId"],
+      where: { source: { in: ["WEBSITE", "GOOGLE_FORM"] } },
+      _count: { _all: true },
+    }),
     db.candidate.count(),
     getNewApplicantsCount(),
   ]);

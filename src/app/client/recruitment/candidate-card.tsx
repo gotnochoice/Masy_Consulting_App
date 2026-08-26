@@ -18,7 +18,7 @@ type CandidateWithAnswers = {
   expectedPay: string | null;
   howHeard: string | null;
   followedSocials: string[];
-  source: "WEBSITE" | "MASY_SOURCED";
+  source: "WEBSITE" | "MASY_SOURCED" | "GOOGLE_FORM";
   stage: CandidateStage;
   answers: { id: string; value: string; roleQuestion: { label: string } }[];
 };

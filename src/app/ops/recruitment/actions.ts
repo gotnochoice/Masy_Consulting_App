@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -307,6 +308,40 @@ export async function getShortLink(roleId: string) {
       },
     });
   }
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function enableGoogleFormIntake(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.openRole.update({ where: { id: roleId }, data: { googleFormWebhookToken: randomBytes(24).toString("hex") } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.enable_google_form_intake",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function disableGoogleFormIntake(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.openRole.update({ where: { id: roleId }, data: { googleFormWebhookToken: null } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.disable_google_form_intake",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
 }

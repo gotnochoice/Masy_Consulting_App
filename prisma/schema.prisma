@@ -70,6 +70,7 @@ enum CandidateStage {
 enum CandidateSource {
   WEBSITE
   MASY_SOURCED
+  GOOGLE_FORM
 }
 
 enum QuestionType {
@@ -331,6 +332,7 @@ model OpenRole {
   stage                   RoleStage      @default(SOURCING)
   mode                    RecruitmentMode @default(FORMAL)
   workSampleLabel         String?
+  googleFormWebhookToken  String?        @unique
   acceptingApplications   Boolean        @default(true)
   askYearsExperience      Boolean        @default(true)
   askExpectedPay          Boolean        @default(true)
