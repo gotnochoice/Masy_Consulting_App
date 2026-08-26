@@ -222,6 +222,7 @@ function googleFormAddItemCode(q: GoogleFormQuestion): string {
 }
 
 function buildGoogleFormCreatorScript({
+  roleId,
   mode,
   roleTitle,
   companyName,
@@ -236,6 +237,7 @@ function buildGoogleFormCreatorScript({
   sections,
   questionsBySection,
 }: {
+  roleId: string;
   mode: "FORMAL" | "INFORMAL";
   roleTitle: string;
   companyName: string;
@@ -250,6 +252,13 @@ function buildGoogleFormCreatorScript({
   sections: GoogleFormSection[];
   questionsBySection: Map<string, GoogleFormQuestion[]>;
 }): string {
+  // Suffixed with the role id so pasting scripts for multiple roles into the same
+  // Apps Script project never collides — two functions can't share a name in one file,
+  // and the last one defined would silently win for every form's trigger.
+  const fnSuffix = roleId.replace(/[^a-zA-Z0-9]/g, "");
+  const createFnName = `createApplicationForm_${fnSuffix}`;
+  const submitFnName = `onFormSubmit_${fnSuffix}`;
+
   const lines: string[] = [];
   let needsManualFileUpload = false;
 
@@ -290,20 +299,23 @@ function buildGoogleFormCreatorScript({
     ? `"\\n\\nOne manual step: Google won't let scripts create File upload questions, so open the edit link above and add one yourself (+ button -> File upload), titled " + ${js(fileUploadTitle)} + ". Submissions to it will flow into the pipeline automatically once it's there."`
     : `""`;
 
-  return `function createApplicationForm() {
+  return `// This script is scoped to ${js(roleTitle)} — the function names below include this
+// role's id so you can safely paste multiple roles' scripts into the same Apps Script
+// project without one overwriting another's trigger.
+function ${createFnName}() {
   var form = FormApp.create(${js(`${roleTitle} — ${companyName} Application`)});
   form.setConfirmationMessage(${js(`Thanks! Someone from ${companyName} or Masy Consulting will be in touch.`)});
 
 ${lines.join("\n")}
 
-  ScriptApp.newTrigger("onFormSubmit").forForm(form).onFormSubmit().create();
+  ScriptApp.newTrigger(${js(submitFnName)}).forForm(form).onFormSubmit().create();
 
   var links = "Edit this form: " + form.getEditUrl() + "\\n\\nShare this link with applicants: " + form.getPublishedUrl() + ${fileUploadNote};
   MailApp.sendEmail(Session.getActiveUser().getEmail(), "Your new Google Form is ready", links);
   Logger.log(links);
 }
 
-function onFormSubmit(e) {
+function ${submitFnName}(e) {
   var answers = {};
   e.response.getItemResponses().forEach(function (item) {
     var title = item.getItem().getTitle();
@@ -433,6 +445,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
 
   const googleFormCreatorScript = googleFormWebhookUrl
     ? buildGoogleFormCreatorScript({
+        roleId: role.id,
         mode: role.mode,
         roleTitle: role.title,
         companyName: role.clientOrg.name,
@@ -448,6 +461,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         questionsBySection,
       })
     : null;
+  const googleFormCreateFnName = `createApplicationForm_${role.id.replace(/[^a-zA-Z0-9]/g, "")}`;
 
   const candidatesWithCvUrl = role.candidates.map((c) => ({
     ...c,
@@ -843,12 +857,18 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                   <summary className="cursor-pointer text-xs font-medium text-slate hover:text-ink">
                     Don&rsquo;t have a form yet? Let this create it for you
                   </summary>
+                  <p className="mt-2 text-xs text-slate-light">
+                    Hiring for more than one role? Each one needs its own Google Form. You can either start a new
+                    project for each (simplest), or paste every role&rsquo;s script into one shared project — the
+                    function names below are unique to this role, so they won&rsquo;t clash with another role&rsquo;s
+                    script in the same project.
+                  </p>
                   <ol className="mt-3 list-decimal space-y-2 pl-4 text-xs text-slate">
-                    <li>Go to script.google.com → New project.</li>
-                    <li>Delete anything in the editor, paste the script below, then save it (Ctrl/Cmd+S).</li>
+                    <li>Go to script.google.com → New project (or open the shared project you&rsquo;re already using).</li>
+                    <li>Paste the script below at the end of the file (don&rsquo;t delete anything already there from another role), then save it (Ctrl/Cmd+S).</li>
                     <li>
                       In the toolbar, use the function dropdown next to &ldquo;Run&rdquo; to pick{" "}
-                      <code>createApplicationForm</code>, then click <strong>Run</strong>.
+                      <code>{googleFormCreateFnName}</code>, then click <strong>Run</strong>.
                     </li>
                     <li>
                       The first time, Google will ask you to authorize the script — click through it (this is your
