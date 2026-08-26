@@ -329,6 +329,26 @@ export async function enableGoogleFormIntake(roleId: string) {
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
+const updateGoogleFormPublicUrlSchema = z.object({
+  googleFormPublicUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+});
+
+export async function updateRoleGoogleFormPublicUrl(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = updateGoogleFormPublicUrlSchema.safeParse({
+    googleFormPublicUrl: formData.get("googleFormPublicUrl") || undefined,
+  });
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid link");
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { googleFormPublicUrl: parsed.data.googleFormPublicUrl || null },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
 export async function disableGoogleFormIntake(roleId: string) {
   const session = await requireRole("MASY_OPS");
 

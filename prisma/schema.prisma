@@ -333,6 +333,7 @@ model OpenRole {
   mode                    RecruitmentMode @default(FORMAL)
   workSampleLabel         String?
   googleFormWebhookToken  String?        @unique
+  googleFormPublicUrl     String?
   acceptingApplications   Boolean        @default(true)
   askYearsExperience      Boolean        @default(true)
   askExpectedPay          Boolean        @default(true)

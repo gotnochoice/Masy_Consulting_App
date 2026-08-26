@@ -29,6 +29,7 @@ import {
   updateRoleWorkSampleLabel,
   enableGoogleFormIntake,
   disableGoogleFormIntake,
+  updateRoleGoogleFormPublicUrl,
   addQuestion,
   updateQuestion,
   moveQuestion,
@@ -241,7 +242,21 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const googleFormAppsScript = `function onFormSubmit(e) {
   var answers = {};
   e.response.getItemResponses().forEach(function (item) {
-    answers[item.getItem().getTitle()] = item.getResponse();
+    var title = item.getItem().getTitle();
+    var value = item.getResponse();
+
+    // File upload questions return Drive file IDs; make each one viewable by
+    // link and send its URL instead, so a photo question turns into a link.
+    if (item.getItem().getType() === FormApp.ItemType.FILE_UPLOAD) {
+      var ids = Array.isArray(value) ? value : [value];
+      value = ids.map(function (id) {
+        var file = DriveApp.getFileById(id);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        return "https://drive.google.com/uc?export=view&id=" + id;
+      });
+    }
+
+    answers[title] = value;
   });
 
   UrlFetchApp.fetch("${googleFormWebhookUrl ?? "PASTE_YOUR_WEBHOOK_URL_HERE"}", {
@@ -268,6 +283,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const updateWorkSampleLabelWithId = updateRoleWorkSampleLabel.bind(null, role.id);
   const enableGoogleFormIntakeWithId = enableGoogleFormIntake.bind(null, role.id);
   const disableGoogleFormIntakeWithId = disableGoogleFormIntake.bind(null, role.id);
+  const updateGoogleFormPublicUrlWithId = updateRoleGoogleFormPublicUrl.bind(null, role.id);
   const addQuestionWithId = addQuestion.bind(null, role.id);
   const createSectionWithId = createQuestionSection.bind(null, role.id);
   const clearAllWithId = clearAllCandidates.bind(null, role.id);
@@ -641,6 +657,26 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
               People are more familiar with Google Forms than a new site. Point a Google Form at this role and
               submissions land here alongside everyone else, so Ops still reviews everyone from one place.
             </p>
+
+            <form action={updateGoogleFormPublicUrlWithId} className="space-y-1">
+              <label className={labelClass} htmlFor="googleFormPublicUrl">
+                Your Google Form link <span className="text-xs font-normal text-slate-light">(optional, to share on social media)</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="googleFormPublicUrl"
+                  name="googleFormPublicUrl"
+                  defaultValue={role.googleFormPublicUrl ?? ""}
+                  placeholder="https://forms.gle/..."
+                  className={inputClass}
+                />
+                {role.googleFormPublicUrl && <CopyLinkButton link={role.googleFormPublicUrl} />}
+              </div>
+              <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+                Save link
+              </button>
+            </form>
+
             {googleFormWebhookUrl ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -660,6 +696,10 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                     </li>
                     <li>Submit a test response on the form to confirm it shows up in the pipeline below.</li>
                   </ol>
+                  <p className="mt-3 text-xs text-slate-light">
+                    Photo &amp; file upload questions work too — the script makes each uploaded file viewable by
+                    link and it shows up here like any other candidate photo.
+                  </p>
                   <div className="mt-3 flex items-start gap-2">
                     <pre className="max-h-64 flex-1 overflow-auto rounded-btn bg-paper-2 p-3 text-[11px] leading-relaxed text-ink">
                       {googleFormAppsScript}

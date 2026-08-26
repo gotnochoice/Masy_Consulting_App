@@ -7,6 +7,7 @@ const NAME_KEYWORDS = ["name"];
 const PHONE_KEYWORDS = ["phone", "whatsapp", "mobile", "number"];
 const EMAIL_KEYWORDS = ["email", "e-mail"];
 const LOCATION_KEYWORDS = ["location", "where", "city", "address"];
+const PHOTO_KEYWORDS = ["photo", "picture", "image", "upload", "sample", "work"];
 
 function formatAnswerValue(value: unknown): string {
   if (Array.isArray(value)) return value.join(", ");
@@ -19,6 +20,17 @@ function extractField(answers: Record<string, unknown>, keywords: string[]): str
     if (keywords.some((k) => lower.includes(k))) {
       const formatted = formatAnswerValue(value);
       if (formatted) return formatted;
+    }
+  }
+  return undefined;
+}
+
+function extractPhotoUrl(answers: Record<string, unknown>): string | undefined {
+  for (const [question, value] of Object.entries(answers)) {
+    const lower = question.toLowerCase();
+    if (PHOTO_KEYWORDS.some((k) => lower.includes(k))) {
+      const match = formatAnswerValue(value).match(/https?:\/\/\S+/);
+      if (match) return match[0];
     }
   }
   return undefined;
@@ -68,6 +80,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const phone = extractField(answers, PHONE_KEYWORDS);
   const email = extractField(answers, EMAIL_KEYWORDS);
   const location = extractField(answers, LOCATION_KEYWORDS);
+  const workSampleUrl = extractPhotoUrl(answers);
 
   if (!name && !phone && !email) {
     return NextResponse.json(
@@ -85,6 +98,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       email: email || null,
       phone: phone || null,
       location: location || null,
+      workSampleUrl: workSampleUrl || null,
       source: "GOOGLE_FORM",
       stage: "APPLIED",
       notes: answerLines.length ? `Submitted via Google Form:\n\n${answerLines.join("\n")}` : null,
