@@ -251,6 +251,7 @@ function buildGoogleFormCreatorScript({
   questionsBySection: Map<string, GoogleFormQuestion[]>;
 }): string {
   const lines: string[] = [];
+  let needsManualFileUpload = false;
 
   if (mode === "INFORMAL") {
     lines.push(`  form.addTextItem().setTitle("Your full name").setRequired(true);`);
@@ -259,9 +260,7 @@ function buildGoogleFormCreatorScript({
       `  form.addTextItem().setTitle("Email").setHelpText("Only if you have one").setRequired(false).setValidation(FormApp.createTextValidation().requireTextIsEmail().build());`,
     );
     lines.push(`  form.addTextItem().setTitle("Where are you? (e.g. Maryland, Lagos)").setRequired(false);`);
-    lines.push(
-      `  form.addFileUploadItem().setTitle(${js(workSampleLabel || "Photo of your work")}).setRequired(true);`,
-    );
+    needsManualFileUpload = true;
   } else {
     lines.push(`  form.addTextItem().setTitle("Full name").setRequired(true);`);
     lines.push(
@@ -273,8 +272,7 @@ function buildGoogleFormCreatorScript({
       lines.push(`  form.addTextItem().setTitle("Years of experience in this kind of role").setRequired(false);`);
     if (askExpectedPay) lines.push(`  form.addTextItem().setTitle("Expected pay (₦, monthly)").setRequired(false);`);
     if (askHowHeard) lines.push(`  form.addTextItem().setTitle("How did you hear about this role?").setRequired(false);`);
-    if (askResumeLink)
-      lines.push(`  form.addFileUploadItem().setTitle("Upload your CV / resume").setRequired(false);`);
+    if (askResumeLink) needsManualFileUpload = true;
 
     for (const q of ungroupedQuestions) {
       lines.push(`  ${googleFormAddItemCode(q)}`);
@@ -287,6 +285,11 @@ function buildGoogleFormCreatorScript({
     }
   }
 
+  const fileUploadTitle = mode === "INFORMAL" ? workSampleLabel || "Photo of your work" : "Upload your CV / resume";
+  const fileUploadNote = needsManualFileUpload
+    ? `"\\n\\nOne manual step: Google won't let scripts create File upload questions, so open the edit link above and add one yourself (+ button -> File upload), titled " + ${js(fileUploadTitle)} + ". Submissions to it will flow into the pipeline automatically once it's there."`
+    : `""`;
+
   return `function createApplicationForm() {
   var form = FormApp.create(${js(`${roleTitle} — ${companyName} Application`)});
   form.setConfirmationMessage(${js(`Thanks! Someone from ${companyName} or Masy Consulting will be in touch.`)});
@@ -295,7 +298,7 @@ ${lines.join("\n")}
 
   ScriptApp.newTrigger("onFormSubmit").forForm(form).onFormSubmit().create();
 
-  var links = "Edit this form: " + form.getEditUrl() + "\\n\\nShare this link with applicants: " + form.getPublishedUrl();
+  var links = "Edit this form: " + form.getEditUrl() + "\\n\\nShare this link with applicants: " + form.getPublishedUrl() + ${fileUploadNote};
   MailApp.sendEmail(Session.getActiveUser().getEmail(), "Your new Google Form is ready", links);
   Logger.log(links);
 }
@@ -853,8 +856,16 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                     </li>
                     <li>
                       Check your email for the new form&rsquo;s edit link and the share link to post on
-                      Instagram/WhatsApp/etc. The submit trigger is already wired up — no extra steps needed.
+                      Instagram/WhatsApp/etc. The submit trigger is already wired up.
                     </li>
+                    {(role.mode === "INFORMAL" || role.askResumeLink) && (
+                      <li>
+                        Google won&rsquo;t let scripts create a &ldquo;File upload&rdquo; question, so open the
+                        edit link from that email and add one yourself (+ button → File upload) — the email spells
+                        out exactly what to title it. Once it&rsquo;s there, submissions to it flow in
+                        automatically.
+                      </li>
+                    )}
                   </ol>
                   {role.mode === "INFORMAL" && (
                     <p className="mt-3 rounded-btn bg-orange-light/40 px-3 py-2 text-xs text-orange">
