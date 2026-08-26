@@ -191,6 +191,141 @@ function QuestionRow({
   );
 }
 
+type GoogleFormQuestion = {
+  label: string;
+  type: "SHORT_TEXT" | "LONG_TEXT" | "LINK" | "MULTIPLE_CHOICE" | "CHECKBOXES";
+  options: string[];
+  required: boolean;
+  sectionId: string | null;
+};
+
+type GoogleFormSection = { id: string; title: string };
+
+function js(value: string) {
+  return JSON.stringify(value);
+}
+
+function googleFormAddItemCode(q: GoogleFormQuestion): string {
+  switch (q.type) {
+    case "LONG_TEXT":
+      return `form.addParagraphTextItem().setTitle(${js(q.label)}).setRequired(${q.required});`;
+    case "LINK":
+      return `form.addTextItem().setTitle(${js(q.label)}).setHelpText("Paste a link").setRequired(${q.required});`;
+    case "MULTIPLE_CHOICE":
+      return `form.addMultipleChoiceItem().setTitle(${js(q.label)}).setChoiceValues([${q.options.map(js).join(", ")}]).setRequired(${q.required});`;
+    case "CHECKBOXES":
+      return `form.addCheckboxItem().setTitle(${js(q.label)}).setChoiceValues([${q.options.map(js).join(", ")}]).setRequired(${q.required});`;
+    case "SHORT_TEXT":
+    default:
+      return `form.addTextItem().setTitle(${js(q.label)}).setRequired(${q.required});`;
+  }
+}
+
+function buildGoogleFormCreatorScript({
+  mode,
+  roleTitle,
+  companyName,
+  webhookUrl,
+  workSampleLabel,
+  askApplicantLocation,
+  askYearsExperience,
+  askExpectedPay,
+  askHowHeard,
+  askResumeLink,
+  ungroupedQuestions,
+  sections,
+  questionsBySection,
+}: {
+  mode: "FORMAL" | "INFORMAL";
+  roleTitle: string;
+  companyName: string;
+  webhookUrl: string;
+  workSampleLabel: string | null;
+  askApplicantLocation: boolean;
+  askYearsExperience: boolean;
+  askExpectedPay: boolean;
+  askHowHeard: boolean;
+  askResumeLink: boolean;
+  ungroupedQuestions: GoogleFormQuestion[];
+  sections: GoogleFormSection[];
+  questionsBySection: Map<string, GoogleFormQuestion[]>;
+}): string {
+  const lines: string[] = [];
+
+  if (mode === "INFORMAL") {
+    lines.push(`  form.addTextItem().setTitle("Your full name").setRequired(true);`);
+    lines.push(`  form.addTextItem().setTitle("Your phone number").setRequired(true);`);
+    lines.push(
+      `  form.addTextItem().setTitle("Email").setHelpText("Only if you have one").setRequired(false).setValidation(FormApp.createTextValidation().requireTextIsEmail().build());`,
+    );
+    lines.push(`  form.addTextItem().setTitle("Where are you? (e.g. Maryland, Lagos)").setRequired(false);`);
+    lines.push(
+      `  form.addFileUploadItem().setTitle(${js(workSampleLabel || "Photo of your work")}).setRequired(true);`,
+    );
+  } else {
+    lines.push(`  form.addTextItem().setTitle("Full name").setRequired(true);`);
+    lines.push(
+      `  form.addTextItem().setTitle("Email").setRequired(true).setValidation(FormApp.createTextValidation().requireTextIsEmail().build());`,
+    );
+    lines.push(`  form.addTextItem().setTitle("Phone").setRequired(true);`);
+    if (askApplicantLocation) lines.push(`  form.addTextItem().setTitle("Where are you located?").setRequired(false);`);
+    if (askYearsExperience)
+      lines.push(`  form.addTextItem().setTitle("Years of experience in this kind of role").setRequired(false);`);
+    if (askExpectedPay) lines.push(`  form.addTextItem().setTitle("Expected pay (₦, monthly)").setRequired(false);`);
+    if (askHowHeard) lines.push(`  form.addTextItem().setTitle("How did you hear about this role?").setRequired(false);`);
+    if (askResumeLink)
+      lines.push(`  form.addFileUploadItem().setTitle("Upload your CV / resume").setRequired(false);`);
+
+    for (const q of ungroupedQuestions) {
+      lines.push(`  ${googleFormAddItemCode(q)}`);
+    }
+    for (const section of sections) {
+      lines.push(`  form.addPageBreakItem().setTitle(${js(section.title)});`);
+      for (const q of questionsBySection.get(section.id) ?? []) {
+        lines.push(`  ${googleFormAddItemCode(q)}`);
+      }
+    }
+  }
+
+  return `function createApplicationForm() {
+  var form = FormApp.create(${js(`${roleTitle} — ${companyName} Application`)});
+  form.setConfirmationMessage(${js(`Thanks! Someone from ${companyName} or Masy Consulting will be in touch.`)});
+
+${lines.join("\n")}
+
+  ScriptApp.newTrigger("onFormSubmit").forForm(form).onFormSubmit().create();
+
+  var links = "Edit this form: " + form.getEditUrl() + "\\n\\nShare this link with applicants: " + form.getPublishedUrl();
+  MailApp.sendEmail(Session.getActiveUser().getEmail(), "Your new Google Form is ready", links);
+  Logger.log(links);
+}
+
+function onFormSubmit(e) {
+  var answers = {};
+  e.response.getItemResponses().forEach(function (item) {
+    var title = item.getItem().getTitle();
+    var value = item.getResponse();
+
+    if (item.getItem().getType() === FormApp.ItemType.FILE_UPLOAD) {
+      var ids = Array.isArray(value) ? value : [value];
+      value = ids.map(function (id) {
+        var file = DriveApp.getFileById(id);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        return "https://drive.google.com/uc?export=view&id=" + id;
+      });
+    }
+
+    answers[title] = value;
+  });
+
+  UrlFetchApp.fetch(${js(webhookUrl)}, {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({ answers: answers }),
+  });
+}`;
+}
+
 export default async function RolePipelinePage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole("MASY_OPS");
   const { id } = await params;
@@ -292,6 +427,24 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const questionsBySection = new Map(
     role.questionSections.map((s) => [s.id, role.questions.filter((q) => q.sectionId === s.id)]),
   );
+
+  const googleFormCreatorScript = googleFormWebhookUrl
+    ? buildGoogleFormCreatorScript({
+        mode: role.mode,
+        roleTitle: role.title,
+        companyName: role.clientOrg.name,
+        webhookUrl: googleFormWebhookUrl,
+        workSampleLabel: role.workSampleLabel,
+        askApplicantLocation: role.askApplicantLocation,
+        askYearsExperience: role.askYearsExperience,
+        askExpectedPay: role.askExpectedPay,
+        askHowHeard: role.askHowHeard,
+        askResumeLink: role.askResumeLink,
+        ungroupedQuestions,
+        sections: role.questionSections,
+        questionsBySection,
+      })
+    : null;
 
   const candidatesWithCvUrl = role.candidates.map((c) => ({
     ...c,
@@ -683,9 +836,46 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                   <input readOnly value={googleFormWebhookUrl} className={`${inputClass} font-mono text-xs`} />
                   <CopyLinkButton link={googleFormWebhookUrl} />
                 </div>
+                <details className="rounded-card border border-border p-3" open>
+                  <summary className="cursor-pointer text-xs font-medium text-slate hover:text-ink">
+                    Don&rsquo;t have a form yet? Let this create it for you
+                  </summary>
+                  <ol className="mt-3 list-decimal space-y-2 pl-4 text-xs text-slate">
+                    <li>Go to script.google.com → New project.</li>
+                    <li>Delete anything in the editor, paste the script below, then save it (Ctrl/Cmd+S).</li>
+                    <li>
+                      In the toolbar, use the function dropdown next to &ldquo;Run&rdquo; to pick{" "}
+                      <code>createApplicationForm</code>, then click <strong>Run</strong>.
+                    </li>
+                    <li>
+                      The first time, Google will ask you to authorize the script — click through it (this is your
+                      own script, so it&rsquo;s safe).
+                    </li>
+                    <li>
+                      Check your email for the new form&rsquo;s edit link and the share link to post on
+                      Instagram/WhatsApp/etc. The submit trigger is already wired up — no extra steps needed.
+                    </li>
+                  </ol>
+                  {role.mode === "INFORMAL" && (
+                    <p className="mt-3 rounded-btn bg-orange-light/40 px-3 py-2 text-xs text-orange">
+                      Heads up: Google Forms requires people to sign in with a Google account before they can
+                      upload a photo. If your applicants are informal, low-literacy users applying from Instagram,
+                      that&rsquo;s real friction — the built-in informal apply link (camera capture, no sign-in) may
+                      work better for those roles than Google Forms.
+                    </p>
+                  )}
+                  {googleFormCreatorScript && (
+                    <div className="mt-3 flex items-start gap-2">
+                      <pre className="max-h-64 flex-1 overflow-auto rounded-btn bg-paper-2 p-3 text-[11px] leading-relaxed text-ink">
+                        {googleFormCreatorScript}
+                      </pre>
+                      <CopyLinkButton link={googleFormCreatorScript} />
+                    </div>
+                  )}
+                </details>
                 <details className="rounded-card border border-border p-3">
                   <summary className="cursor-pointer text-xs font-medium text-slate hover:text-ink">
-                    How to connect a Google Form
+                    Already have a Google Form? Connect it instead
                   </summary>
                   <ol className="mt-3 list-decimal space-y-2 pl-4 text-xs text-slate">
                     <li>Open your Google Form, then Extensions → Apps Script.</li>
