@@ -4,7 +4,7 @@ import { getUnreadAnnouncements } from "@/lib/announcements";
 import { getUnresolvedConcernsForClient } from "@/lib/concerns";
 import { getUnresolvedReviewsForClient } from "@/lib/reviews";
 import { getNewApplicantsCount } from "@/lib/recruitment";
-import { getUnreadDocumentsForClient } from "@/lib/employee-documents";
+import { getUnreadDocumentsForClient } from "@/lib/employee-documents-server";
 import { DashboardHeader } from "@/components/dashboard-header";
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {

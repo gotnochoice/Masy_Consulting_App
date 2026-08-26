@@ -11,7 +11,7 @@ import { generateTemporaryPassword } from "@/lib/password";
 import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
 import { getOrigin } from "@/lib/url";
 import { uploadEmployeePhoto } from "@/lib/photo";
-import { uploadEmployeeDocumentFile } from "@/lib/employee-documents";
+import { uploadEmployeeDocumentFile } from "@/lib/employee-documents-server";
 import { notifyEmployeeDocumentsShared } from "@/lib/notify-document";
 
 const baseFields = {

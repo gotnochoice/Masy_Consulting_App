@@ -7,7 +7,7 @@ import { requireRole } from "@/lib/rbac";
 import { getOrigin } from "@/lib/url";
 import { sendNotification } from "@/lib/email";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/documents";
-import { uploadEmployeeDocumentFile } from "@/lib/employee-documents";
+import { uploadEmployeeDocumentFile } from "@/lib/employee-documents-server";
 import { notifyEmployeeDocumentsShared } from "@/lib/notify-document";
 
 export async function markInProgress(requestId: string) {
