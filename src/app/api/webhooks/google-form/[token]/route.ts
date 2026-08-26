@@ -24,6 +24,20 @@ function extractField(answers: Record<string, unknown>, keywords: string[]): str
   return undefined;
 }
 
+export async function GET(_request: Request, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  const role = await db.openRole.findUnique({ where: { googleFormWebhookToken: token }, select: { title: true } });
+
+  if (!role) {
+    return NextResponse.json({ error: "This link is not connected to any role. Turn on Google Form intake again from the role's settings to get a fresh link." }, { status: 404 });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    message: `This webhook is connected to "${role.title}" and is working. It only accepts POST requests from your Google Form's Apps Script trigger, not from a browser visit — seeing this message means the link itself is fine.`,
+  });
+}
+
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
 
