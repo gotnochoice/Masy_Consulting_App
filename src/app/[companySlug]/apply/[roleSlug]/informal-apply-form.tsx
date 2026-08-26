@@ -93,14 +93,6 @@ export function InformalApplyForm({
           {workSampleLabel}
         </label>
         <p className="mb-2 text-sm text-slate">Take a photo now, or choose one you already have.</p>
-        {photoPreview && (
-          // eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a remote asset
-          <img
-            src={photoPreview}
-            alt="Your uploaded photo"
-            className="mb-3 h-48 w-full rounded-card border border-border object-cover"
-          />
-        )}
         <input
           id="workSamplePhoto"
           name="workSamplePhoto"
@@ -112,8 +104,31 @@ export function InformalApplyForm({
             const file = e.target.files?.[0];
             setPhotoPreview(file ? URL.createObjectURL(file) : null);
           }}
-          className={`${inputClass} file:mr-3 file:rounded-btn file:border-0 file:bg-indigo-tint file:px-4 file:py-2.5 file:text-base file:font-semibold file:text-indigo`}
+          className="sr-only"
         />
+        <label
+          htmlFor="workSamplePhoto"
+          className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-card border-2 border-dashed border-indigo/40 bg-indigo-tint/40 p-6 text-center transition-colors active:bg-indigo-tint"
+        >
+          {photoPreview ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a remote asset */}
+              <img
+                src={photoPreview}
+                alt="Your uploaded photo"
+                className="h-48 w-full rounded-card border border-border object-cover"
+              />
+              <span className="text-base font-semibold text-indigo">Tap to change photo</span>
+            </>
+          ) : (
+            <>
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo text-white">
+                <Camera className="h-8 w-8" strokeWidth={2} />
+              </span>
+              <span className="text-base font-bold text-indigo">Tap to take or choose a photo</span>
+            </>
+          )}
+        </label>
       </div>
 
       <div className="rounded-card border border-border bg-paper-2 p-4">
