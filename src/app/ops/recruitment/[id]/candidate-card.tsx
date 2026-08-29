@@ -9,6 +9,20 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { linkify } from "@/lib/linkify";
 import type { ConvertToEmployeeState } from "../actions";
 
+const GOOGLE_FORM_NOTES_PREFIX = "Submitted via Google Form:\n\n";
+
+function parseGoogleFormNotes(notes: string): { question: string; value: string }[] | null {
+  if (!notes.startsWith(GOOGLE_FORM_NOTES_PREFIX)) return null;
+  const lines = notes.slice(GOOGLE_FORM_NOTES_PREFIX.length).split("\n").filter((line) => line.trim().length > 0);
+  if (lines.length === 0) return null;
+  return lines.map((line) => {
+    const separatorIndex = line.indexOf(": ");
+    return separatorIndex === -1
+      ? { question: line, value: "" }
+      : { question: line.slice(0, separatorIndex), value: line.slice(separatorIndex + 2) };
+  });
+}
+
 type CandidateWithAnswers = {
   id: string;
   name: string;
@@ -52,6 +66,8 @@ export function CandidateCard({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const hasDetails = candidate.answers.length > 0 || !!candidate.notes || !!candidate.howHeard;
+  const googleFormAnswers =
+    candidate.source === "GOOGLE_FORM" && candidate.notes ? parseGoogleFormNotes(candidate.notes) : null;
 
   return (
     <div id={`candidate-${candidate.id}`} className="rounded-card border border-border bg-paper p-4 scroll-mt-4">
@@ -259,14 +275,21 @@ export function CandidateCard({
                   <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(a.value)}</p>
                 </div>
               ))}
-              {candidate.notes && (
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Notes</p>
-                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">
-                    {linkify(candidate.notes)}
-                  </p>
-                </div>
-              )}
+              {googleFormAnswers
+                ? googleFormAnswers.map((qa, i) => (
+                    <div key={i}>
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-light">{qa.question}</p>
+                      <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(qa.value)}</p>
+                    </div>
+                  ))
+                : candidate.notes && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Notes</p>
+                      <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">
+                        {linkify(candidate.notes)}
+                      </p>
+                    </div>
+                  )}
             </div>
           )}
         </div>

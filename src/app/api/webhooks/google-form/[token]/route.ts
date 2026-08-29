@@ -14,23 +14,33 @@ function formatAnswerValue(value: unknown): string {
   return String(value ?? "").trim();
 }
 
-function extractField(answers: Record<string, unknown>, keywords: string[]): string | undefined {
+// A question already matched to one field (e.g. "Email Address" matching email) is
+// excluded from later, looser matches (e.g. "address" also matching location) via `claimed`.
+function extractField(answers: Record<string, unknown>, keywords: string[], claimed: Set<string>): string | undefined {
   for (const [question, value] of Object.entries(answers)) {
+    if (claimed.has(question)) continue;
     const lower = question.toLowerCase();
     if (keywords.some((k) => lower.includes(k))) {
       const formatted = formatAnswerValue(value);
-      if (formatted) return formatted;
+      if (formatted) {
+        claimed.add(question);
+        return formatted;
+      }
     }
   }
   return undefined;
 }
 
-function extractPhotoUrl(answers: Record<string, unknown>): string | undefined {
+function extractPhotoUrl(answers: Record<string, unknown>, claimed: Set<string>): string | undefined {
   for (const [question, value] of Object.entries(answers)) {
+    if (claimed.has(question)) continue;
     const lower = question.toLowerCase();
     if (PHOTO_KEYWORDS.some((k) => lower.includes(k))) {
       const match = formatAnswerValue(value).match(/https?:\/\/\S+/);
-      if (match) return match[0];
+      if (match) {
+        claimed.add(question);
+        return match[0];
+      }
     }
   }
   return undefined;
@@ -76,11 +86,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       ? ((body as { answers: Record<string, unknown> }).answers ?? {})
       : {};
 
-  const name = extractField(answers, NAME_KEYWORDS);
-  const phone = extractField(answers, PHONE_KEYWORDS);
-  const email = extractField(answers, EMAIL_KEYWORDS);
-  const location = extractField(answers, LOCATION_KEYWORDS);
-  const workSampleUrl = extractPhotoUrl(answers);
+  const claimed = new Set<string>();
+  const name = extractField(answers, NAME_KEYWORDS, claimed);
+  const phone = extractField(answers, PHONE_KEYWORDS, claimed);
+  const email = extractField(answers, EMAIL_KEYWORDS, claimed);
+  const location = extractField(answers, LOCATION_KEYWORDS, claimed);
+  const workSampleUrl = extractPhotoUrl(answers, claimed);
 
   if (!name && !phone && !email) {
     return NextResponse.json(
