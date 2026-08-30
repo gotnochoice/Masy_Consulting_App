@@ -389,9 +389,27 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
   const googleFormWebhookUrl = role.googleFormWebhookToken
     ? `${origin}/api/webhooks/google-form/${role.googleFormWebhookToken}`
     : null;
-  const googleFormAppsScript = `function onFormSubmit(e) {
+  const googleFormAppsScript = `// Fires automatically once you add the "On form submit" trigger below.
+function onFormSubmit(e) {
+  postAnswers(buildAnswers(e.response));
+}
+
+// One-time only: brings in responses this form already collected before you
+// connected it here. Run this yourself from the function dropdown -- it never
+// runs on its own. Run it once, ideally before adding the trigger above, so you
+// don't end up with a duplicate for a response that already came in live.
+function importExistingResponses() {
+  var form = FormApp.getActiveForm();
+  var responses = form.getResponses();
+  responses.forEach(function (response) {
+    postAnswers(buildAnswers(response));
+  });
+  Logger.log("Imported " + responses.length + " existing response(s).");
+}
+
+function buildAnswers(response) {
   var answers = {};
-  e.response.getItemResponses().forEach(function (item) {
+  response.getItemResponses().forEach(function (item) {
     var title = item.getItem().getTitle();
     var value = item.getResponse();
 
@@ -408,7 +426,10 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
 
     answers[title] = value;
   });
+  return answers;
+}
 
+function postAnswers(answers) {
   UrlFetchApp.fetch("${googleFormWebhookUrl ?? "PASTE_YOUR_WEBHOOK_URL_HERE"}", {
     method: "post",
     contentType: "application/json",
@@ -906,20 +927,29 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
                 </details>
                 <details className="rounded-card border border-border p-3">
                   <summary className="cursor-pointer text-xs font-medium text-slate hover:text-ink">
-                    Already have a Google Form? Connect it instead
+                    Already have a Google Form (maybe with old responses on it)? Connect it instead
                   </summary>
                   <ol className="mt-3 list-decimal space-y-2 pl-4 text-xs text-slate">
                     <li>Open your Google Form, then Extensions → Apps Script.</li>
                     <li>Delete anything in the editor and paste the script below, then save it.</li>
                     <li>
+                      Already has responses sitting in it from before? Use the function dropdown next to
+                      &ldquo;Run&rdquo; to pick <code>importExistingResponses</code> and click <strong>Run</strong>{" "}
+                      first — this brings in everything already submitted, once, as a one-time backfill. Skip this
+                      step if the form has no responses yet.
+                    </li>
+                    <li>
                       Click the clock icon (Triggers) → Add Trigger → choose <code>onFormSubmit</code>, event source
-                      &ldquo;From form&rdquo;, event type &ldquo;On form submit&rdquo; → Save.
+                      &ldquo;From form&rdquo;, event type &ldquo;On form submit&rdquo; → Save. This is what keeps
+                      new responses flowing in from here on.
                     </li>
                     <li>Submit a test response on the form to confirm it shows up in the pipeline below.</li>
                   </ol>
                   <p className="mt-3 text-xs text-slate-light">
                     Photo &amp; file upload questions work too — the script makes each uploaded file viewable by
-                    link and it shows up here like any other candidate photo.
+                    link and it shows up here like any other candidate photo. Do the backfill step before adding
+                    the trigger, not after, or a response that already flowed in live will get imported a second
+                    time as a duplicate.
                   </p>
                   <div className="mt-3 flex items-start gap-2">
                     <pre className="max-h-64 flex-1 overflow-auto rounded-btn bg-paper-2 p-3 text-[11px] leading-relaxed text-ink">
