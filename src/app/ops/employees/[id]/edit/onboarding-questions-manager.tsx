@@ -1,6 +1,6 @@
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
-import { addOnboardingQuestion, deleteOnboardingQuestion } from "../../actions";
+import { addOnboardingQuestion, bulkAddOnboardingQuestions, deleteOnboardingQuestion } from "../../actions";
 import { UploadOnboardingQuestionsPanel } from "./upload-onboarding-questions-panel";
 import type { OnboardingQuestion } from "@/generated/prisma/client";
 
@@ -20,6 +20,7 @@ export function OnboardingQuestionsManager({
   questions: OnboardingQuestion[];
 }) {
   const addWithId = addOnboardingQuestion.bind(null, employeeId);
+  const bulkAddWithId = bulkAddOnboardingQuestions.bind(null, employeeId);
 
   return (
     <div className="space-y-4 rounded-card border border-border bg-paper p-6">
@@ -64,7 +65,27 @@ export function OnboardingQuestionsManager({
         </div>
       )}
 
+      <form action={bulkAddWithId} className="space-y-2 border-t border-border pt-4">
+        <label className={labelClass} htmlFor="bulkLabels">Paste a list of questions</label>
+        <p className="text-xs text-slate-light">
+          One per line, added as short-answer, required by default. Put a <code>?</code> at the start of a line to
+          make that one optional (e.g. <code>? Spouse&rsquo;s phone number</code>). For anything else -- long
+          answer, multiple choice, checkboxes -- use &ldquo;Add a question&rdquo; below instead.
+        </p>
+        <textarea
+          id="bulkLabels"
+          name="bulkLabels"
+          rows={5}
+          placeholder={"Driver's license number\nYears of driving experience\n? Spouse's phone number"}
+          className={inputClass}
+        />
+        <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+          Add these questions
+        </button>
+      </form>
+
       <form action={addWithId} className="space-y-3 border-t border-border pt-4">
+        <p className={labelClass}>Add a question</p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex-1 min-w-[200px]">
             <label className={labelClass} htmlFor="label">Question</label>

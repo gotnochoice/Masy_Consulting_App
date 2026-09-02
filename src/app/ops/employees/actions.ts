@@ -476,6 +476,44 @@ export async function addOnboardingQuestion(employeeId: string, formData: FormDa
   revalidatePath(`/ops/employees/${employeeId}/edit`);
 }
 
+export async function bulkAddOnboardingQuestions(employeeId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const raw = (formData.get("bulkLabels") as string | null) ?? "";
+  const lines = raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return;
+
+  const last = await db.onboardingQuestion.findFirst({
+    where: { employeeId },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+  const start = (last?.order ?? -1) + 1;
+
+  // A leading "?" marks a field optional (e.g. "? Spouse's phone number"); everything
+  // else is a required short-answer field -- enough for pasting a long form's field list
+  // in one go without a type/required picker per line.
+  await db.onboardingQuestion.createMany({
+    data: lines.map((line, i) => {
+      const optional = line.startsWith("?");
+      const label = optional ? line.slice(1).trim() : line;
+      return {
+        employeeId,
+        label,
+        type: "SHORT_TEXT" as const,
+        required: !optional,
+        options: [],
+        order: start + i,
+      };
+    }),
+  });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
 export async function deleteOnboardingQuestion(questionId: string, employeeId: string) {
   await requireRole("MASY_OPS");
 
