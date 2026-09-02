@@ -7,6 +7,7 @@ import type { CandidateStage } from "@/generated/prisma/client";
 import { inputClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { linkify } from "@/lib/linkify";
+import { resolveImageUrl } from "@/lib/drive-image";
 import type { ConvertToEmployeeState } from "../actions";
 
 const GOOGLE_FORM_NOTES_PREFIX = "Submitted via Google Form:\n\n";
@@ -94,13 +95,21 @@ export function CandidateCard({
         )}
       </div>
       {candidate.workSampleUrl && (
-        <a href={candidate.workSampleUrl} target="_blank" rel="noreferrer" className="mt-2 block">
-          {/* eslint-disable-next-line @next/next/no-img-element -- external Blob URL thumbnail, not worth next/image config */}
+        <a
+          href={resolveImageUrl(candidate.workSampleUrl)}
+          target="_blank"
+          rel="noreferrer"
+          className="group mt-2 block"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- external Blob/Drive URL thumbnail, not worth next/image config */}
           <img
-            src={candidate.workSampleUrl}
+            src={resolveImageUrl(candidate.workSampleUrl)}
             alt={`${candidate.name}'s work sample`}
-            className="h-28 w-full rounded-btn border border-border object-cover"
+            className="h-28 w-full rounded-btn border border-border object-cover transition-opacity group-hover:opacity-90"
           />
+          <span className="mt-1 block text-xs font-medium text-indigo group-hover:text-indigo-light">
+            View full size ↗
+          </span>
         </a>
       )}
       {candidate.cvUrl && (
@@ -237,13 +246,16 @@ export function CandidateCard({
             {candidate.workSampleUrl && (
               <div className="col-span-2 sm:col-span-3">
                 <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-light">Work sample</p>
-                <a href={candidate.workSampleUrl} target="_blank" rel="noreferrer">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- external Blob URL, not worth next/image config */}
+                <a href={resolveImageUrl(candidate.workSampleUrl)} target="_blank" rel="noreferrer" className="group inline-block">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- external Blob/Drive URL, not worth next/image config */}
                   <img
-                    src={candidate.workSampleUrl}
+                    src={resolveImageUrl(candidate.workSampleUrl)}
                     alt={`${candidate.name}'s work sample`}
-                    className="max-h-72 rounded-card border border-border object-contain"
+                    className="max-h-72 rounded-card border border-border object-contain transition-opacity group-hover:opacity-90"
                   />
+                  <span className="mt-1 block text-xs font-medium text-indigo group-hover:text-indigo-light">
+                    View full size ↗
+                  </span>
                 </a>
               </div>
             )}

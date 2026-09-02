@@ -326,7 +326,7 @@ function ${submitFnName}(e) {
       value = ids.map(function (id) {
         var file = DriveApp.getFileById(id);
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-        return "https://drive.google.com/uc?export=view&id=" + id;
+        return "https://drive.google.com/thumbnail?id=" + id + "&sz=w1000";
       });
     }
 
@@ -420,7 +420,7 @@ function buildAnswers(response) {
       value = ids.map(function (id) {
         var file = DriveApp.getFileById(id);
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-        return "https://drive.google.com/uc?export=view&id=" + id;
+        return "https://drive.google.com/thumbnail?id=" + id + "&sz=w1000";
       });
     }
 
