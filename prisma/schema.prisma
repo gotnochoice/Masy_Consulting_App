@@ -17,6 +17,7 @@ enum Role {
 }
 
 enum EmployeeStatus {
+  PENDING
   ACTIVE
   ON_LEAVE
   OFFBOARDED

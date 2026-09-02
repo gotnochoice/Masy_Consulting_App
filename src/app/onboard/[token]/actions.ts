@@ -101,6 +101,7 @@ export async function completeOnboarding(
         bankName: parsed.data.bankName ?? null,
         bankAccountNumber: parsed.data.bankAccountNumber ?? null,
         bankAccountHolderName: parsed.data.bankAccountHolderName ?? null,
+        ...(employee.status === "PENDING" ? { status: "ACTIVE" } : {}),
         ...(photoUrl ? { photoUrl } : {}),
       },
     });

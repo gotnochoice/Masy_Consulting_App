@@ -13,7 +13,7 @@ export default async function OpsPayrollPage() {
     orderBy: { name: "asc" },
     include: {
       employees: {
-        where: { status: { not: "OFFBOARDED" } },
+        where: { status: { notIn: ["OFFBOARDED", "PENDING"] } },
         orderBy: { name: "asc" },
       },
     },

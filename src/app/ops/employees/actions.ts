@@ -8,18 +8,17 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { generateTemporaryPassword } from "@/lib/password";
-import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
+import { DEFAULT_ONBOARDING_TASKS, MAX_ONBOARDING_QUESTION_FILE_LABEL } from "@/lib/onboarding";
 import { getOrigin } from "@/lib/url";
 import { uploadEmployeePhoto } from "@/lib/photo";
 import { uploadEmployeeDocumentFile } from "@/lib/employee-documents-server";
 import { notifyEmployeeDocumentsShared } from "@/lib/notify-document";
+import mammoth from "mammoth";
+import { extractOnboardingQuestionsFromDocument, type SuggestedOnboardingQuestion } from "@/lib/ai";
 
 const baseFields = {
   clientOrgId: z.string().min(1, "Organization is required"),
-  name: z.string().min(1, "Name is required"),
   roleTitle: z.string().min(1, "Role is required"),
-  email: z.string().email("Valid email required"),
-  startDate: z.string().min(1, "Start date is required"),
   dateOfBirth: z.string().optional(),
   phone: z.string().optional(),
   whatsappNumber: z.string().optional(),
@@ -37,11 +36,22 @@ const baseFields = {
 
 const leaveBalanceField = { leaveBalanceDays: z.coerce.number().int().min(0, "Leave balance can't be negative") };
 
-const createSchema = z.object({ ...baseFields, ...leaveBalanceField });
+// Not confirmed yet -- Ops can add just a role and organization and leave name, email, and
+// start date blank; the new hire fills those in themselves via their onboarding link.
+const createSchema = z.object({
+  ...baseFields,
+  name: z.string().optional(),
+  email: z.string().email("Valid email required").optional().or(z.literal("")),
+  startDate: z.string().optional(),
+  ...leaveBalanceField,
+});
 const updateSchema = z.object({
   ...baseFields,
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email required"),
+  startDate: z.string().min(1, "Start date is required"),
   ...leaveBalanceField,
-  status: z.enum(["ACTIVE", "ON_LEAVE", "OFFBOARDED"]),
+  status: z.enum(["PENDING", "ACTIVE", "ON_LEAVE", "OFFBOARDED"]),
 });
 
 export async function createEmployee(formData: FormData) {
@@ -94,10 +104,19 @@ export async function createEmployee(formData: FormData) {
     photoUrl = result.url;
   }
 
+  // Not confirmed yet: Ops can leave name/email/start date blank. Placeholders stand in
+  // until the new hire sets their real ones via their onboarding link.
+  const name = rest.name?.trim() || rest.roleTitle;
+  const email = rest.email?.trim() || `pending.${randomBytes(6).toString("hex")}@placeholder.masyconsulting.com`;
+  const startDate = rest.startDate?.trim() ? new Date(rest.startDate) : new Date();
+
   const employee = await db.employee.create({
     data: {
       ...rest,
-      startDate: new Date(parsed.data.startDate),
+      name,
+      email,
+      startDate,
+      status: "PENDING",
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
       phone: phone ?? null,
       whatsappNumber: whatsappNumber ?? null,
@@ -461,6 +480,92 @@ export async function deleteOnboardingQuestion(questionId: string, employeeId: s
   await requireRole("MASY_OPS");
 
   await db.onboardingQuestion.delete({ where: { id: questionId } });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+const MAX_ONBOARDING_QUESTION_FILE_BYTES = 8 * 1024 * 1024;
+
+export type ExtractOnboardingQuestionsState =
+  | { suggestions: SuggestedOnboardingQuestion[] }
+  | { error: string }
+  | undefined;
+
+export async function extractOnboardingQuestionsFromFile(
+  employeeId: string,
+  _prevState: ExtractOnboardingQuestionsState,
+  formData: FormData,
+): Promise<ExtractOnboardingQuestionsState> {
+  await requireRole("MASY_OPS");
+
+  const file = formData.get("document");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose a document to upload first." };
+  }
+  if (file.size > MAX_ONBOARDING_QUESTION_FILE_BYTES) {
+    return { error: `That file is too large. Please keep it under ${MAX_ONBOARDING_QUESTION_FILE_LABEL}.` };
+  }
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const name = file.name.toLowerCase();
+
+    let suggestions: SuggestedOnboardingQuestion[];
+    if (name.endsWith(".docx")) {
+      const { value: text } = await mammoth.extractRawText({ buffer });
+      if (!text.trim()) return { error: "Couldn't find any text in that document." };
+      suggestions = await extractOnboardingQuestionsFromDocument({ text });
+    } else if (name.endsWith(".pdf") || file.type === "application/pdf") {
+      suggestions = await extractOnboardingQuestionsFromDocument({
+        file: { mimeType: "application/pdf", data: buffer.toString("base64") },
+      });
+    } else {
+      const text = buffer.toString("utf-8");
+      if (!text.trim()) return { error: "Couldn't find any text in that file." };
+      suggestions = await extractOnboardingQuestionsFromDocument({ text });
+    }
+
+    if (suggestions.length === 0) {
+      return { error: "Couldn't find any questions in that document. Try a different file, or add questions manually below." };
+    }
+    return { suggestions };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Something went wrong reading that document." };
+  }
+}
+
+const suggestedOnboardingQuestionsSchema = z.array(
+  z.object({
+    label: z.string().min(1),
+    type: z.enum(ONBOARDING_QUESTION_TYPES),
+    required: z.boolean(),
+    options: z.array(z.string()),
+  }),
+);
+
+export async function addSuggestedOnboardingQuestions(employeeId: string, questions: SuggestedOnboardingQuestion[]) {
+  await requireRole("MASY_OPS");
+
+  const parsed = suggestedOnboardingQuestionsSchema.safeParse(questions);
+  if (!parsed.success || parsed.data.length === 0) return;
+
+  const last = await db.onboardingQuestion.findFirst({
+    where: { employeeId },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+  const start = (last?.order ?? -1) + 1;
+
+  await db.onboardingQuestion.createMany({
+    data: parsed.data.map((q, i) => ({
+      employeeId,
+      label: q.label,
+      type: q.type,
+      required: q.required,
+      options: q.type === "MULTIPLE_CHOICE" || q.type === "CHECKBOXES" ? q.options : [],
+      order: start + i,
+    })),
+  });
 
   revalidatePath(`/ops/employees/${employeeId}/edit`);
 }

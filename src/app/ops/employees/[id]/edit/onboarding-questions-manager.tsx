@@ -1,6 +1,7 @@
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { addOnboardingQuestion, deleteOnboardingQuestion } from "../../actions";
+import { UploadOnboardingQuestionsPanel } from "./upload-onboarding-questions-panel";
 import type { OnboardingQuestion } from "@/generated/prisma/client";
 
 const QUESTION_TYPE_OPTIONS = [
@@ -29,6 +30,8 @@ export function OnboardingQuestionsManager({
           e.g. guarantor name/phone/address for a driver, or license details. Answers show up here once they submit.
         </p>
       </div>
+
+      <UploadOnboardingQuestionsPanel employeeId={employeeId} />
 
       {questions.length > 0 && (
         <div className="space-y-2">

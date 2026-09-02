@@ -9,7 +9,7 @@ export default async function ClientPayrollPage() {
   const session = await requireRole("CLIENT");
 
   const employees = await db.employee.findMany({
-    where: { clientOrgId: session.user.clientOrgId ?? "__none__", status: { not: "OFFBOARDED" } },
+    where: { clientOrgId: session.user.clientOrgId ?? "__none__", status: { notIn: ["OFFBOARDED", "PENDING"] } },
     orderBy: { name: "asc" },
   });
 

@@ -13,7 +13,7 @@ export async function GET() {
   await requireRole("MASY_OPS");
 
   const employees = await db.employee.findMany({
-    where: { status: { not: "OFFBOARDED" } },
+    where: { status: { notIn: ["OFFBOARDED", "PENDING"] } },
     orderBy: [{ clientOrg: { name: "asc" } }, { name: "asc" }],
     include: { clientOrg: true },
   });

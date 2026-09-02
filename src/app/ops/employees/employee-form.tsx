@@ -36,10 +36,23 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
             <p className="mt-1 text-xs text-slate-light">JPG, PNG, or WEBP, up to {MAX_PHOTO_FILE_LABEL}.</p>
           </div>
         </div>
+        {!employee && (
+          <p className="text-xs text-slate-light">
+            Not confirmed yet? Just fill in Role and Organization below and leave the rest blank -- they&rsquo;ll set
+            their own name, email, and other details when they fill out their onboarding link.
+          </p>
+        )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="name">Name</label>
-            <input id="name" name="name" defaultValue={employee?.name} required className={inputClass} />
+            <input
+              id="name"
+              name="name"
+              defaultValue={employee?.name}
+              required={!!employee}
+              placeholder={employee ? undefined : "Leave blank if not confirmed yet"}
+              className={inputClass}
+            />
           </div>
           <div>
             <label className={labelClass} htmlFor="roleTitle">Role</label>
@@ -49,7 +62,15 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" defaultValue={employee?.email} required className={inputClass} />
+            <input
+              id="email"
+              name="email"
+              type="email"
+              defaultValue={employee?.email}
+              required={!!employee}
+              placeholder={employee ? undefined : "Leave blank if not confirmed yet"}
+              className={inputClass}
+            />
           </div>
           <div>
             <label className={labelClass} htmlFor="phone">Phone</label>
@@ -107,7 +128,15 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
           </div>
           <div>
             <label className={labelClass} htmlFor="startDate">Start date</label>
-            <input id="startDate" name="startDate" type="date" defaultValue={startDateValue} required className={inputClass} />
+            <input
+              id="startDate"
+              name="startDate"
+              type="date"
+              defaultValue={startDateValue}
+              required={!!employee}
+              className={inputClass}
+            />
+            {!employee && <p className="mt-1 text-xs text-slate-light">Defaults to today if left blank.</p>}
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -115,10 +144,15 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
             <div>
               <label className={labelClass} htmlFor="status">Status</label>
               <select id="status" name="status" defaultValue={employee.status} required className={inputClass}>
+                <option value="PENDING">Pending onboarding</option>
                 <option value="ACTIVE">Active</option>
                 <option value="ON_LEAVE">On leave</option>
                 <option value="OFFBOARDED">Offboarded</option>
               </select>
+              <p className="mt-1 text-xs text-slate-light">
+                Switches to Active automatically once they complete onboarding, or set it yourself if they won&rsquo;t
+                use a login.
+              </p>
             </div>
           )}
           <div>
