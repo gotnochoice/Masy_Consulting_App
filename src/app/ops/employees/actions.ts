@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { generateTemporaryPassword } from "@/lib/password";
+import { slugify } from "@/lib/slug";
 import { DEFAULT_ONBOARDING_TASKS, MAX_ONBOARDING_QUESTION_FILE_LABEL } from "@/lib/onboarding";
 import { getOrigin } from "@/lib/url";
 import { uploadEmployeePhoto } from "@/lib/photo";
@@ -307,7 +308,10 @@ export async function generateOnboardingLink(
   const existingUser = await db.user.findUnique({ where: { email: employee.email } });
   if (existingUser) return { error: "This employee already has a login." };
 
-  const token = randomBytes(32).toString("hex");
+  // Prefixed with the role so the link reads as something ("company-driver-...") instead of
+  // a bare hex blob -- the random half after it still carries full 128 bits of entropy, so
+  // this doesn't weaken the token at all, it's just not the *only* thing in the URL.
+  const token = `${slugify(employee.roleTitle)}-${randomBytes(16).toString("hex")}`;
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   await db.onboardingInvite.upsert({
