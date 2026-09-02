@@ -406,3 +406,61 @@ export async function deleteEmployeeDocument(documentId: string, employeeId: str
   revalidatePath(`/ops/employees/${employeeId}/edit`);
   revalidatePath("/me/documents");
 }
+
+const ONBOARDING_QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES"] as const;
+
+const addOnboardingQuestionSchema = z.object({
+  label: z.string().min(1, "Question is required"),
+  type: z.enum(ONBOARDING_QUESTION_TYPES),
+  required: z.boolean(),
+  options: z.string().optional(),
+});
+
+function parseOnboardingOptions(type: (typeof ONBOARDING_QUESTION_TYPES)[number], raw: string | undefined) {
+  if (type !== "MULTIPLE_CHOICE" && type !== "CHECKBOXES") return [];
+  return (raw ?? "")
+    .split("\n")
+    .map((o) => o.trim())
+    .filter(Boolean);
+}
+
+export async function addOnboardingQuestion(employeeId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = addOnboardingQuestionSchema.safeParse({
+    label: formData.get("label"),
+    type: formData.get("type"),
+    required: formData.get("required") === "on",
+    options: formData.get("options") || undefined,
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid question");
+  }
+
+  const last = await db.onboardingQuestion.findFirst({
+    where: { employeeId },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+
+  await db.onboardingQuestion.create({
+    data: {
+      employeeId,
+      label: parsed.data.label,
+      type: parsed.data.type,
+      required: parsed.data.required,
+      options: parseOnboardingOptions(parsed.data.type, parsed.data.options),
+      order: (last?.order ?? -1) + 1,
+    },
+  });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+export async function deleteOnboardingQuestion(questionId: string, employeeId: string) {
+  await requireRole("MASY_OPS");
+
+  await db.onboardingQuestion.delete({ where: { id: questionId } });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}

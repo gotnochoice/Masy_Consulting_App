@@ -6,14 +6,62 @@ import { completeOnboarding, type OnboardingFormState } from "./actions";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { PasswordInput } from "@/components/password-input";
 import { MAX_PHOTO_FILE_LABEL } from "@/lib/photo";
+import type { OnboardingQuestion } from "@/generated/prisma/client";
 
 const sectionLabelClass = "text-xs font-semibold uppercase tracking-widest text-slate-light";
+
+function OnboardingQuestionField({ q }: { q: OnboardingQuestion }) {
+  return (
+    <div>
+      <label className={labelClass} htmlFor={`answer_${q.id}`}>
+        {q.label}
+        {!q.required && <span className="text-slate-light"> (optional)</span>}
+      </label>
+      {q.type === "LONG_TEXT" ? (
+        <textarea id={`answer_${q.id}`} name={`answer_${q.id}`} required={q.required} rows={3} className={inputClass} />
+      ) : q.type === "MULTIPLE_CHOICE" ? (
+        <div className="space-y-2">
+          {q.options.map((opt) => (
+            <label
+              key={opt}
+              className="flex cursor-pointer items-center gap-3 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint has-[:hover]:border-indigo/40"
+            >
+              <input type="radio" name={`answer_${q.id}`} value={opt} required={q.required} className="h-4 w-4 shrink-0 accent-indigo" />
+              {opt}
+            </label>
+          ))}
+        </div>
+      ) : q.type === "CHECKBOXES" ? (
+        <div className="space-y-2">
+          {q.options.map((opt) => (
+            <label
+              key={opt}
+              className="flex cursor-pointer items-center gap-3 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint has-[:hover]:border-indigo/40"
+            >
+              <input type="checkbox" name={`answer_${q.id}`} value={opt} className="h-4 w-4 shrink-0 rounded accent-indigo" />
+              {opt}
+            </label>
+          ))}
+        </div>
+      ) : (
+        <input
+          id={`answer_${q.id}`}
+          name={`answer_${q.id}`}
+          type={q.type === "LINK" ? "url" : "text"}
+          required={q.required}
+          className={inputClass}
+        />
+      )}
+    </div>
+  );
+}
 
 export function OnboardingForm({
   token,
   name,
   email,
   orgName,
+  questions,
   initiallyValid,
   initiallyCompleted,
 }: {
@@ -21,6 +69,7 @@ export function OnboardingForm({
   name: string;
   email: string;
   orgName: string;
+  questions: OnboardingQuestion[];
   initiallyValid: boolean;
   initiallyCompleted: boolean;
 }) {
@@ -120,6 +169,15 @@ export function OnboardingForm({
             <p className="mt-1 text-xs text-slate-light">Only fill this in if it&rsquo;s different from your name above.</p>
           </div>
         </div>
+
+        {questions.length > 0 && (
+          <div className="space-y-4">
+            <p className={sectionLabelClass}>A few more details</p>
+            {questions.map((q) => (
+              <OnboardingQuestionField key={q.id} q={q} />
+            ))}
+          </div>
+        )}
 
         <div className="space-y-4">
           <p className={sectionLabelClass}>Set up your login</p>

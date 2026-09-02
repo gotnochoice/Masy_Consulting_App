@@ -64,8 +64,30 @@ export async function completeOnboarding(
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
 
-  const employee = await db.employee.findUnique({ where: { id: invite.employeeId } });
+  const employee = await db.employee.findUnique({
+    where: { id: invite.employeeId },
+    include: { onboardingQuestions: true },
+  });
   if (!employee) return { error: "Employee record not found. Contact Masy." };
+
+  const questionAnswers: { id: string; value: string }[] = [];
+  for (const q of employee.onboardingQuestions) {
+    let value: string;
+    if (q.type === "CHECKBOXES") {
+      const selected = formData.getAll(`answer_${q.id}`).filter((v): v is string => typeof v === "string");
+      const invalid = selected.find((v) => !q.options.includes(v));
+      if (invalid) return { error: `"${q.label}" has an invalid answer.` };
+      value = selected.join(", ");
+    } else {
+      const raw = formData.get(`answer_${q.id}`);
+      value = typeof raw === "string" ? raw.trim() : "";
+      if (q.type === "MULTIPLE_CHOICE" && value && !q.options.includes(value)) {
+        return { error: `"${q.label}" has an invalid answer.` };
+      }
+    }
+    if (q.required && !value) return { error: `"${q.label}" is required.` };
+    if (value) questionAnswers.push({ id: q.id, value });
+  }
 
   await db.$transaction(async (tx) => {
     await tx.employee.update({
@@ -82,6 +104,10 @@ export async function completeOnboarding(
         ...(photoUrl ? { photoUrl } : {}),
       },
     });
+
+    for (const { id, value } of questionAnswers) {
+      await tx.onboardingQuestion.update({ where: { id }, data: { answer: value } });
+    }
 
     const user = await tx.user.create({
       data: {
@@ -106,5 +132,6 @@ export async function completeOnboarding(
   });
 
   revalidatePath("/ops/employees");
+  revalidatePath(`/ops/employees/${employee.id}/edit`);
   return { success: true };
 }

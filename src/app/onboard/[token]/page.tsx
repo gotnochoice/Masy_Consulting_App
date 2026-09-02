@@ -6,7 +6,11 @@ export default async function OnboardingPage({ params }: { params: Promise<{ tok
   const { token } = await params;
   const invite = await db.onboardingInvite.findUnique({
     where: { token },
-    include: { employee: { include: { clientOrg: true } } },
+    include: {
+      employee: {
+        include: { clientOrg: true, onboardingQuestions: { orderBy: { order: "asc" } } },
+      },
+    },
   });
 
   return (
@@ -22,6 +26,7 @@ export default async function OnboardingPage({ params }: { params: Promise<{ tok
               name={invite.employee.name}
               email={invite.employee.email}
               orgName={invite.employee.clientOrg.name}
+              questions={invite.employee.onboardingQuestions}
               initiallyValid={!invite.completedAt && invite.expiresAt > new Date()}
               initiallyCompleted={!!invite.completedAt}
             />
