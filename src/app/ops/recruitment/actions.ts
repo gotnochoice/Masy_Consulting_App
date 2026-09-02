@@ -71,6 +71,36 @@ export async function deleteRole(roleId: string) {
   revalidatePath("/ops/recruitment");
 }
 
+const ROLE_LIST_ORDER = [
+  { displayOrder: "asc" as const },
+  { clientOrg: { name: "asc" as const } },
+  { createdAt: "desc" as const },
+];
+
+export async function moveRole(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const direction = formData.get("direction");
+  if (direction !== "up" && direction !== "down") throw new Error("Invalid direction");
+
+  const roles = await db.openRole.findMany({ orderBy: ROLE_LIST_ORDER, select: { id: true } });
+  const index = roles.findIndex((r) => r.id === roleId);
+  const swapIndex = direction === "up" ? index - 1 : index + 1;
+  if (index === -1 || swapIndex < 0 || swapIndex >= roles.length) return;
+
+  // Swap the two positions, then rewrite everyone's displayOrder to their index in
+  // the resulting list. This assigns real, distinct values the first time it's used
+  // (when every role still shares the default 0) and just as correctly re-sequences
+  // an already-ordered list on every move after that.
+  const order = roles.map((r) => r.id);
+  [order[index], order[swapIndex]] = [order[swapIndex], order[index]];
+
+  await db.$transaction(order.map((id, i) => db.openRole.update({ where: { id }, data: { displayOrder: i } })));
+
+  revalidatePath("/ops/recruitment");
+  revalidatePath("/careers");
+}
+
 export async function cloneRole(roleId: string) {
   const session = await requireRole("MASY_OPS");
 

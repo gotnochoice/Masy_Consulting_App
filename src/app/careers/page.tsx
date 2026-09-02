@@ -17,7 +17,7 @@ export default async function CareersPage() {
   const roles = await db.openRole.findMany({
     where: { acceptingApplications: true },
     include: { clientOrg: true },
-    orderBy: [{ clientOrg: { name: "asc" } }, { createdAt: "desc" }],
+    orderBy: [{ displayOrder: "asc" }, { clientOrg: { name: "asc" } }, { createdAt: "desc" }],
   });
 
   return (

@@ -7,7 +7,7 @@ import { StatCard } from "@/components/stat-card";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { getNewApplicantsCount } from "@/lib/recruitment";
-import { createRole, deleteRole, cloneRole } from "./actions";
+import { createRole, deleteRole, cloneRole, moveRole } from "./actions";
 
 export default async function OpsRecruitmentPage() {
   await requireRole("MASY_OPS");
@@ -15,7 +15,7 @@ export default async function OpsRecruitmentPage() {
   const [roles, orgs, websiteCounts, totalCandidates, newApplicants] = await Promise.all([
     db.openRole.findMany({
       include: { clientOrg: true, _count: { select: { candidates: true } } },
-      orderBy: [{ clientOrg: { name: "asc" } }, { createdAt: "desc" }],
+      orderBy: [{ displayOrder: "asc" }, { clientOrg: { name: "asc" } }, { createdAt: "desc" }],
     }),
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
     db.candidate.groupBy({
@@ -53,11 +53,19 @@ export default async function OpsRecruitmentPage() {
         </div>
       )}
 
+      {roles.length > 1 && (
+        <p className="text-xs text-slate-light">
+          Use the ↑↓ arrows to set the order roles appear in on the public Careers page — this list is the same
+          order applicants see, top to bottom, across every company.
+        </p>
+      )}
+
       {/* Mobile: stacked cards */}
       <div className="space-y-3 sm:hidden">
-        {roles.map((role) => {
+        {roles.map((role, index) => {
           const deleteRoleWithId = deleteRole.bind(null, role.id);
           const cloneRoleWithId = cloneRole.bind(null, role.id);
+          const moveRoleWithId = moveRole.bind(null, role.id);
           return (
             <div key={role.id} className="rounded-card border border-border bg-paper p-4">
               <div className="flex items-start justify-between gap-2">
@@ -79,6 +87,20 @@ export default async function OpsRecruitmentPage() {
                 )}
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3">
+                <div className="flex items-center gap-2">
+                  <form action={moveRoleWithId}>
+                    <input type="hidden" name="direction" value="up" />
+                    <button type="submit" disabled={index === 0} aria-label="Move role up" className="text-sm font-medium text-slate hover:text-ink disabled:opacity-30">
+                      ↑
+                    </button>
+                  </form>
+                  <form action={moveRoleWithId}>
+                    <input type="hidden" name="direction" value="down" />
+                    <button type="submit" disabled={index === roles.length - 1} aria-label="Move role down" className="text-sm font-medium text-slate hover:text-ink disabled:opacity-30">
+                      ↓
+                    </button>
+                  </form>
+                </div>
                 <Link href={`/ops/recruitment/${role.id}`} className="text-sm font-medium text-indigo hover:text-indigo-light">
                   View pipeline
                 </Link>
@@ -110,6 +132,7 @@ export default async function OpsRecruitmentPage() {
           <table className="min-w-full divide-y divide-border text-xs">
             <thead className="bg-paper-2">
               <tr>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Order</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
@@ -121,11 +144,28 @@ export default async function OpsRecruitmentPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {roles.map((role) => {
+              {roles.map((role, index) => {
                 const deleteRoleWithId = deleteRole.bind(null, role.id);
                 const cloneRoleWithId = cloneRole.bind(null, role.id);
+                const moveRoleWithId = moveRole.bind(null, role.id);
                 return (
                   <tr key={role.id} className="hover:bg-paper-2">
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <form action={moveRoleWithId}>
+                          <input type="hidden" name="direction" value="up" />
+                          <button type="submit" disabled={index === 0} aria-label="Move role up" className="text-sm font-medium text-slate hover:text-ink disabled:opacity-30">
+                            ↑
+                          </button>
+                        </form>
+                        <form action={moveRoleWithId}>
+                          <input type="hidden" name="direction" value="down" />
+                          <button type="submit" disabled={index === roles.length - 1} aria-label="Move role down" className="text-sm font-medium text-slate hover:text-ink disabled:opacity-30">
+                            ↓
+                          </button>
+                        </form>
+                      </div>
+                    </td>
                     <td className="px-3 py-2.5 font-medium text-ink">{role.title}</td>
                     <td className="px-3 py-2.5 text-slate">
                       {role.clientOrg.name}

@@ -327,6 +327,7 @@ model OpenRole {
   title                   String
   slug                    String
   description             String?
+  displayOrder            Int            @default(0)
   location                String?
   shortCode               String?        @unique
   stage                   RoleStage      @default(SOURCING)
