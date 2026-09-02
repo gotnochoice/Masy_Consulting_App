@@ -476,6 +476,40 @@ export async function addOnboardingQuestion(employeeId: string, formData: FormDa
   revalidatePath(`/ops/employees/${employeeId}/edit`);
 }
 
+export async function updateOnboardingQuestion(questionId: string, employeeId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = addOnboardingQuestionSchema.safeParse({
+    label: formData.get("label"),
+    type: formData.get("type"),
+    required: formData.get("required") === "on",
+    options: formData.get("options") || undefined,
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid question");
+  }
+
+  await db.onboardingQuestion.update({
+    where: { id: questionId },
+    data: {
+      label: parsed.data.label,
+      type: parsed.data.type,
+      required: parsed.data.required,
+      options: parseOnboardingOptions(parsed.data.type, parsed.data.options),
+    },
+  });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+export async function markAllOnboardingQuestionsRequired(employeeId: string) {
+  await requireRole("MASY_OPS");
+
+  await db.onboardingQuestion.updateMany({ where: { employeeId }, data: { required: true } });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
 export async function bulkAddOnboardingQuestions(employeeId: string, formData: FormData) {
   await requireRole("MASY_OPS");
 
