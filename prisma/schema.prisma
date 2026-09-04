@@ -440,14 +440,16 @@ model CandidateAnswer {
 // A shared apply link for two or more roles at one company: applicants pick which role
 // they're applying for, then answer these shared questions plus that role's own questions.
 model ApplicationGroup {
-  id          String            @id @default(cuid())
-  clientOrgId String
-  clientOrg   ClientOrg         @relation(fields: [clientOrgId], references: [id])
-  title       String
-  slug        String
-  roles       OpenRole[]
-  questions   GeneralQuestion[]
-  createdAt   DateTime          @default(now())
+  id                     String            @id @default(cuid())
+  clientOrgId            String
+  clientOrg              ClientOrg         @relation(fields: [clientOrgId], references: [id])
+  title                  String
+  slug                   String
+  googleFormWebhookToken String?           @unique
+  googleFormPublicUrl    String?
+  roles                  OpenRole[]
+  questions              GeneralQuestion[]
+  createdAt              DateTime          @default(now())
 
   @@unique([clientOrgId, slug])
 }

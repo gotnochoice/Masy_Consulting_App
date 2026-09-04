@@ -12,6 +12,9 @@ import {
   updateGeneralQuestion,
   deleteGeneralQuestion,
   deleteApplicationGroup,
+  enableGroupGoogleFormIntake,
+  disableGroupGoogleFormIntake,
+  updateGroupGoogleFormPublicUrl,
 } from "../actions";
 
 const QUESTION_TYPE_OPTIONS = [
@@ -53,6 +56,57 @@ export default async function ApplicationGroupPage({ params }: { params: Promise
   const updateRolesWithId = updateApplicationGroupRoles.bind(null, group.id);
   const addQuestionWithId = addGeneralQuestion.bind(null, group.id);
   const deleteGroupWithId = deleteApplicationGroup.bind(null, group.id);
+  const enableGoogleFormIntakeWithId = enableGroupGoogleFormIntake.bind(null, group.id);
+  const disableGoogleFormIntakeWithId = disableGroupGoogleFormIntake.bind(null, group.id);
+  const updateGoogleFormPublicUrlWithId = updateGroupGoogleFormPublicUrl.bind(null, group.id);
+
+  const googleFormWebhookUrl = group.googleFormWebhookToken
+    ? `${origin}/api/webhooks/google-form-group/${group.googleFormWebhookToken}`
+    : null;
+  const googleFormAppsScript = `function onFormSubmit(e) {
+  postAnswers(buildAnswers(e.response));
+}
+
+// One-time only: brings in responses this form already collected before you connected it
+// here. Run this yourself from the function dropdown -- it never runs on its own. Run it
+// once, ideally before adding the trigger above, so you don't end up with a duplicate for
+// a response that already came in live.
+function importExistingResponses() {
+  var form = FormApp.getActiveForm();
+  var responses = form.getResponses();
+  responses.forEach(function (response) {
+    postAnswers(buildAnswers(response));
+  });
+  Logger.log("Imported " + responses.length + " existing response(s).");
+}
+
+function buildAnswers(response) {
+  var answers = {};
+  response.getItemResponses().forEach(function (item) {
+    var title = item.getItem().getTitle();
+    var value = item.getResponse();
+
+    if (item.getItem().getType() === FormApp.ItemType.FILE_UPLOAD) {
+      var ids = Array.isArray(value) ? value : [value];
+      value = ids.map(function (id) {
+        var file = DriveApp.getFileById(id);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        return "https://drive.google.com/thumbnail?id=" + id + "&sz=w1000";
+      });
+    }
+
+    answers[title] = value;
+  });
+  return answers;
+}
+
+function postAnswers(answers) {
+  UrlFetchApp.fetch("${googleFormWebhookUrl ?? "PASTE_YOUR_WEBHOOK_URL_HERE"}", {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({ answers: answers }),
+  });
+}`;
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -128,6 +182,92 @@ export default async function ApplicationGroupPage({ params }: { params: Promise
             <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
               Save roles
             </button>
+          </form>
+        )}
+      </div>
+
+      <div className="space-y-3 rounded-card border border-border bg-paper p-6">
+        <p className="text-sm font-semibold text-ink">Google Form intake</p>
+        <p className="text-xs text-slate-light">
+          Point one Google Form at this whole group instead of the roles individually. Add a question to the form
+          asking &ldquo;Which role are you applying for?&rdquo; with the exact role titles as its options --
+          submissions land in whichever role&rsquo;s pipeline the applicant picked.
+        </p>
+
+        <form action={updateGoogleFormPublicUrlWithId} className="space-y-1">
+          <label className={labelClass} htmlFor="googleFormPublicUrl">
+            Your Google Form link <span className="text-xs font-normal text-slate-light">(optional, to share on social media)</span>
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="googleFormPublicUrl"
+              name="googleFormPublicUrl"
+              defaultValue={group.googleFormPublicUrl ?? ""}
+              placeholder="https://forms.gle/..."
+              className={inputClass}
+            />
+            {group.googleFormPublicUrl && <CopyLinkButton link={group.googleFormPublicUrl} />}
+          </div>
+          <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
+            Save link
+          </button>
+        </form>
+
+        {googleFormWebhookUrl ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <input readOnly value={googleFormWebhookUrl} className={`${inputClass} font-mono text-xs`} />
+              <CopyLinkButton link={googleFormWebhookUrl} />
+            </div>
+            <details className="rounded-card border border-border p-3" open>
+              <summary className="cursor-pointer text-xs font-medium text-slate hover:text-ink">
+                How to connect a Google Form
+              </summary>
+              <ol className="mt-3 list-decimal space-y-2 pl-4 text-xs text-slate">
+                <li>
+                  Add a question to your Google Form: &ldquo;Which role are you applying for?&rdquo; (multiple
+                  choice), with options exactly matching your roles&rsquo; titles
+                  {group.roles.length > 0 && (
+                    <>: {group.roles.map((r) => `"${r.title}"`).join(", ")}</>
+                  )}
+                  .
+                </li>
+                <li>Open the form, then Extensions → Apps Script.</li>
+                <li>Delete anything in the editor and paste the script below, then save it.</li>
+                <li>
+                  Already has responses on it from before? Use the function dropdown next to &ldquo;Run&rdquo; to
+                  pick <code>importExistingResponses</code> and click <strong>Run</strong> first -- this brings in
+                  everything already submitted, once, as a one-time backfill. Skip this step if the form has no
+                  responses yet.
+                </li>
+                <li>
+                  Click the clock icon (Triggers) → Add Trigger → choose <code>onFormSubmit</code>, event source
+                  &ldquo;From form&rdquo;, event type &ldquo;On form submit&rdquo; → Save.
+                </li>
+                <li>Submit a test response to confirm it shows up in the right role&rsquo;s pipeline.</li>
+              </ol>
+              <p className="mt-3 text-xs text-slate-light">
+                Do the backfill step before adding the trigger, not after, or a response that already flowed in
+                live will get imported a second time as a duplicate.
+              </p>
+              <div className="mt-3 flex items-start gap-2">
+                <pre className="max-h-64 flex-1 overflow-auto rounded-btn bg-paper-2 p-3 text-[11px] leading-relaxed text-ink">
+                  {googleFormAppsScript}
+                </pre>
+                <CopyLinkButton link={googleFormAppsScript} />
+              </div>
+            </details>
+            <ConfirmSubmitButton
+              action={disableGoogleFormIntakeWithId}
+              confirmMessage="Turn off Google Form intake for this group? The current link will stop working."
+              className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink"
+            >
+              Turn off
+            </ConfirmSubmitButton>
+          </div>
+        ) : (
+          <form action={enableGoogleFormIntakeWithId}>
+            <button type="submit" className={buttonClass}>Turn on Google Form intake</button>
           </form>
         )}
       </div>

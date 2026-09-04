@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -41,6 +42,45 @@ export async function updateApplicationGroupTitle(groupId: string, formData: For
   if (typeof title !== "string" || !title.trim()) throw new Error("Title is required");
 
   await db.applicationGroup.update({ where: { id: groupId }, data: { title: title.trim() } });
+
+  revalidatePath(`/ops/recruitment/groups/${groupId}`);
+}
+
+export async function enableGroupGoogleFormIntake(groupId: string) {
+  await requireRole("MASY_OPS");
+
+  await db.applicationGroup.update({
+    where: { id: groupId },
+    data: { googleFormWebhookToken: randomBytes(24).toString("hex") },
+  });
+
+  revalidatePath(`/ops/recruitment/groups/${groupId}`);
+}
+
+export async function disableGroupGoogleFormIntake(groupId: string) {
+  await requireRole("MASY_OPS");
+
+  await db.applicationGroup.update({ where: { id: groupId }, data: { googleFormWebhookToken: null } });
+
+  revalidatePath(`/ops/recruitment/groups/${groupId}`);
+}
+
+const updateGroupGoogleFormPublicUrlSchema = z.object({
+  googleFormPublicUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+});
+
+export async function updateGroupGoogleFormPublicUrl(groupId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = updateGroupGoogleFormPublicUrlSchema.safeParse({
+    googleFormPublicUrl: formData.get("googleFormPublicUrl") || undefined,
+  });
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid link");
+
+  await db.applicationGroup.update({
+    where: { id: groupId },
+    data: { googleFormPublicUrl: parsed.data.googleFormPublicUrl || null },
+  });
 
   revalidatePath(`/ops/recruitment/groups/${groupId}`);
 }
