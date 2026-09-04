@@ -25,6 +25,22 @@ export async function uniqueRoleSlug(title: string, clientOrgId: string) {
   return `${base}-${n}`;
 }
 
+export async function uniqueApplicationGroupSlug(title: string, clientOrgId: string) {
+  const base = slugify(title);
+  const existing = await db.applicationGroup.findMany({
+    where: { clientOrgId, slug: { startsWith: base } },
+    select: { slug: true },
+  });
+  if (existing.length === 0) return base;
+
+  const taken = new Set(existing.map((g) => g.slug));
+  if (!taken.has(base)) return base;
+
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+
 export async function uniqueCompanySlug(name: string) {
   const base = slugify(name);
   const existing = await db.clientOrg.findMany({

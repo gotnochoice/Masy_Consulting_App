@@ -119,6 +119,7 @@ model ClientOrg {
   employees          Employee[]
   users              User[]
   openRoles          OpenRole[]
+  applicationGroups  ApplicationGroup[]
   monthlyReportNotes MonthlyReportNote[]
   announcements      Announcement[]
   createdAt          DateTime            @default(now())
@@ -350,6 +351,8 @@ model OpenRole {
   workSampleLabel         String?
   googleFormWebhookToken  String?        @unique
   googleFormPublicUrl     String?
+  applicationGroupId      String?
+  applicationGroup        ApplicationGroup? @relation(fields: [applicationGroupId], references: [id])
   acceptingApplications   Boolean        @default(true)
   askYearsExperience      Boolean        @default(true)
   askExpectedPay          Boolean        @default(true)
@@ -418,6 +421,7 @@ model Candidate {
   convertedEmployee   Employee?         @relation(fields: [convertedEmployeeId], references: [id])
   convertedAt         DateTime?
   answers         CandidateAnswer[]
+  generalAnswers  GeneralAnswer[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 }
@@ -431,6 +435,45 @@ model CandidateAnswer {
   value          String
 
   @@unique([candidateId, roleQuestionId])
+}
+
+// A shared apply link for two or more roles at one company: applicants pick which role
+// they're applying for, then answer these shared questions plus that role's own questions.
+model ApplicationGroup {
+  id          String            @id @default(cuid())
+  clientOrgId String
+  clientOrg   ClientOrg         @relation(fields: [clientOrgId], references: [id])
+  title       String
+  slug        String
+  roles       OpenRole[]
+  questions   GeneralQuestion[]
+  createdAt   DateTime          @default(now())
+
+  @@unique([clientOrgId, slug])
+}
+
+model GeneralQuestion {
+  id                 String           @id @default(cuid())
+  applicationGroupId String
+  applicationGroup   ApplicationGroup @relation(fields: [applicationGroupId], references: [id], onDelete: Cascade)
+  label              String
+  type               QuestionType     @default(SHORT_TEXT)
+  options            String[]         @default([])
+  required           Boolean          @default(true)
+  order              Int              @default(0)
+  answers            GeneralAnswer[]
+  createdAt          DateTime         @default(now())
+}
+
+model GeneralAnswer {
+  id                String          @id @default(cuid())
+  candidateId       String
+  candidate         Candidate       @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  generalQuestionId String
+  generalQuestion   GeneralQuestion @relation(fields: [generalQuestionId], references: [id], onDelete: Cascade)
+  value             String
+
+  @@unique([candidateId, generalQuestionId])
 }
 
 model MonthlyReportNote {

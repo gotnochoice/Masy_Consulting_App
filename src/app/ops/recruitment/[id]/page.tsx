@@ -375,6 +375,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             offerEmailSentAt: true,
             convertedEmployeeId: true,
             answers: { include: { roleQuestion: true } },
+            generalAnswers: { include: { generalQuestion: true } },
           },
         },
       },

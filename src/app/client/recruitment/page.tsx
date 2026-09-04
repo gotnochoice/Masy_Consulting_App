@@ -29,6 +29,7 @@ export default async function ClientRecruitmentPage() {
           stage: true,
           source: true,
           answers: { include: { roleQuestion: true } },
+          generalAnswers: { include: { generalQuestion: true } },
         },
       },
     },

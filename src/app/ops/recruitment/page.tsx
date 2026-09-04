@@ -30,10 +30,18 @@ export default async function OpsRecruitmentPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
-        <h1 className="text-2xl font-bold tracking-tight text-ink">Recruitment</h1>
-        <p className="text-sm text-slate">Open roles and candidate pipelines across every client organization.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+          <h1 className="text-2xl font-bold tracking-tight text-ink">Recruitment</h1>
+          <p className="text-sm text-slate">Open roles and candidate pipelines across every client organization.</p>
+        </div>
+        <Link
+          href="/ops/recruitment/groups"
+          className="rounded-btn border border-border px-3 py-2 text-xs font-medium text-slate hover:text-ink"
+        >
+          Application groups
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

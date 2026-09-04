@@ -22,6 +22,7 @@ type CandidateWithAnswers = {
   source: "WEBSITE" | "MASY_SOURCED" | "GOOGLE_FORM";
   stage: CandidateStage;
   answers: { id: string; value: string; roleQuestion: { label: string } }[];
+  generalAnswers: { id: string; value: string; generalQuestion: { label: string } }[];
 };
 
 export function ClientCandidateCard({
@@ -32,7 +33,7 @@ export function ClientCandidateCard({
   updateStage: (formData: FormData) => Promise<void>;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const hasDetails = candidate.answers.length > 0 || !!candidate.howHeard;
+  const hasDetails = candidate.answers.length > 0 || candidate.generalAnswers.length > 0 || !!candidate.howHeard;
 
   return (
     <div className="rounded-card border border-border bg-paper p-4">
@@ -185,7 +186,7 @@ export function ClientCandidateCard({
             )}
           </div>
 
-          {(candidate.howHeard || candidate.answers.length > 0) && (
+          {(candidate.howHeard || candidate.answers.length > 0 || candidate.generalAnswers.length > 0) && (
             <div className="mt-6 space-y-5 border-t border-border pt-6">
               {candidate.howHeard && (
                 <div>
@@ -197,6 +198,14 @@ export function ClientCandidateCard({
                   </p>
                 </div>
               )}
+              {candidate.generalAnswers.map((a) => (
+                <div key={a.id}>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
+                    {a.generalQuestion.label}
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(a.value)}</p>
+                </div>
+              ))}
               {candidate.answers.map((a) => (
                 <div key={a.id}>
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-light">

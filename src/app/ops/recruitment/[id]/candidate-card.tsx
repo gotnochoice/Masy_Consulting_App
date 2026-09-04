@@ -44,6 +44,7 @@ type CandidateWithAnswers = {
   offerEmailSentAt: Date | null;
   convertedEmployeeId: string | null;
   answers: { id: string; value: string; roleQuestion: { label: string } }[];
+  generalAnswers: { id: string; value: string; generalQuestion: { label: string } }[];
 };
 
 export function CandidateCard({
@@ -66,7 +67,8 @@ export function CandidateCard({
   convertToEmployee: (prevState: ConvertToEmployeeState, formData: FormData) => Promise<ConvertToEmployeeState>;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const hasDetails = candidate.answers.length > 0 || !!candidate.notes || !!candidate.howHeard;
+  const hasDetails =
+    candidate.answers.length > 0 || candidate.generalAnswers.length > 0 || !!candidate.notes || !!candidate.howHeard;
   const googleFormAnswers =
     candidate.source === "GOOGLE_FORM" && candidate.notes ? parseGoogleFormNotes(candidate.notes) : null;
 
@@ -267,7 +269,7 @@ export function CandidateCard({
             )}
           </div>
 
-          {(candidate.howHeard || candidate.answers.length > 0 || candidate.notes) && (
+          {(candidate.howHeard || candidate.answers.length > 0 || candidate.generalAnswers.length > 0 || candidate.notes) && (
             <div className="mt-6 space-y-5 border-t border-border pt-6">
               {candidate.howHeard && (
                 <div>
@@ -279,6 +281,14 @@ export function CandidateCard({
                   </p>
                 </div>
               )}
+              {candidate.generalAnswers.map((a) => (
+                <div key={a.id}>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
+                    {a.generalQuestion.label}
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(a.value)}</p>
+                </div>
+              ))}
               {candidate.answers.map((a) => (
                 <div key={a.id}>
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
