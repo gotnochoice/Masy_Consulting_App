@@ -10,11 +10,12 @@ import { linkify } from "@/lib/linkify";
 import { resolveImageUrl } from "@/lib/drive-image";
 import type { ConvertToEmployeeState } from "../actions";
 
-const GOOGLE_FORM_NOTES_PREFIX = "Submitted via Google Form:\n\n";
+const GOOGLE_FORM_NOTES_PREFIX = /^Submitted via Google Form(?: \(".*"\))?:\n\n/;
 
 function parseGoogleFormNotes(notes: string): { question: string; value: string }[] | null {
-  if (!notes.startsWith(GOOGLE_FORM_NOTES_PREFIX)) return null;
-  const lines = notes.slice(GOOGLE_FORM_NOTES_PREFIX.length).split("\n").filter((line) => line.trim().length > 0);
+  const match = notes.match(GOOGLE_FORM_NOTES_PREFIX);
+  if (!match) return null;
+  const lines = notes.slice(match[0].length).split("\n").filter((line) => line.trim().length > 0);
   if (lines.length === 0) return null;
   return lines.map((line) => {
     const separatorIndex = line.indexOf(": ");
