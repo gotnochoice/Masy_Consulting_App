@@ -1,11 +1,17 @@
 "use server";
 
 import { z } from "zod";
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uniqueRoleSlug } from "@/lib/slug";
+import { generateShortCode } from "@/lib/short-code";
 import { suggestRoleQuestions, type SuggestedQuestion } from "@/lib/ai";
+import { sendNotification } from "@/lib/email";
+import { rejectionEmail, interviewInviteEmail, offerEmail } from "@/lib/candidate-email-templates";
+import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
 const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
@@ -14,6 +20,7 @@ const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "C
 const createRoleSchema = z.object({
   clientOrgId: z.string().min(1, "Company is required"),
   title: z.string().min(1, "Role title is required"),
+  mode: z.enum(["FORMAL", "INFORMAL"]).default("FORMAL"),
 });
 
 export async function createRole(formData: FormData) {
@@ -22,6 +29,7 @@ export async function createRole(formData: FormData) {
   const parsed = createRoleSchema.safeParse({
     clientOrgId: formData.get("clientOrgId"),
     title: formData.get("title"),
+    mode: formData.get("mode") || undefined,
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid role data");
@@ -63,6 +71,105 @@ export async function deleteRole(roleId: string) {
   revalidatePath("/ops/recruitment");
 }
 
+const ROLE_LIST_ORDER = [
+  { displayOrder: "asc" as const },
+  { clientOrg: { name: "asc" as const } },
+  { createdAt: "desc" as const },
+];
+
+export async function moveRole(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const direction = formData.get("direction");
+  if (direction !== "up" && direction !== "down") throw new Error("Invalid direction");
+
+  const roles = await db.openRole.findMany({ orderBy: ROLE_LIST_ORDER, select: { id: true } });
+  const index = roles.findIndex((r) => r.id === roleId);
+  const swapIndex = direction === "up" ? index - 1 : index + 1;
+  if (index === -1 || swapIndex < 0 || swapIndex >= roles.length) return;
+
+  // Swap the two positions, then rewrite everyone's displayOrder to their index in
+  // the resulting list. This assigns real, distinct values the first time it's used
+  // (when every role still shares the default 0) and just as correctly re-sequences
+  // an already-ordered list on every move after that.
+  const order = roles.map((r) => r.id);
+  [order[index], order[swapIndex]] = [order[swapIndex], order[index]];
+
+  await db.$transaction(order.map((id, i) => db.openRole.update({ where: { id }, data: { displayOrder: i } })));
+
+  revalidatePath("/ops/recruitment");
+  revalidatePath("/careers");
+}
+
+export async function cloneRole(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  const source = await db.openRole.findUnique({
+    where: { id: roleId },
+    include: {
+      questionSections: { orderBy: { order: "asc" } },
+      questions: { orderBy: { order: "asc" } },
+    },
+  });
+  if (!source) throw new Error("Role not found");
+
+  const newTitle = `${source.title} (Copy)`;
+  const newSlug = await uniqueRoleSlug(newTitle, source.clientOrgId);
+  const newRoleId = await db.$transaction(async (tx) => {
+    const newRole = await tx.openRole.create({
+      data: {
+        clientOrgId: source.clientOrgId,
+        title: newTitle,
+        slug: newSlug,
+        description: source.description,
+        location: source.location,
+        acceptingApplications: true,
+        askYearsExperience: source.askYearsExperience,
+        askExpectedPay: source.askExpectedPay,
+        askHowHeard: source.askHowHeard,
+        askResumeLink: source.askResumeLink,
+        askApplicantLocation: source.askApplicantLocation,
+      },
+    });
+
+    const sectionIdMap = new Map<string, string>();
+    for (const section of source.questionSections) {
+      const newSection = await tx.questionSection.create({
+        data: { openRoleId: newRole.id, title: section.title, order: section.order },
+      });
+      sectionIdMap.set(section.id, newSection.id);
+    }
+
+    for (const question of source.questions) {
+      await tx.roleQuestion.create({
+        data: {
+          openRoleId: newRole.id,
+          sectionId: question.sectionId ? (sectionIdMap.get(question.sectionId) ?? null) : null,
+          label: question.label,
+          type: question.type,
+          options: question.options,
+          required: question.required,
+          order: question.order,
+        },
+      });
+    }
+
+    return newRole.id;
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.clone",
+      targetType: "OpenRole",
+      targetId: newRoleId,
+    },
+  });
+
+  revalidatePath("/ops/recruitment");
+  redirect(`/ops/recruitment/${newRoleId}`);
+}
+
 export async function updateRoleStage(roleId: string, formData: FormData) {
   await requireRole("MASY_OPS");
 
@@ -99,6 +206,254 @@ export async function updateRoleDescription(roleId: string, formData: FormData) 
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
+const updateLocationSchema = z.object({
+  location: z.string().optional(),
+});
+
+export async function updateRoleLocation(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = updateLocationSchema.safeParse({ location: formData.get("location") || undefined });
+  if (!parsed.success) throw new Error("Invalid location");
+
+  await db.openRole.update({ where: { id: roleId }, data: { location: parsed.data.location } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/recruitment");
+}
+
+export async function updateRoleMode(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const mode = z.enum(["FORMAL", "INFORMAL"]).safeParse(formData.get("mode"));
+  if (!mode.success) throw new Error("Invalid recruitment type");
+
+  await db.openRole.update({ where: { id: roleId }, data: { mode: mode.data } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function updateRoleWorkSampleLabel(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const workSampleLabel = (formData.get("workSampleLabel") as string | null)?.trim() || null;
+
+  await db.openRole.update({ where: { id: roleId }, data: { workSampleLabel } });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+const updateSchedulingLinkSchema = z.object({
+  schedulingLink: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+});
+
+export async function updateRoleSchedulingLink(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = updateSchedulingLinkSchema.safeParse({ schedulingLink: formData.get("schedulingLink") || undefined });
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid link");
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { schedulingLink: parsed.data.schedulingLink || null },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function updateRoleCustomInterviewMessage(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const customInterviewMessage = (formData.get("customInterviewMessage") as string | null)?.trim() || null;
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { customInterviewMessage },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function updateRoleCustomOfferMessage(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const customOfferMessage = (formData.get("customOfferMessage") as string | null)?.trim() || null;
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { customOfferMessage },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+const updateTitleSchema = z.object({
+  title: z.string().min(1, "Role title is required"),
+});
+
+export async function updateRoleTitle(roleId: string, formData: FormData) {
+  const session = await requireRole("MASY_OPS");
+
+  const parsed = updateTitleSchema.safeParse({ title: formData.get("title") });
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid role title");
+
+  await db.openRole.update({ where: { id: roleId }, data: { title: parsed.data.title } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.update_title",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/recruitment");
+}
+
+export async function getShortLink(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  const role = await db.openRole.findUnique({ where: { id: roleId }, select: { shortCode: true } });
+  if (!role) throw new Error("Role not found");
+
+  if (!role.shortCode) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateShortCode();
+      try {
+        await db.openRole.update({ where: { id: roleId }, data: { shortCode: code } });
+        break;
+      } catch (err) {
+        if (attempt === 4) throw err;
+      }
+    }
+
+    await db.auditLog.create({
+      data: {
+        actorId: session.user.id,
+        action: "role.generate_short_link",
+        targetType: "OpenRole",
+        targetId: roleId,
+      },
+    });
+  }
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function enableGoogleFormIntake(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.openRole.update({ where: { id: roleId }, data: { googleFormWebhookToken: randomBytes(24).toString("hex") } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.enable_google_form_intake",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+const updateGoogleFormPublicUrlSchema = z.object({
+  googleFormPublicUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+});
+
+export async function updateRoleGoogleFormPublicUrl(roleId: string, formData: FormData) {
+  await requireRole("MASY_OPS");
+
+  const parsed = updateGoogleFormPublicUrlSchema.safeParse({
+    googleFormPublicUrl: formData.get("googleFormPublicUrl") || undefined,
+  });
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid link");
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { googleFormPublicUrl: parsed.data.googleFormPublicUrl || null },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function disableGoogleFormIntake(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.openRole.update({ where: { id: roleId }, data: { googleFormWebhookToken: null } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.disable_google_form_intake",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export async function regenerateRoleSlug(roleId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  const role = await db.openRole.findUnique({ where: { id: roleId }, select: { title: true, clientOrgId: true } });
+  if (!role) throw new Error("Role not found");
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: { slug: await uniqueRoleSlug(role.title, role.clientOrgId) },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.regenerate_slug",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/recruitment");
+}
+
+const updateCompanySchema = z.object({
+  clientOrgId: z.string().min(1, "Company is required"),
+});
+
+export async function updateRoleCompany(roleId: string, formData: FormData) {
+  const session = await requireRole("MASY_OPS");
+
+  const parsed = updateCompanySchema.safeParse({ clientOrgId: formData.get("clientOrgId") });
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid company");
+
+  const role = await db.openRole.findUnique({ where: { id: roleId }, select: { title: true } });
+  if (!role) throw new Error("Role not found");
+
+  await db.openRole.update({
+    where: { id: roleId },
+    data: {
+      clientOrgId: parsed.data.clientOrgId,
+      slug: await uniqueRoleSlug(role.title, parsed.data.clientOrgId),
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "role.update_company",
+      targetType: "OpenRole",
+      targetId: roleId,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/recruitment");
+}
+
 export async function updateRoleDefaultFields(roleId: string, formData: FormData) {
   await requireRole("MASY_OPS");
 
@@ -109,6 +464,7 @@ export async function updateRoleDefaultFields(roleId: string, formData: FormData
       askExpectedPay: formData.get("askExpectedPay") === "on",
       askHowHeard: formData.get("askHowHeard") === "on",
       askResumeLink: formData.get("askResumeLink") === "on",
+      askApplicantLocation: formData.get("askApplicantLocation") === "on",
     },
   });
 
@@ -387,6 +743,7 @@ const addCandidateSchema = z.object({
   email: z.string().email("Enter a valid email").optional().or(z.literal("")),
   phone: z.string().optional(),
   yearsExperience: z.string().optional(),
+  location: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -398,6 +755,7 @@ export async function addCandidate(roleId: string, formData: FormData) {
     email: formData.get("email") || "",
     phone: formData.get("phone") || undefined,
     yearsExperience: formData.get("yearsExperience") || undefined,
+    location: formData.get("location") || undefined,
     notes: formData.get("notes") || undefined,
   });
   if (!parsed.success) {
@@ -411,6 +769,7 @@ export async function addCandidate(roleId: string, formData: FormData) {
       email: parsed.data.email || undefined,
       phone: parsed.data.phone,
       yearsExperience: parsed.data.yearsExperience,
+      location: parsed.data.location,
       notes: parsed.data.notes,
       source: "MASY_SOURCED",
       stage: "APPLIED",
@@ -438,6 +797,8 @@ export async function updateCandidateStage(candidateId: string, roleId: string, 
   await db.candidate.update({ where: { id: candidateId }, data: { stage: stage.data } });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/applicants");
+  revalidatePath(`/ops/applicants/${candidateId}`);
 }
 
 export async function deleteCandidate(candidateId: string, roleId: string) {
@@ -446,6 +807,7 @@ export async function deleteCandidate(candidateId: string, roleId: string) {
   await db.candidate.delete({ where: { id: candidateId } });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/applicants");
 }
 
 export async function clearAllCandidates(roleId: string) {
@@ -454,4 +816,153 @@ export async function clearAllCandidates(roleId: string) {
   await db.candidate.deleteMany({ where: { openRoleId: roleId } });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export type ConvertToEmployeeState = { employeeId: string } | { error: string } | undefined;
+
+const convertToEmployeeSchema = z.object({
+  startDate: z.string().min(1, "Start date is required"),
+  roleTitle: z.string().min(1, "Role title is required"),
+  email: z.string().email("Valid email required"),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+});
+
+export async function convertCandidateToEmployee(
+  candidateId: string,
+  roleId: string,
+  _prevState: ConvertToEmployeeState,
+  formData: FormData,
+): Promise<ConvertToEmployeeState> {
+  const session = await requireRole("MASY_OPS");
+
+  const candidate = await db.candidate.findUnique({
+    where: { id: candidateId },
+    include: { openRole: true },
+  });
+  if (!candidate) return { error: "Candidate not found" };
+  if (candidate.stage !== "HIRED") return { error: "Only hired candidates can be converted to an employee" };
+  if (candidate.convertedEmployeeId) return { error: "Already converted to an employee" };
+
+  const parsed = convertToEmployeeSchema.safeParse({
+    startDate: formData.get("startDate"),
+    roleTitle: formData.get("roleTitle"),
+    email: formData.get("email"),
+    phone: formData.get("phone") || undefined,
+    address: formData.get("address") || undefined,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
+  }
+
+  const existingUser = await db.user.findUnique({ where: { email: parsed.data.email } });
+  if (existingUser) return { error: "That email already has a login on the platform. Use a different email." };
+
+  const employee = await db.$transaction(async (tx) => {
+    const created = await tx.employee.create({
+      data: {
+        clientOrgId: candidate.openRole.clientOrgId,
+        name: candidate.name,
+        roleTitle: parsed.data.roleTitle,
+        email: parsed.data.email,
+        phone: parsed.data.phone ?? null,
+        address: parsed.data.address ?? null,
+        startDate: new Date(parsed.data.startDate),
+      },
+    });
+
+    await tx.onboardingTask.createMany({
+      data: DEFAULT_ONBOARDING_TASKS.map((label) => ({ employeeId: created.id, label })),
+    });
+
+    await tx.candidate.update({
+      where: { id: candidateId },
+      data: { convertedEmployeeId: created.id, convertedAt: new Date() },
+    });
+
+    return created;
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "candidate.convert_to_employee",
+      targetType: "Employee",
+      targetId: employee.id,
+    },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/employees");
+
+  return { employeeId: employee.id };
+}
+
+async function loadCandidateForEmail(candidateId: string) {
+  const candidate = await db.candidate.findUnique({
+    where: { id: candidateId },
+    include: { openRole: { include: { clientOrg: true } } },
+  });
+  if (!candidate) throw new Error("Candidate not found");
+  if (!candidate.email) throw new Error(`${candidate.name} has no email address on file`);
+  return candidate;
+}
+
+export async function sendCandidateRejectionEmail(candidateId: string, roleId: string) {
+  const session = await requireRole("MASY_OPS");
+  const candidate = await loadCandidateForEmail(candidateId);
+
+  const { subject, body } = rejectionEmail(candidate.name, candidate.openRole.title, candidate.openRole.clientOrg.name);
+  await sendNotification(candidate.email!, subject, body);
+
+  await db.candidate.update({ where: { id: candidateId }, data: { rejectionEmailSentAt: new Date() } });
+  await db.auditLog.create({
+    data: { actorId: session.user.id, action: "candidate.send_rejection_email", targetType: "Candidate", targetId: candidateId },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath(`/ops/applicants/${candidateId}`);
+}
+
+export async function sendCandidateInterviewInviteEmail(candidateId: string, roleId: string) {
+  const session = await requireRole("MASY_OPS");
+  const candidate = await loadCandidateForEmail(candidateId);
+
+  const { subject, body } = interviewInviteEmail(
+    candidate.name,
+    candidate.openRole.title,
+    candidate.openRole.clientOrg.name,
+    candidate.openRole.schedulingLink,
+    candidate.openRole.customInterviewMessage,
+  );
+  await sendNotification(candidate.email!, subject, body);
+
+  await db.candidate.update({ where: { id: candidateId }, data: { interviewInviteSentAt: new Date() } });
+  await db.auditLog.create({
+    data: { actorId: session.user.id, action: "candidate.send_interview_invite", targetType: "Candidate", targetId: candidateId },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath(`/ops/applicants/${candidateId}`);
+}
+
+export async function sendCandidateOfferEmail(candidateId: string, roleId: string) {
+  const session = await requireRole("MASY_OPS");
+  const candidate = await loadCandidateForEmail(candidateId);
+
+  const { subject, body } = offerEmail(
+    candidate.name,
+    candidate.openRole.title,
+    candidate.openRole.clientOrg.name,
+    candidate.openRole.customOfferMessage,
+  );
+  await sendNotification(candidate.email!, subject, body);
+
+  await db.candidate.update({ where: { id: candidateId }, data: { offerEmailSentAt: new Date() } });
+  await db.auditLog.create({
+    data: { actorId: session.user.id, action: "candidate.send_offer_email", targetType: "Candidate", targetId: candidateId },
+  });
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath(`/ops/applicants/${candidateId}`);
 }

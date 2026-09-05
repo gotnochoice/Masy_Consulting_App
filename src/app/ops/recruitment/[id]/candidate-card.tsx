@@ -1,9 +1,29 @@
 "use client";
 
+import { useActionState, useRef } from "react";
+import Link from "next/link";
 import { CandidateSourceBadge, CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
 import type { CandidateStage } from "@/generated/prisma/client";
 import { inputClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { linkify } from "@/lib/linkify";
+import { resolveImageUrl } from "@/lib/drive-image";
+import type { ConvertToEmployeeState } from "../actions";
+
+const GOOGLE_FORM_NOTES_PREFIX = /^Submitted via Google Form(?: \(".*"\))?:\n\n/;
+
+function parseGoogleFormNotes(notes: string): { question: string; value: string }[] | null {
+  const match = notes.match(GOOGLE_FORM_NOTES_PREFIX);
+  if (!match) return null;
+  const lines = notes.slice(match[0].length).split("\n").filter((line) => line.trim().length > 0);
+  if (lines.length === 0) return null;
+  return lines.map((line) => {
+    const separatorIndex = line.indexOf(": ");
+    return separatorIndex === -1
+      ? { question: line, value: "" }
+      : { question: line.slice(0, separatorIndex), value: line.slice(separatorIndex + 2) };
+  });
+}
 
 type CandidateWithAnswers = {
   id: string;
@@ -11,37 +31,93 @@ type CandidateWithAnswers = {
   email: string | null;
   phone: string | null;
   yearsExperience: string | null;
-  resumeLink: string | null;
+  location: string | null;
+  cvUrl: string | null;
+  workSampleUrl: string | null;
   expectedPay: string | null;
   howHeard: string | null;
+  followedSocials: string[];
   notes: string | null;
-  source: "WEBSITE" | "MASY_SOURCED";
+  source: "WEBSITE" | "MASY_SOURCED" | "GOOGLE_FORM";
   stage: CandidateStage;
+  rejectionEmailSentAt: Date | null;
+  interviewInviteSentAt: Date | null;
+  offerEmailSentAt: Date | null;
+  convertedEmployeeId: string | null;
   answers: { id: string; value: string; roleQuestion: { label: string } }[];
+  generalAnswers: { id: string; value: string; generalQuestion: { label: string } }[];
 };
 
 export function CandidateCard({
   candidate,
+  roleTitle,
   updateStage,
   deleteCandidate,
+  sendRejectionEmail,
+  sendInterviewInviteEmail,
+  sendOfferEmail,
+  convertToEmployee,
 }: {
   candidate: CandidateWithAnswers;
+  roleTitle: string;
   updateStage: (formData: FormData) => Promise<void>;
   deleteCandidate: (formData: FormData) => Promise<void>;
+  sendRejectionEmail: (formData: FormData) => Promise<void>;
+  sendInterviewInviteEmail: (formData: FormData) => Promise<void>;
+  sendOfferEmail: (formData: FormData) => Promise<void>;
+  convertToEmployee: (prevState: ConvertToEmployeeState, formData: FormData) => Promise<ConvertToEmployeeState>;
 }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const hasDetails =
+    candidate.answers.length > 0 || candidate.generalAnswers.length > 0 || !!candidate.notes || !!candidate.howHeard;
+  const googleFormAnswers =
+    candidate.source === "GOOGLE_FORM" && candidate.notes ? parseGoogleFormNotes(candidate.notes) : null;
+
   return (
     <div id={`candidate-${candidate.id}`} className="rounded-card border border-border bg-paper p-4 scroll-mt-4">
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-ink">{candidate.name}</p>
-        <CandidateSourceBadge source={candidate.source} />
+      <div className="mb-3">
+        <button
+          type="button"
+          onClick={() => dialogRef.current?.showModal()}
+          className="text-left text-sm font-medium leading-snug text-ink hover:text-indigo"
+        >
+          {candidate.name}
+        </button>
+        <div className="mt-1.5">
+          <CandidateSourceBadge source={candidate.source} />
+        </div>
       </div>
-      {candidate.email && <p className="truncate text-xs text-slate">{candidate.email}</p>}
-      {candidate.phone && <p className="text-xs text-slate">{candidate.phone}</p>}
-      {candidate.yearsExperience && <p className="text-xs text-slate">{candidate.yearsExperience} experience</p>}
-      {candidate.expectedPay && <p className="text-xs text-slate">Expects {candidate.expectedPay}</p>}
-      {candidate.resumeLink && (
+      <div className="space-y-1">
+        {candidate.email && <p className="truncate text-xs text-slate">{candidate.email}</p>}
+        {candidate.phone && <p className="text-xs text-slate">{candidate.phone}</p>}
+        {candidate.yearsExperience && <p className="text-xs text-slate">{candidate.yearsExperience} experience</p>}
+        {candidate.location && <p className="text-xs text-slate">📍 {candidate.location}</p>}
+        {candidate.expectedPay && <p className="text-xs text-slate">Expects {candidate.expectedPay}</p>}
+        {candidate.followedSocials.length > 0 && (
+          <p className="text-xs text-slate-light">Says they follow: {candidate.followedSocials.join(", ")}</p>
+        )}
+      </div>
+      {candidate.workSampleUrl && (
         <a
-          href={candidate.resumeLink}
+          href={resolveImageUrl(candidate.workSampleUrl)}
+          target="_blank"
+          rel="noreferrer"
+          className="group mt-2 block"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- external Blob/Drive URL thumbnail, not worth next/image config */}
+          <img
+            src={resolveImageUrl(candidate.workSampleUrl)}
+            alt={`${candidate.name}'s work sample`}
+            className="h-28 w-full rounded-btn border border-border object-cover transition-opacity group-hover:opacity-90"
+          />
+          <span className="mt-1 block text-xs font-medium text-indigo group-hover:text-indigo-light">
+            View full size ↗
+          </span>
+        </a>
+      )}
+      {candidate.cvUrl && (
+        <a
+          href={candidate.cvUrl}
           target="_blank"
           rel="noreferrer"
           className="mt-1 inline-block text-xs font-medium text-indigo hover:text-indigo-light"
@@ -50,32 +126,14 @@ export function CandidateCard({
         </a>
       )}
 
-      {(candidate.answers.length > 0 || candidate.notes || candidate.howHeard) && (
-        <details className="mt-2">
-          <summary className="cursor-pointer text-xs font-medium text-slate hover:text-ink">
-            View details
-          </summary>
-          <div className="mt-2 space-y-2">
-            {candidate.howHeard && (
-              <div>
-                <p className="text-xs font-medium text-slate-light">How they heard about it</p>
-                <p className="text-xs text-ink">{candidate.howHeard}</p>
-              </div>
-            )}
-            {candidate.answers.map((a) => (
-              <div key={a.id}>
-                <p className="text-xs font-medium text-slate-light">{a.roleQuestion.label}</p>
-                <p className="text-xs text-ink">{a.value}</p>
-              </div>
-            ))}
-            {candidate.notes && (
-              <div>
-                <p className="text-xs font-medium text-slate-light">Notes</p>
-                <p className="text-xs text-ink">{candidate.notes}</p>
-              </div>
-            )}
-          </div>
-        </details>
+      {hasDetails && (
+        <button
+          type="button"
+          onClick={() => dialogRef.current?.showModal()}
+          className="mt-2 block text-xs font-medium text-indigo hover:text-indigo-light"
+        >
+          View full application →
+        </button>
       )}
 
       <form action={updateStage} className="mt-3">
@@ -91,6 +149,37 @@ export function CandidateCard({
         </select>
       </form>
 
+      {candidate.stage === "REJECTED" && (
+        <EmailAction
+          action={sendRejectionEmail}
+          sentAt={candidate.rejectionEmailSentAt}
+          hasEmail={!!candidate.email}
+          confirmMessage={`Send a rejection email to ${candidate.name}${candidate.email ? ` at ${candidate.email}` : ""}?`}
+          label="rejection email"
+        />
+      )}
+      {candidate.stage === "INTERVIEWING" && (
+        <EmailAction
+          action={sendInterviewInviteEmail}
+          sentAt={candidate.interviewInviteSentAt}
+          hasEmail={!!candidate.email}
+          confirmMessage={`Send an interview invite to ${candidate.name}${candidate.email ? ` at ${candidate.email}` : ""}?`}
+          label="interview invite"
+        />
+      )}
+      {candidate.stage === "OFFER" && (
+        <EmailAction
+          action={sendOfferEmail}
+          sentAt={candidate.offerEmailSentAt}
+          hasEmail={!!candidate.email}
+          confirmMessage={`Send an offer email to ${candidate.name}${candidate.email ? ` at ${candidate.email}` : ""}?`}
+          label="offer email"
+        />
+      )}
+      {candidate.stage === "HIRED" && (
+        <ConvertToEmployeeAction candidate={candidate} roleTitle={roleTitle} action={convertToEmployee} />
+      )}
+
       <ConfirmSubmitButton
         action={deleteCandidate}
         confirmMessage={`Delete ${candidate.name}? This can't be undone.`}
@@ -98,6 +187,237 @@ export function CandidateCard({
       >
         Delete
       </ConfirmSubmitButton>
+
+      <dialog
+        ref={dialogRef}
+        onClick={(e) => {
+          if (e.target === dialogRef.current) dialogRef.current?.close();
+        }}
+        className="w-full max-w-2xl rounded-card border border-border bg-paper p-0 backdrop:bg-ink/40 open:flex open:flex-col"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-border p-6">
+          <div>
+            <h2 className="text-lg font-bold text-ink">{candidate.name}</h2>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <CandidateSourceBadge source={candidate.source} />
+              {candidate.email && <span className="text-sm text-slate">{candidate.email}</span>}
+              {candidate.phone && <span className="text-sm text-slate">{candidate.phone}</span>}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => dialogRef.current?.close()}
+            className="rounded-btn border border-border px-3 py-1.5 text-sm font-medium text-slate hover:text-ink"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="max-h-[70vh] overflow-y-auto p-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {candidate.yearsExperience && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Experience</p>
+                <p className="mt-0.5 text-sm text-ink">{candidate.yearsExperience}</p>
+              </div>
+            )}
+            {candidate.location && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Location</p>
+                <p className="mt-0.5 text-sm text-ink">{candidate.location}</p>
+              </div>
+            )}
+            {candidate.expectedPay && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Expected pay</p>
+                <p className="mt-0.5 text-sm text-ink">{candidate.expectedPay}</p>
+              </div>
+            )}
+            {candidate.cvUrl && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">CV / resume</p>
+                <a
+                  href={candidate.cvUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-0.5 block text-sm font-medium text-indigo hover:text-indigo-light"
+                >
+                  View
+                </a>
+              </div>
+            )}
+            {candidate.workSampleUrl && (
+              <div className="col-span-2 sm:col-span-3">
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-light">Work sample</p>
+                <a href={resolveImageUrl(candidate.workSampleUrl)} target="_blank" rel="noreferrer" className="group inline-block">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- external Blob/Drive URL, not worth next/image config */}
+                  <img
+                    src={resolveImageUrl(candidate.workSampleUrl)}
+                    alt={`${candidate.name}'s work sample`}
+                    className="max-h-72 rounded-card border border-border object-contain transition-opacity group-hover:opacity-90"
+                  />
+                  <span className="mt-1 block text-xs font-medium text-indigo group-hover:text-indigo-light">
+                    View full size ↗
+                  </span>
+                </a>
+              </div>
+            )}
+            {candidate.followedSocials.length > 0 && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Says they follow</p>
+                <p className="mt-0.5 text-sm text-ink">{candidate.followedSocials.join(", ")}</p>
+              </div>
+            )}
+          </div>
+
+          {(candidate.howHeard || candidate.answers.length > 0 || candidate.generalAnswers.length > 0 || candidate.notes) && (
+            <div className="mt-6 space-y-5 border-t border-border pt-6">
+              {candidate.howHeard && (
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
+                    How they heard about it
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">
+                    {linkify(candidate.howHeard)}
+                  </p>
+                </div>
+              )}
+              {candidate.generalAnswers.map((a) => (
+                <div key={a.id}>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
+                    {a.generalQuestion.label}
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(a.value)}</p>
+                </div>
+              ))}
+              {candidate.answers.map((a) => (
+                <div key={a.id}>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
+                    {a.roleQuestion.label}
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(a.value)}</p>
+                </div>
+              ))}
+              {googleFormAnswers
+                ? googleFormAnswers.map((qa, i) => (
+                    <div key={i}>
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-light">{qa.question}</p>
+                      <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(qa.value)}</p>
+                    </div>
+                  ))
+                : candidate.notes && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Notes</p>
+                      <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">
+                        {linkify(candidate.notes)}
+                      </p>
+                    </div>
+                  )}
+            </div>
+          )}
+        </div>
+      </dialog>
     </div>
+  );
+}
+
+function EmailAction({
+  action,
+  sentAt,
+  hasEmail,
+  confirmMessage,
+  label,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  sentAt: Date | null;
+  hasEmail: boolean;
+  confirmMessage: string;
+  label: string;
+}) {
+  if (!hasEmail) {
+    return <p className="mt-2 text-xs text-slate-light">No email on file, can&rsquo;t send {label}.</p>;
+  }
+
+  return (
+    <div className="mt-2">
+      <ConfirmSubmitButton
+        action={action}
+        confirmMessage={confirmMessage}
+        className="text-xs font-medium text-indigo hover:text-indigo-light"
+      >
+        {sentAt ? `Resend ${label}` : `Send ${label}`}
+      </ConfirmSubmitButton>
+      {sentAt && (
+        <p className="mt-0.5 text-[11px] text-slate-light">
+          Sent {sentAt.toLocaleDateString([], { month: "short", day: "numeric" })}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ConvertToEmployeeAction({
+  candidate,
+  roleTitle,
+  action,
+}: {
+  candidate: CandidateWithAnswers;
+  roleTitle: string;
+  action: (prevState: ConvertToEmployeeState, formData: FormData) => Promise<ConvertToEmployeeState>;
+}) {
+  const [state, formAction, isPending] = useActionState<ConvertToEmployeeState, FormData>(action, undefined);
+
+  const employeeId = candidate.convertedEmployeeId ?? (state && "employeeId" in state ? state.employeeId : null);
+  if (employeeId) {
+    return (
+      <div className="mt-2">
+        <Link
+          href={`/ops/employees/${employeeId}/edit`}
+          className="text-xs font-medium text-indigo hover:text-indigo-light"
+        >
+          {candidate.convertedEmployeeId ? "View employee record" : "✓ Employee record created"} →
+        </Link>
+      </div>
+    );
+  }
+
+  if (!candidate.email) {
+    return (
+      <p className="mt-2 text-xs text-slate-light">Add an email to this candidate to create an employee record.</p>
+    );
+  }
+
+  const todayValue = new Date().toISOString().slice(0, 10);
+
+  return (
+    <form action={formAction} className="mt-2 space-y-1.5">
+      <input type="hidden" name="roleTitle" value={roleTitle} />
+      <input type="hidden" name="phone" value={candidate.phone ?? ""} />
+      <input type="hidden" name="address" value={candidate.location ?? ""} />
+      <div className="grid grid-cols-2 gap-1.5">
+        <input
+          type="date"
+          name="startDate"
+          defaultValue={todayValue}
+          required
+          className={`${inputClass} px-2 py-1 text-xs`}
+        />
+        <input
+          type="email"
+          name="email"
+          defaultValue={candidate.email}
+          required
+          className={`${inputClass} px-2 py-1 text-xs`}
+        />
+      </div>
+      {state && "error" in state && <p className="text-xs text-orange">{state.error}</p>}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="text-xs font-medium text-indigo hover:text-indigo-light disabled:opacity-50"
+      >
+        {isPending ? "Creating…" : "Create employee record"}
+      </button>
+    </form>
   );
 }

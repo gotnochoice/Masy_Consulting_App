@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { CANDIDATE_SOURCE_LABELS } from "@/components/stage-badge";
 
 function csvEscape(value: string) {
   if (/[",\n]/.test(value)) {
@@ -17,7 +18,26 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     where: { id },
     include: {
       questions: { orderBy: { order: "asc" } },
-      candidates: { orderBy: { createdAt: "desc" }, include: { answers: true } },
+      candidates: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          yearsExperience: true,
+          location: true,
+          resumeLink: true,
+          resumeFileUrl: true,
+          workSampleUrl: true,
+          expectedPay: true,
+          howHeard: true,
+          source: true,
+          stage: true,
+          createdAt: true,
+          answers: true,
+        },
+      },
     },
   });
 
@@ -30,6 +50,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     "Email",
     "Phone",
     "Years of experience",
+    "Location",
     "Resume link",
     "Expected pay",
     "How they heard about it",
@@ -41,15 +62,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const rows = role.candidates.map((c) => {
     const answerByQuestionId = new Map(c.answers.map((a) => [a.roleQuestionId, a.value]));
+    const resumeUrl = c.resumeFileUrl ?? c.resumeLink ?? c.workSampleUrl ?? "";
     return [
       c.name,
       c.email ?? "",
       c.phone ?? "",
       c.yearsExperience ?? "",
-      c.resumeLink ?? "",
+      c.location ?? "",
+      resumeUrl,
       c.expectedPay ?? "",
       c.howHeard ?? "",
-      c.source === "WEBSITE" ? "Applied online" : "Added by Masy",
+      CANDIDATE_SOURCE_LABELS[c.source],
       c.stage,
       c.createdAt.toISOString(),
       ...role.questions.map((q) => answerByQuestionId.get(q.id) ?? ""),

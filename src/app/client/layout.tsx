@@ -3,26 +3,32 @@ import { db } from "@/lib/db";
 import { getUnreadAnnouncements } from "@/lib/announcements";
 import { getUnresolvedConcernsForClient } from "@/lib/concerns";
 import { getUnresolvedReviewsForClient } from "@/lib/reviews";
+import { getNewApplicantsCount } from "@/lib/recruitment";
+import { getUnreadDocumentsForClient } from "@/lib/employee-documents-server";
 import { DashboardHeader } from "@/components/dashboard-header";
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const session = await requireRole("CLIENT");
 
-  const [org, pendingLeaveCount, unread, unresolvedConcerns, unresolvedReviews] = await Promise.all([
-    session.user.clientOrgId
-      ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } })
-      : null,
-    db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
-    getUnreadAnnouncements(session.user.id, session.user.clientOrgId),
-    getUnresolvedConcernsForClient(session),
-    getUnresolvedReviewsForClient(session),
-  ]);
+  const [org, pendingLeaveCount, unread, unresolvedConcerns, unresolvedReviews, newApplicantsCount, unreadDocuments] =
+    await Promise.all([
+      session.user.clientOrgId
+        ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true, logoUrl: true } })
+        : null,
+      db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
+      getUnreadAnnouncements(session.user.id, session.user.clientOrgId),
+      getUnresolvedConcernsForClient(session),
+      getUnresolvedReviewsForClient(session),
+      getNewApplicantsCount(session.user.clientOrgId ?? "__none__"),
+      getUnreadDocumentsForClient(session),
+    ]);
 
   return (
     <div className="min-h-screen bg-paper-2">
       <DashboardHeader
         roleLabel="Client"
         personName={org?.name ?? "Client"}
+        logoUrl={org?.logoUrl}
         unreadAnnouncements={unread.map((a) => ({
           id: a.id,
           title: a.title,
@@ -41,13 +47,23 @@ export default async function ClientLayout({ children }: { children: React.React
           cycle: r.cycle,
         }))}
         pendingLeave={{ count: pendingLeaveCount, href: "/client/leave" }}
+        newApplicants={{ count: newApplicantsCount, href: "/client/recruitment" }}
+        unreadDocuments={unreadDocuments.map((d) => ({
+          id: d.id,
+          label: d.label,
+          employeeName: d.employee.name,
+          createdAt: d.createdAt.toLocaleDateString(),
+        }))}
         nav={[
           { label: "Overview", href: "/client/staff" },
+          { label: "Payroll", href: "/client/payroll" },
           { label: "Attendance", href: "/client/attendance" },
           { label: "Leave", href: "/client/leave", badge: pendingLeaveCount },
           { label: "Reviews", href: "/client/reviews", badge: unresolvedReviews.length },
+          { label: "Recruitment", href: "/client/recruitment", badge: newApplicantsCount },
           { label: "Pulse", href: "/client/pulse" },
           { label: "Concerns", href: "/client/concerns", badge: unresolvedConcerns.length },
+          { label: "Documents", href: "/client/documents", badge: unreadDocuments.length },
           { label: "Announcements", href: "/client/announcements", badge: unread.length },
           { label: "Reports", href: "/client/reports" },
         ]}

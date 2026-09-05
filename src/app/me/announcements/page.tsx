@@ -2,6 +2,7 @@ import { CheckCircle2, Megaphone } from "lucide-react";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { acknowledgeAnnouncement } from "@/lib/actions/announcements";
+import { NigeriaHolidaysWidget } from "@/components/nigeria-holidays-widget";
 
 export default async function MyAnnouncementsPage() {
   const session = await requireRole("EMPLOYEE");
@@ -23,6 +24,8 @@ export default async function MyAnnouncementsPage() {
         <h1 className="text-2xl font-bold tracking-tight text-ink">Announcements</h1>
         <p className="text-sm text-slate">Updates from Masy and your organization.</p>
       </div>
+
+      <NigeriaHolidaysWidget />
 
       <div className="space-y-4">
         {announcements.map((a) => {

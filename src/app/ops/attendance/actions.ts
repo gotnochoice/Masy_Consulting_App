@@ -63,8 +63,7 @@ export async function createAttendanceRecord(formData: FormData) {
   revalidatePath("/ops/attendance");
 }
 
-export async function updateAttendanceRecord(recordId: string, formData: FormData) {
-  const session = await requireRole("MASY_OPS");
+export async function updateAttendanceRecord(recordId: string, formData: FormData) {  const session = await requireRole("MASY_OPS");
 
   const parsed = updateSchema.safeParse({
     date: formData.get("date"),
@@ -101,4 +100,24 @@ export async function updateAttendanceRecord(recordId: string, formData: FormDat
 
   revalidatePath("/ops/attendance");
   redirect("/ops/attendance");
+}
+
+export async function clearEmployeeAttendance(employeeId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.attendanceRecord.deleteMany({ where: { employeeId } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "attendance.clear_employee",
+      targetType: "Employee",
+      targetId: employeeId,
+    },
+  });
+
+  revalidatePath("/ops/attendance");
+  revalidatePath(`/ops/attendance/employee/${employeeId}`);
+  revalidatePath("/client/attendance");
+  revalidatePath(`/client/attendance/employee/${employeeId}`);
 }

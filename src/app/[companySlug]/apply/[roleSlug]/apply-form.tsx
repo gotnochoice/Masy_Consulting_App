@@ -3,7 +3,8 @@
 import { useActionState, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { RoleQuestion, QuestionSection } from "@/generated/prisma/client";
-import { SocialLinks, SocialLinksList } from "@/components/social-links";
+import { SocialLinks, SocialLinksList, SOCIAL_PLATFORMS } from "@/components/social-links";
+import { MAX_RESUME_FILE_BYTES, MAX_RESUME_FILE_LABEL } from "@/lib/resume";
 import type { ApplyState } from "./actions";
 
 const inputClass =
@@ -13,6 +14,7 @@ const buttonClass =
   "rounded-btn bg-indigo px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-light disabled:cursor-not-allowed disabled:opacity-50";
 const secondaryButtonClass =
   "rounded-btn border border-border px-4 py-3 text-sm font-semibold text-slate transition-colors hover:border-ink/20 hover:text-ink";
+const MIN_FOLLOWED_SOCIALS = 2;
 
 // Fields on steps that aren't currently showing must not carry `required`, or the browser's
 // native validation blocks advancing/submitting on fields the applicant can't even see yet.
@@ -89,6 +91,7 @@ export function ApplyForm({
   askExpectedPay,
   askHowHeard,
   askResumeLink,
+  askApplicantLocation,
 }: {
   action: (prevState: ApplyState, formData: FormData) => Promise<ApplyState>;
   questions: RoleQuestion[];
@@ -99,11 +102,43 @@ export function ApplyForm({
   askExpectedPay: boolean;
   askHowHeard: boolean;
   askResumeLink: boolean;
+  askApplicantLocation: boolean;
 }) {
   const [state, formAction, isPending] = useActionState<ApplyState, FormData>(action, {});
   const [currentStep, setCurrentStep] = useState(0);
-  const [showFollowPrompt, setShowFollowPrompt] = useState(false);
+  const [checkedSocials, setCheckedSocials] = useState<string[]>([]);
+  const [followError, setFollowError] = useState<string | null>(null);
+  const [resumeFileError, setResumeFileError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  function toggleSocial(name: string) {
+    setFollowError(null);
+    setCheckedSocials((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (checkedSocials.length < MIN_FOLLOWED_SOCIALS) {
+      e.preventDefault();
+      setFollowError(`Please select at least ${MIN_FOLLOWED_SOCIALS} platforms you follow us on.`);
+    }
+  }
+
+  function handleResumeFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setResumeFileError(null);
+      return;
+    }
+    if (file.type !== "application/pdf") {
+      setResumeFileError("Please upload a PDF file.");
+      e.target.value = "";
+    } else if (file.size > MAX_RESUME_FILE_BYTES) {
+      setResumeFileError(`That file is too large. Please keep it under ${MAX_RESUME_FILE_LABEL}.`);
+      e.target.value = "";
+    } else {
+      setResumeFileError(null);
+    }
+  }
 
   const ungroupedQuestions = questions.filter((q) => !q.sectionId);
   const namedSections = questionSections
@@ -144,6 +179,18 @@ export function ApplyForm({
             <label className={labelClass} htmlFor="phone">Phone</label>
             <input id="phone" name="phone" required={active} className={inputClass} />
           </div>
+          {askApplicantLocation && (
+            <div>
+              <label className={labelClass} htmlFor="location">Where are you located?</label>
+              <input
+                id="location"
+                name="location"
+                required={active}
+                placeholder="e.g. Lekki, Lagos"
+                className={inputClass}
+              />
+            </div>
+          )}
           {askYearsExperience && (
             <div>
               <label className={labelClass} htmlFor="yearsExperience">Years of experience in this kind of role</label>
@@ -152,11 +199,12 @@ export function ApplyForm({
           )}
           {askExpectedPay && (
             <div>
-              <label className={labelClass} htmlFor="expectedPay">Expected pay range</label>
+              <label className={labelClass} htmlFor="expectedPay">Expected pay (₦, monthly)</label>
               <input
                 id="expectedPay"
                 name="expectedPay"
                 required={active}
+                placeholder="e.g. ₦250,000"
                 className={inputClass}
               />
             </div>
@@ -186,15 +234,17 @@ export function ApplyForm({
       label: "Application materials",
       content: (
         <div>
-          <label className={labelClass} htmlFor="resumeLink">Link to your CV / resume</label>
+          <label className={labelClass} htmlFor="resumeFile">Upload your CV / resume</label>
           <input
-            id="resumeLink"
-            name="resumeLink"
-            type="url"
-            placeholder="https://drive.google.com/..."
-            className={inputClass}
+            id="resumeFile"
+            name="resumeFile"
+            type="file"
+            accept="application/pdf"
+            onChange={handleResumeFileChange}
+            className={`${inputClass} file:mr-3 file:rounded-btn file:border-0 file:bg-indigo-tint file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo`}
           />
-          <p className="mt-1 text-xs text-slate-light">A shareable Google Drive, Dropbox, or LinkedIn link works.</p>
+          <p className="mt-1 text-xs text-slate-light">PDF only, up to {MAX_RESUME_FILE_LABEL}.</p>
+          {resumeFileError && <p className="mt-1 text-xs text-orange">{resumeFileError}</p>}
         </div>
       ),
     });
@@ -270,7 +320,7 @@ export function ApplyForm({
               02
             </span>
             <p className="text-sm text-slate">
-              If there&apos;s a fit, we&apos;ll reach out to you directly{state.email ? ` at ${state.email}` : ""}.
+              If there&apos;s a fit, we&apos;ll reach out to you directly, or you can reach us at hello@masyconsulting.com.
             </p>
           </div>
         </div>
@@ -286,7 +336,7 @@ export function ApplyForm({
   }
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-6">
+    <form ref={formRef} action={formAction} onSubmit={handleSubmit} className="space-y-6">
       {/*
         Honeypot: real applicants never see this field. It's fully display:none (not just
         visually clipped) and its name avoids anything autofill heuristics recognize
@@ -335,64 +385,41 @@ export function ApplyForm({
       {isLastStep && (
         <div className="space-y-4 border-t border-border pt-6">
           <div>
-            <p className="text-sm font-medium text-ink">Follow us on social media</p>
+            <p className="text-sm font-medium text-ink">Follow us</p>
             <p className="mt-1 text-xs text-slate-light">Stay updated on new roles as they open.</p>
             <SocialLinksList className="mt-3" />
           </div>
-          <div className="space-y-2">
-            <label className="flex cursor-pointer items-center gap-2 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint">
-              <input
-                type="radio"
-                name="followsSocial"
-                value="yes"
-                required
-                onChange={() => setShowFollowPrompt(false)}
-                className="h-4 w-4 shrink-0 accent-indigo"
-              />
-              I follow Masy Consulting on social media
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint">
-              <input
-                type="radio"
-                name="followsSocial"
-                value="no"
-                required
-                onChange={() => setShowFollowPrompt(true)}
-                className="h-4 w-4 shrink-0 accent-indigo"
-              />
-              I don&apos;t follow yet
-            </label>
+          <div>
+            <p className="text-sm text-ink">
+              Tick at least {MIN_FOLLOWED_SOCIALS} platforms you actually follow us on below.
+            </p>
+            <p className="mt-1 text-xs text-slate-light">
+              We check, so please only select platforms you genuinely follow.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {SOCIAL_PLATFORMS.map((s) => (
+                <label
+                  key={s.name}
+                  className="flex cursor-pointer items-center gap-2 rounded-btn border border-border px-3.5 py-2.5 text-sm text-ink transition-colors has-[:checked]:border-indigo has-[:checked]:bg-indigo-tint"
+                >
+                  <input
+                    type="checkbox"
+                    name="followedSocials"
+                    value={s.name}
+                    checked={checkedSocials.includes(s.name)}
+                    onChange={() => toggleSocial(s.name)}
+                    className="h-4 w-4 shrink-0 rounded accent-indigo"
+                  />
+                  {s.name}
+                </label>
+              ))}
+            </div>
+            {followError && <p className="mt-2 text-xs text-orange">{followError}</p>}
           </div>
           <p className="text-xs text-slate-light">
             By submitting this application, you agree that your information will be used only to evaluate you for this
             role and shared with {companyName}. We won&apos;t use it for anything else.
           </p>
-        </div>
-      )}
-
-      {showFollowPrompt && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"
-          onClick={() => setShowFollowPrompt(false)}
-        >
-          <div
-            className="w-full max-w-sm rounded-card bg-paper p-6 shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-base font-bold text-ink">Follow us to continue</p>
-            <p className="mt-2 text-sm text-slate">
-              Please follow Masy Consulting on social media to stay updated on new roles, then come back and select
-              &ldquo;I follow Masy Consulting on social media&rdquo; above to continue.
-            </p>
-            <SocialLinksList className="mt-4" />
-            <button
-              type="button"
-              onClick={() => setShowFollowPrompt(false)}
-              className={`mt-4 w-full ${buttonClass}`}
-            >
-              Got it
-            </button>
-          </div>
         </div>
       )}
 
