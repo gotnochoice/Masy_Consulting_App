@@ -2,6 +2,7 @@ const NAME_KEYWORDS = ["name"];
 const PHONE_KEYWORDS = ["phone", "whatsapp", "mobile", "number"];
 const EMAIL_KEYWORDS = ["email", "e-mail"];
 const LOCATION_KEYWORDS = ["location", "where", "city", "address"];
+const CV_KEYWORDS = ["cv", "resume", "résumé"];
 const PHOTO_KEYWORDS = ["photo", "picture", "image", "upload", "sample", "work"];
 
 export function formatAnswerValue(value: unknown): string {
@@ -26,11 +27,11 @@ export function extractField(answers: Record<string, unknown>, keywords: string[
   return undefined;
 }
 
-export function extractPhotoUrl(answers: Record<string, unknown>, claimed: Set<string>): string | undefined {
+export function extractUrlField(answers: Record<string, unknown>, keywords: string[], claimed: Set<string>): string | undefined {
   for (const [question, value] of Object.entries(answers)) {
     if (claimed.has(question)) continue;
     const lower = question.toLowerCase();
-    if (PHOTO_KEYWORDS.some((k) => lower.includes(k))) {
+    if (keywords.some((k) => lower.includes(k))) {
       const match = formatAnswerValue(value).match(/https?:\/\/\S+/);
       if (match) {
         claimed.add(question);
@@ -46,8 +47,11 @@ export function extractApplicantFields(answers: Record<string, unknown>, claimed
   const phone = extractField(answers, PHONE_KEYWORDS, claimed);
   const email = extractField(answers, EMAIL_KEYWORDS, claimed);
   const location = extractField(answers, LOCATION_KEYWORDS, claimed);
-  const workSampleUrl = extractPhotoUrl(answers, claimed);
-  return { name, phone, email, location, workSampleUrl };
+  // CV extraction runs before photo/work-sample so a "Please upload your CV" question
+  // (which also contains the generic "upload" keyword) is claimed as the CV, not a photo.
+  const cvUrl = extractUrlField(answers, CV_KEYWORDS, claimed);
+  const workSampleUrl = extractUrlField(answers, PHOTO_KEYWORDS, claimed);
+  return { name, phone, email, location, cvUrl, workSampleUrl };
 }
 
 export function parseAnswersBody(body: unknown): Record<string, unknown> {

@@ -41,7 +41,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   const answers = parseAnswersBody(body);
   const claimed = new Set<string>();
-  const { name, phone, email, location, workSampleUrl } = extractApplicantFields(answers, claimed);
+  const { name, phone, email, location, cvUrl, workSampleUrl } = extractApplicantFields(answers, claimed);
 
   if (!name && !phone && !email) {
     return NextResponse.json(
@@ -59,6 +59,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       email: email || null,
       phone: phone || null,
       location: location || null,
+      resumeLink: cvUrl || null,
       workSampleUrl: workSampleUrl || null,
       source: "GOOGLE_FORM",
       stage: "APPLIED",
