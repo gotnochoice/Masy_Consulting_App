@@ -5,6 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import type { RoleQuestion, QuestionSection } from "@/generated/prisma/client";
 import { SocialLinks, SocialLinksList, SOCIAL_PLATFORMS } from "@/components/social-links";
 import { MAX_RESUME_FILE_BYTES, MAX_RESUME_FILE_LABEL } from "@/lib/resume";
+import { MAX_PHOTO_FILE_LABEL } from "@/lib/photo";
 import type { ApplyState } from "./actions";
 
 const inputClass =
@@ -65,6 +66,18 @@ function QuestionField({ q, active }: { q: RoleQuestion; active: boolean }) {
               {opt}
             </label>
           ))}
+        </div>
+      ) : q.type === "PHOTO" ? (
+        <div>
+          <input
+            id={`answer_${q.id}`}
+            name={`answer_${q.id}`}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            required={required}
+            className={`${inputClass} file:mr-3 file:rounded-btn file:border-0 file:bg-indigo-tint file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo`}
+          />
+          <p className="mt-1 text-xs text-slate-light">JPG, PNG, or WEBP, up to {MAX_PHOTO_FILE_LABEL}.</p>
         </div>
       ) : (
         <input

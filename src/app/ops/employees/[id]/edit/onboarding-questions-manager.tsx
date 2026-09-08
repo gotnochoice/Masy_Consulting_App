@@ -8,6 +8,7 @@ import {
   deleteOnboardingQuestion,
 } from "../../actions";
 import { UploadOnboardingQuestionsPanel } from "./upload-onboarding-questions-panel";
+import { AnswerValue } from "@/components/answer-value";
 import type { OnboardingQuestion } from "@/generated/prisma/client";
 
 const QUESTION_TYPE_OPTIONS = [
@@ -16,6 +17,7 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "LINK", label: "Link" },
   { value: "MULTIPLE_CHOICE", label: "Multiple choice (pick one)" },
   { value: "CHECKBOXES", label: "Checkboxes (pick multiple)" },
+  { value: "PHOTO", label: "Photo upload" },
 ];
 
 export function OnboardingQuestionsManager({
@@ -116,10 +118,10 @@ export function OnboardingQuestionsManager({
                 </form>
 
                 {q.answer && (
-                  <p className="mt-3 whitespace-pre-line border-t border-border pt-3 text-sm text-ink">
+                  <div className="mt-3 border-t border-border pt-3">
                     <span className="text-xs font-medium uppercase tracking-wide text-slate-light">Answer: </span>
-                    {q.answer}
-                  </p>
+                    <AnswerValue type={q.type} value={q.answer} label={q.label} />
+                  </div>
                 )}
               </details>
             );

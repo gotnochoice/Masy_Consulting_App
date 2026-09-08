@@ -6,6 +6,7 @@ import type { CandidateStage } from "@/generated/prisma/client";
 import { inputClass } from "@/lib/form-styles";
 import { linkify } from "@/lib/linkify";
 import { resolveImageUrl } from "@/lib/drive-image";
+import { AnswerValue } from "@/components/answer-value";
 
 type CandidateWithAnswers = {
   id: string;
@@ -21,8 +22,8 @@ type CandidateWithAnswers = {
   followedSocials: string[];
   source: "WEBSITE" | "MASY_SOURCED" | "GOOGLE_FORM";
   stage: CandidateStage;
-  answers: { id: string; value: string; roleQuestion: { label: string } }[];
-  generalAnswers: { id: string; value: string; generalQuestion: { label: string } }[];
+  answers: { id: string; value: string; roleQuestion: { label: string; type: string } }[];
+  generalAnswers: { id: string; value: string; generalQuestion: { label: string; type: string } }[];
 };
 
 export function ClientCandidateCard({
@@ -203,7 +204,7 @@ export function ClientCandidateCard({
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
                     {a.generalQuestion.label}
                   </p>
-                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(a.value)}</p>
+                  <AnswerValue type={a.generalQuestion.type} value={a.value} label={a.generalQuestion.label} />
                 </div>
               ))}
               {candidate.answers.map((a) => (
@@ -211,7 +212,7 @@ export function ClientCandidateCard({
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
                     {a.roleQuestion.label}
                   </p>
-                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink">{linkify(a.value)}</p>
+                  <AnswerValue type={a.roleQuestion.type} value={a.value} label={a.roleQuestion.label} />
                 </div>
               ))}
             </div>

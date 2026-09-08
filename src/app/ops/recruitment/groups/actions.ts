@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uniqueApplicationGroupSlug } from "@/lib/slug";
 
-const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES"] as const;
+const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES", "PHOTO"] as const;
 
 export async function createApplicationGroup(formData: FormData) {
   await requireRole("MASY_OPS");

@@ -23,6 +23,7 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "LINK", label: "Link" },
   { value: "MULTIPLE_CHOICE", label: "Multiple choice (pick one)" },
   { value: "CHECKBOXES", label: "Checkboxes (pick multiple)" },
+  { value: "PHOTO", label: "Photo upload" },
 ];
 
 export default async function ApplicationGroupPage({ params }: { params: Promise<{ id: string }> }) {

@@ -80,6 +80,7 @@ enum QuestionType {
   LINK
   MULTIPLE_CHOICE
   CHECKBOXES
+  PHOTO
 }
 
 enum DocumentRequestType {

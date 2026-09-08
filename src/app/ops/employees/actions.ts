@@ -430,7 +430,7 @@ export async function deleteEmployeeDocument(documentId: string, employeeId: str
   revalidatePath("/me/documents");
 }
 
-const ONBOARDING_QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES"] as const;
+const ONBOARDING_QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES", "PHOTO"] as const;
 
 const addOnboardingQuestionSchema = z.object({
   label: z.string().min(1, "Question is required"),

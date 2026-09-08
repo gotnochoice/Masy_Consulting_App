@@ -60,6 +60,7 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "LINK", label: "Link (portfolio, etc.)" },
   { value: "MULTIPLE_CHOICE", label: "Multiple choice (pick one)" },
   { value: "CHECKBOXES", label: "Checkboxes (pick multiple)" },
+  { value: "PHOTO", label: "Photo upload" },
 ];
 
 const DEFAULT_FIELD_OPTIONS = [
@@ -191,13 +192,7 @@ function QuestionRow({
   );
 }
 
-type GoogleFormQuestion = {
-  label: string;
-  type: "SHORT_TEXT" | "LONG_TEXT" | "LINK" | "MULTIPLE_CHOICE" | "CHECKBOXES";
-  options: string[];
-  required: boolean;
-  sectionId: string | null;
-};
+type GoogleFormQuestion = Pick<RoleQuestion, "label" | "type" | "options" | "required" | "sectionId">;
 
 type GoogleFormSection = { id: string; title: string };
 
@@ -260,7 +255,10 @@ function buildGoogleFormCreatorScript({
   const submitFnName = `onFormSubmit_${fnSuffix}`;
 
   const lines: string[] = [];
-  let needsManualFileUpload = false;
+  // Google won't let Apps Script create File upload questions, so anything that needs one
+  // (the built-in CV/photo field, plus any custom "Photo upload" question) is skipped here
+  // and listed in a manual step instead.
+  const manualFileUploadTitles: string[] = [];
 
   if (mode === "INFORMAL") {
     lines.push(`  form.addTextItem().setTitle("Your full name").setRequired(true);`);
@@ -269,7 +267,7 @@ function buildGoogleFormCreatorScript({
       `  form.addTextItem().setTitle("Email").setHelpText("Only if you have one").setRequired(false).setValidation(FormApp.createTextValidation().requireTextIsEmail().build());`,
     );
     lines.push(`  form.addTextItem().setTitle("Where are you? (e.g. Maryland, Lagos)").setRequired(false);`);
-    needsManualFileUpload = true;
+    manualFileUploadTitles.push(workSampleLabel || "Photo of your work");
   } else {
     lines.push(`  form.addTextItem().setTitle("Full name").setRequired(true);`);
     lines.push(
@@ -281,22 +279,23 @@ function buildGoogleFormCreatorScript({
       lines.push(`  form.addTextItem().setTitle("Years of experience in this kind of role").setRequired(false);`);
     if (askExpectedPay) lines.push(`  form.addTextItem().setTitle("Expected pay (₦, monthly)").setRequired(false);`);
     if (askHowHeard) lines.push(`  form.addTextItem().setTitle("How did you hear about this role?").setRequired(false);`);
-    if (askResumeLink) needsManualFileUpload = true;
+    if (askResumeLink) manualFileUploadTitles.push("Upload your CV / resume");
 
     for (const q of ungroupedQuestions) {
-      lines.push(`  ${googleFormAddItemCode(q)}`);
+      if (q.type === "PHOTO") manualFileUploadTitles.push(q.label);
+      else lines.push(`  ${googleFormAddItemCode(q)}`);
     }
     for (const section of sections) {
       lines.push(`  form.addPageBreakItem().setTitle(${js(section.title)});`);
       for (const q of questionsBySection.get(section.id) ?? []) {
-        lines.push(`  ${googleFormAddItemCode(q)}`);
+        if (q.type === "PHOTO") manualFileUploadTitles.push(q.label);
+        else lines.push(`  ${googleFormAddItemCode(q)}`);
       }
     }
   }
 
-  const fileUploadTitle = mode === "INFORMAL" ? workSampleLabel || "Photo of your work" : "Upload your CV / resume";
-  const fileUploadNote = needsManualFileUpload
-    ? `"\\n\\nOne manual step: Google won't let scripts create File upload questions, so open the edit link above and add one yourself (+ button -> File upload), titled " + ${js(fileUploadTitle)} + ". Submissions to it will flow into the pipeline automatically once it's there."`
+  const fileUploadNote = manualFileUploadTitles.length > 0
+    ? `"\\n\\n${manualFileUploadTitles.length > 1 ? "Manual steps" : "One manual step"}: Google won't let scripts create File upload questions, so open the edit link above and add ${manualFileUploadTitles.length > 1 ? "these yourself" : "one yourself"} (+ button -> File upload): " + ${js(manualFileUploadTitles.join(", "))} + ". Submissions to ${manualFileUploadTitles.length > 1 ? "them" : "it"} will flow into the pipeline automatically once ${manualFileUploadTitles.length > 1 ? "they're" : "it's"} there."`
     : `""`;
 
   return `// This script is scoped to ${js(roleTitle)} — the function names below include this

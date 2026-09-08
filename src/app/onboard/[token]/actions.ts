@@ -78,6 +78,15 @@ export async function completeOnboarding(
       const invalid = selected.find((v) => !q.options.includes(v));
       if (invalid) return { error: `"${q.label}" has an invalid answer.` };
       value = selected.join(", ");
+    } else if (q.type === "PHOTO") {
+      const raw = formData.get(`answer_${q.id}`);
+      if (raw instanceof File && raw.size > 0) {
+        const result = await uploadEmployeePhoto(raw);
+        if ("error" in result) return { error: `"${q.label}": ${result.error}` };
+        value = result.url;
+      } else {
+        value = "";
+      }
     } else {
       const raw = formData.get(`answer_${q.id}`);
       value = typeof raw === "string" ? raw.trim() : "";

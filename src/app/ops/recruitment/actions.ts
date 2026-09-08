@@ -15,7 +15,7 @@ import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
 const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
-const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES"] as const;
+const QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES", "PHOTO"] as const;
 
 const createRoleSchema = z.object({
   clientOrgId: z.string().min(1, "Company is required"),

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
 import { sendOpsNotification } from "@/lib/email";
 import { MAX_RESUME_FILE_BYTES, MAX_RESUME_FILE_LABEL } from "@/lib/resume";
+import { uploadEmployeePhoto } from "@/lib/photo";
 import { SOCIAL_PLATFORMS } from "@/components/social-links";
 import { checkApplicationRateLimit } from "@/lib/application-rate-limit";
 
@@ -121,6 +122,15 @@ export async function submitGroupApplication(
       const invalid = selected.find((v) => !q.options.includes(v));
       if (invalid) return { error: `"${q.label}" has an invalid answer.` };
       value = selected.join(", ");
+    } else if (q.type === "PHOTO") {
+      const raw = formData.get(`general_${q.id}`);
+      if (raw instanceof File && raw.size > 0) {
+        const result = await uploadEmployeePhoto(raw);
+        if ("error" in result) return { error: `"${q.label}": ${result.error}` };
+        value = result.url;
+      } else {
+        value = "";
+      }
     } else {
       const raw = formData.get(`general_${q.id}`);
       value = typeof raw === "string" ? raw.trim() : "";
@@ -140,6 +150,15 @@ export async function submitGroupApplication(
       const invalid = selected.find((v) => !q.options.includes(v));
       if (invalid) return { error: `"${q.label}" has an invalid answer.` };
       value = selected.join(", ");
+    } else if (q.type === "PHOTO") {
+      const raw = formData.get(`answer_${q.id}`);
+      if (raw instanceof File && raw.size > 0) {
+        const result = await uploadEmployeePhoto(raw);
+        if ("error" in result) return { error: `"${q.label}": ${result.error}` };
+        value = result.url;
+      } else {
+        value = "";
+      }
     } else {
       const raw = formData.get(`answer_${q.id}`);
       value = typeof raw === "string" ? raw.trim() : "";
