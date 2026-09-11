@@ -84,12 +84,12 @@ export default async function MyAttendancePage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Date</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Clock in</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Clock out</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Hours</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Notes</th>
-              <th className="px-4 py-2.5" />
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Date</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Clock in</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Clock out</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Hours</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Notes</th>
+              <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -97,16 +97,16 @@ export default async function MyAttendancePage() {
               const deleteWithId = deleteAttendanceRecord.bind(null, record.id);
               return (
                 <tr key={record.id}>
-                  <td className="px-4 py-3 font-medium text-ink">{formatDate(record.date)}</td>
-                  <td className="px-4 py-3 text-xs text-slate">{formatTime(record.clockIn)}</td>
-                  <td className="px-4 py-3 text-xs text-slate">{formatTime(record.clockOut)}</td>
-                  <td className="px-4 py-3 text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
-                  <td className="px-4 py-3 text-slate">
+                  <td className="px-3 py-2.5 font-medium text-ink">{formatDate(record.date)}</td>
+                  <td className="px-3 py-2.5 text-xs text-slate">{formatTime(record.clockIn)}</td>
+                  <td className="px-3 py-2.5 text-xs text-slate">{formatTime(record.clockOut)}</td>
+                  <td className="px-3 py-2.5 text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
+                  <td className="px-3 py-2.5 text-slate">
                     {record.clockInNote && <p>In: {record.clockInNote}</p>}
                     {record.clockOutNote && <p>Out: {record.clockOutNote}</p>}
                     {!record.clockInNote && !record.clockOutNote && "–"}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-3 py-2.5 text-right">
                     <ConfirmSubmitButton
                       action={deleteWithId}
                       confirmMessage={`Delete the attendance record for ${formatDate(record.date)}? This can't be undone.`}

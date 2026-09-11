@@ -16,6 +16,9 @@ import {
   Activity,
   Megaphone,
   FileSignature,
+  UserSearch,
+  History,
+  Wallet,
   X,
 } from "lucide-react";
 
@@ -27,12 +30,15 @@ const ICONS = {
   leave: CalendarDays,
   reviews: FileText,
   recruitment: Briefcase,
+  applicants: UserSearch,
   concerns: AlertTriangle,
   reports: BarChart3,
   onboarding: ClipboardCheck,
   announcements: Megaphone,
   documents: FileSignature,
   pulse: Activity,
+  audit: History,
+  payroll: Wallet,
 } as const;
 
 export type NavIconName = keyof typeof ICONS;

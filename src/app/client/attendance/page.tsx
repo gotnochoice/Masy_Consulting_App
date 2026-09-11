@@ -1,5 +1,6 @@
 import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import Link from "next/link";
 import { AttendanceTrendChart } from "@/components/attendance-trend-chart";
 
 type EmployeeSummary = {
@@ -89,24 +90,26 @@ export default async function ClientAttendancePage() {
         <AttendanceTrendChart rows={trendRows} />
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper">
+      {/* Desktop / tablet */}
+      <div className="hidden overflow-x-auto rounded-card border border-border bg-paper sm:block">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-indigo-tint">
             <tr>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Days present</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Total hours</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Incomplete days</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Work done</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Days present</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Total hours</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Incomplete days</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Work done</th>
+              <th className="px-4 py-2.5" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {rows.map((row) => (
               <tr key={row.employeeId}>
-                <td className="px-5 py-3 font-medium text-ink">{row.name}</td>
-                <td className="px-5 py-3 text-slate">{row.daysPresent}</td>
-                <td className="px-5 py-3 text-xs text-slate">{(row.totalHoursMs / 3_600_000).toFixed(1)}h</td>
-                <td className="px-5 py-3 text-slate">
+                <td className="px-4 py-2.5 font-medium text-ink">{row.name}</td>
+                <td className="px-4 py-2.5 text-slate">{row.daysPresent}</td>
+                <td className="px-4 py-2.5 text-xs text-slate">{(row.totalHoursMs / 3_600_000).toFixed(1)}h</td>
+                <td className="px-4 py-2.5 text-slate">
                   {row.incompleteDays > 0 ? (
                     <span className="rounded-btn bg-orange-light/40 px-2.5 py-0.5 text-xs font-medium text-orange">
                       {row.incompleteDays}
@@ -115,7 +118,7 @@ export default async function ClientAttendancePage() {
                     "–"
                   )}
                 </td>
-                <td className="px-5 py-3 text-slate">
+                <td className="px-4 py-2.5 text-slate">
                   {row.workNotes.length > 0 ? (
                     <ul className="space-y-1">
                       {row.workNotes.map((note, i) => (
@@ -128,17 +131,64 @@ export default async function ClientAttendancePage() {
                     "–"
                   )}
                 </td>
+                <td className="px-4 py-2.5 text-right">
+                  <Link
+                    href={`/client/attendance/employee/${row.employeeId}`}
+                    className="text-xs font-medium text-indigo hover:text-indigo-light"
+                  >
+                    View sheet
+                  </Link>
+                </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-sm text-slate-light">
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-light">
                   No attendance recorded yet this month.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile */}
+      <div className="space-y-3 sm:hidden">
+        {rows.map((row) => (
+          <div key={row.employeeId} className="rounded-card border border-border bg-paper p-4">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm font-medium text-ink">{row.name}</p>
+              <Link
+                href={`/client/attendance/employee/${row.employeeId}`}
+                className="shrink-0 text-xs font-medium text-indigo hover:text-indigo-light"
+              >
+                View sheet →
+              </Link>
+            </div>
+            <p className="mt-1 text-xs text-slate">
+              {row.daysPresent} day{row.daysPresent === 1 ? "" : "s"} present · {(row.totalHoursMs / 3_600_000).toFixed(1)}h total
+              {row.incompleteDays > 0 && (
+                <span className="ml-2 rounded-btn bg-orange-light/40 px-2 py-0.5 font-medium text-orange">
+                  {row.incompleteDays} incomplete
+                </span>
+              )}
+            </p>
+            {row.workNotes.length > 0 && (
+              <ul className="mt-2 space-y-0.5 text-xs text-slate">
+                {row.workNotes.map((note, i) => (
+                  <li key={i} className="before:mr-1.5 before:text-slate-light before:content-['•']">
+                    {note}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+        {rows.length === 0 && (
+          <p className="rounded-card border border-dashed border-border px-4 py-8 text-center text-sm text-slate-light">
+            No attendance recorded yet this month.
+          </p>
+        )}
       </div>
     </div>
   );

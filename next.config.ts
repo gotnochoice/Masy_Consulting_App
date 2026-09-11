@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: ["hr.masyconsulting.com"],
+      bodySizeLimit: "6mb",
     },
   },
 };
