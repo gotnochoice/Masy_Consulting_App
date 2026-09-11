@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { CandidateStageBadge, CandidateSourceBadge, CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } from "@/components/stage-badge";
 import { formatDateShort } from "@/lib/leave";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
-import { CopyEmailsButton } from "@/components/copy-emails-button";
+import { CopyValuesButton } from "@/components/copy-values-button";
 import type { CandidateStage } from "@/generated/prisma/client";
 
 export default async function OpsApplicantsPage({
@@ -38,7 +38,9 @@ export default async function OpsApplicantsPage({
 
   const hasFilters = !!(q || roleId || validStage);
   const missingEmailCount = candidates.filter((c) => !c.email).length;
+  const missingPhoneCount = candidates.filter((c) => !c.phone).length;
   const emails = [...new Set(candidates.map((c) => c.email).filter((e): e is string => !!e))];
+  const phones = [...new Set(candidates.map((c) => c.phone).filter((p): p is string => !!p))];
 
   return (
     <div className="space-y-6">
@@ -84,8 +86,12 @@ export default async function OpsApplicantsPage({
           {candidates.length} applicant{candidates.length === 1 ? "" : "s"}
           {!hasFilters && " · every stage, all time. The Recruitment/Applicants badge only counts those still unreviewed."}
           {missingEmailCount > 0 && ` · ${missingEmailCount} without an email on file`}
+          {missingPhoneCount > 0 && ` · ${missingPhoneCount} without a phone on file`}
         </p>
-        <CopyEmailsButton emails={emails} />
+        <div className="flex items-center gap-2">
+          <CopyValuesButton values={emails} noun="email" />
+          <CopyValuesButton values={phones} noun="phone number" />
+        </div>
       </div>
 
       {/* Mobile: stacked cards */}
@@ -104,6 +110,7 @@ export default async function OpsApplicantsPage({
               {c.openRole.title} · {c.openRole.clientOrg.name}
             </p>
             {c.email && <p className="mt-1 truncate text-xs text-slate-light">{c.email}</p>}
+            {c.phone && <p className="text-xs text-slate-light">{c.phone}</p>}
             <div className="mt-2 flex items-center justify-between">
               <CandidateSourceBadge source={c.source} />
               <span className="text-xs text-slate-light">{formatDateShort(c.createdAt)}</span>
@@ -125,6 +132,7 @@ export default async function OpsApplicantsPage({
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Email</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Phone</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Company</th>
                 <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
@@ -141,6 +149,7 @@ export default async function OpsApplicantsPage({
                     </Link>
                   </td>
                   <td className="px-3 py-2.5 text-slate">{c.email ?? "—"}</td>
+                  <td className="px-3 py-2.5 text-slate">{c.phone ?? "—"}</td>
                   <td className="px-3 py-2.5 text-slate">{c.openRole.title}</td>
                   <td className="px-3 py-2.5 text-slate">{c.openRole.clientOrg.name}</td>
                   <td className="px-3 py-2.5"><CandidateStageBadge stage={c.stage} /></td>
