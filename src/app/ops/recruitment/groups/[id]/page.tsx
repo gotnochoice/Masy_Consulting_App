@@ -102,11 +102,21 @@ function buildAnswers(response) {
 }
 
 function postAnswers(answers, timestamp) {
-  UrlFetchApp.fetch("${googleFormWebhookUrl ?? "PASTE_YOUR_WEBHOOK_URL_HERE"}", {
+  // muteHttpExceptions matters a lot here: without it, UrlFetchApp throws on any
+  // non-2xx response, which would stop importExistingResponses' loop dead at the
+  // first row it can't process -- silently abandoning every response after it,
+  // including the most recent ones. Logging and moving on means one bad response
+  // never costs you the rest of the backfill.
+  var response = UrlFetchApp.fetch("${googleFormWebhookUrl ?? "PASTE_YOUR_WEBHOOK_URL_HERE"}", {
     method: "post",
     contentType: "application/json",
     payload: JSON.stringify({ answers: answers, timestamp: timestamp }),
+    muteHttpExceptions: true,
   });
+  var code = response.getResponseCode();
+  if (code >= 400) {
+    Logger.log("Skipped a response (HTTP " + code + "): " + response.getContentText());
+  }
 }`;
 
   return (
