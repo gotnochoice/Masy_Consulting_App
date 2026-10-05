@@ -17,7 +17,12 @@ export async function sendOpsNotification(subject: string, body: string) {
   if (to.length === 0) return;
 
   try {
-    await resend.emails.send({ from: FROM, to, subject, text: body });
+    await resend.emails.send({
+      from: FROM,
+      to,
+      subject,
+      text: `${body}\n\nIf this email landed in Promotions or Spam, please move it to your Primary inbox so you don't miss future updates.`,
+    });
   } catch (err) {
     console.error("[email] failed to send notification:", err);
   }

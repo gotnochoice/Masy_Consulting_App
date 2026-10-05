@@ -9,13 +9,15 @@ import { StatCard } from "@/components/stat-card";
 import { SuccessBanner } from "@/components/success-banner";
 import { MilestonesPanel } from "@/components/milestones-panel";
 import { approveLeave, denyLeave } from "../leave/actions";
+import { EmployeeAvatar } from "@/components/employee-avatar";
+import { ClientLogo } from "@/components/client-logo";
 
 export default async function ClientStaffPage() {
   const session = await requireRole("CLIENT");
 
   const [org, employees, recentLeave, pendingLeaveCount] = await Promise.all([
     session.user.clientOrgId
-      ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } })
+      ? db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true, logoUrl: true } })
       : null,
     db.employee.findMany({
       where: { clientOrgId: session.user.clientOrgId ?? "__none__" },
@@ -30,6 +32,8 @@ export default async function ClientStaffPage() {
     db.leaveRequest.count({ where: { employee: scopedEmployeeWhere(session), status: "PENDING" } }),
   ]);
 
+  const currentEmployees = employees.filter((e) => e.status !== "OFFBOARDED");
+  const formerEmployees = employees.filter((e) => e.status === "OFFBOARDED");
   const activeCount = employees.filter((e) => e.status === "ACTIVE").length;
   const onLeaveCount = employees.filter((e) => e.status === "ON_LEAVE").length;
   const today = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
@@ -42,16 +46,19 @@ export default async function ClientStaffPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">{org?.name ?? "Your team"}</h1>
-        <p className="mt-1 text-sm text-slate">Here is how your team is doing right now.</p>
+      <div className="flex items-center gap-4">
+        {org?.logoUrl && <ClientLogo name={org.name} logoUrl={org.logoUrl} size="lg" />}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">{org?.name ?? "Your team"}</h1>
+          <p className="mt-1 text-sm text-slate">Here is how your team is doing right now.</p>
+        </div>
       </div>
 
       <SuccessBanner />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Team size" value={employees.length} icon={Users} />
+        <StatCard label="Team size" value={currentEmployees.length} icon={Users} />
         <StatCard label="Active" value={activeCount} icon={UserCheck} />
         <StatCard label="On leave" value={onLeaveCount} icon={CalendarDays} />
         <StatCard label="Pending leave" value={pendingLeaveCount} icon={Clock3} tone="orange" />
@@ -114,33 +121,31 @@ export default async function ClientStaffPage() {
           <table className="min-w-full divide-y divide-border text-sm">
             <thead className="bg-indigo-tint">
               <tr>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Role</th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-indigo">Status</th>
-                <th className="px-5 py-3" />
+                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Name</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Role</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-indigo">Status</th>
+                <th className="px-4 py-2.5" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {employees.map((employee) => (
+              {currentEmployees.map((employee) => (
                 <tr key={employee.id}>
-                  <td className="px-5 py-3">
+                  <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-tint text-xs font-semibold text-indigo">
-                        {employee.name.charAt(0).toUpperCase()}
-                      </div>
+                      <EmployeeAvatar name={employee.name} photoUrl={employee.photoUrl} />
                       <span className="font-medium text-ink">{employee.name}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-3 text-slate">{employee.roleTitle}</td>
-                  <td className="px-5 py-3"><StatusBadge status={employee.status} /></td>
-                  <td className="px-5 py-3 text-right">
+                  <td className="px-4 py-2.5 text-slate">{employee.roleTitle}</td>
+                  <td className="px-4 py-2.5"><StatusBadge status={employee.status} /></td>
+                  <td className="px-4 py-2.5 text-right">
                     <a href={`/client/staff/${employee.id}/edit`} className="text-sm font-medium text-indigo hover:text-indigo-light">
                       Edit
                     </a>
                   </td>
                 </tr>
               ))}
-              {employees.length === 0 && (
+              {currentEmployees.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-5 py-8 text-center text-sm text-slate-light">No staff on record yet.</td>
                 </tr>
@@ -149,6 +154,32 @@ export default async function ClientStaffPage() {
           </table>
         </div>
       </div>
+
+      {formerEmployees.length > 0 && (
+        <details className="rounded-card border border-border bg-paper">
+          <summary className="cursor-pointer list-none px-5 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            Former staff ({formerEmployees.length})
+          </summary>
+          <div className="overflow-x-auto border-t border-border">
+            <table className="min-w-full divide-y divide-border text-sm">
+              <tbody className="divide-y divide-border">
+                {formerEmployees.map((employee) => (
+                  <tr key={employee.id}>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-3">
+                        <EmployeeAvatar name={employee.name} photoUrl={employee.photoUrl} />
+                        <span className="font-medium text-slate">{employee.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 text-slate">{employee.roleTitle}</td>
+                    <td className="px-4 py-2.5"><StatusBadge status={employee.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
     </div>
   );
 }

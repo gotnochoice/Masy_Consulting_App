@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
+import { notifyAnnouncementCreated } from "@/lib/notify-announcement";
 
 const createSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -24,7 +25,7 @@ export async function createAnnouncement(formData: FormData) {
 
   const org = await db.clientOrg.findUnique({ where: { id: session.user.clientOrgId }, select: { name: true } });
 
-  await db.announcement.create({
+  const announcement = await db.announcement.create({
     data: {
       clientOrgId: session.user.clientOrgId,
       authorRole: "CLIENT",
@@ -33,6 +34,8 @@ export async function createAnnouncement(formData: FormData) {
       body: parsed.data.body,
     },
   });
+
+  await notifyAnnouncementCreated(announcement);
 
   revalidatePath("/client/announcements");
 }

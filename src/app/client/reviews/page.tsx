@@ -6,6 +6,8 @@ import { MasyLogo } from "@/components/masy-logo";
 import { PrintButton } from "@/components/print-button";
 import { acknowledgeReview } from "@/lib/actions/reviews";
 
+type ReviewResponseSection = { section: string; answers: { question: string; answer: string }[] };
+
 export default async function ClientReviewsPage() {
   const session = await requireRole("CLIENT");
 
@@ -25,12 +27,16 @@ export default async function ClientReviewsPage() {
 
       <div className="space-y-6">
         {reviews.map((review) => {
-          const paragraphs = (review.masyNotes ?? "").split(/\n+/).filter((p) => p.trim().length > 0);
+          const notes = (review.masyNotes ?? "").split(/\n+/).filter((p) => p.trim().length > 0);
+          const responses = Array.isArray(review.responses)
+            ? (review.responses as unknown as ReviewResponseSection[])
+            : [];
           const resolved = review.acks.length > 0;
           return (
             <article
               key={review.id}
-              className="overflow-hidden rounded-card border border-border bg-paper print:break-inside-avoid print:shadow-none"
+              id={`review-${review.id}`}
+              className="scroll-mt-4 overflow-hidden rounded-card border border-border bg-paper print:break-inside-avoid print:shadow-none"
             >
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border bg-paper-2 px-6 py-4">
                 <div>
@@ -54,17 +60,52 @@ export default async function ClientReviewsPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  {paragraphs.length > 0 ? (
-                    paragraphs.map((p, i) => (
+                {notes.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-light">
+                      Summary from your Masy HR partner
+                    </p>
+                    {notes.map((p, i) => (
                       <p key={i} className="text-sm leading-relaxed text-ink">
                         {p}
                       </p>
-                    ))
-                  ) : (
-                    <p className="text-sm text-slate-light">No summary written yet.</p>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                )}
+
+                {responses.length > 0 && (
+                  <div className={`space-y-5 ${notes.length > 0 ? "mt-6 border-t border-border pt-5" : ""}`}>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-light">
+                      {review.employee.name}&rsquo;s self-assessment
+                    </p>
+                    {responses.map((s, si) => (
+                      <div key={si}>
+                        <p className="text-sm font-semibold text-ink">{s.section}</p>
+                        <div className="mt-2 space-y-3">
+                          {s.answers.map((a, ai) => (
+                            <div key={ai}>
+                              <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
+                                {a.question}
+                              </p>
+                              <p className="mt-0.5 text-sm leading-relaxed text-ink">{a.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {review.selfAssessment && (
+                  <div className={`${notes.length > 0 || responses.length > 0 ? "mt-6 border-t border-border pt-5" : ""}`}>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-light">Anything else</p>
+                    <p className="mt-1 text-sm leading-relaxed text-ink">{review.selfAssessment}</p>
+                  </div>
+                )}
+
+                {notes.length === 0 && responses.length === 0 && !review.selfAssessment && (
+                  <p className="text-sm text-slate-light">No content submitted for this review.</p>
+                )}
 
                 <p className="mt-6 border-t border-border pt-4 text-xs text-slate-light">
                   Prepared by your Masy Consulting HR partner · Released {formatDateShort(review.updatedAt)}
