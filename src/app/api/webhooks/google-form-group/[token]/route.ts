@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
 import { sendOpsNotification } from "@/lib/email";
-import { formatAnswerValue, extractApplicantFields, parseAnswersBody, findExistingCandidateForRole } from "@/lib/google-form-extract";
+import { formatAnswerValue, extractApplicantFields, parseAnswersBody, parseSubmittedAt, findExistingCandidateForRole } from "@/lib/google-form-extract";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -46,6 +46,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   }
 
   const answers = parseAnswersBody(body);
+  const submittedAt = parseSubmittedAt(body);
 
   // Which role is this for? Look for an answer whose value exactly matches one of the
   // group's role titles -- this is what a "Which role are you applying for?" question,
@@ -86,6 +87,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   const existing = await findExistingCandidateForRole(role.id, email, phone);
   if (existing) {
+    if (submittedAt && submittedAt < existing.createdAt) {
+      await db.candidate.update({ where: { id: existing.id }, data: { createdAt: submittedAt } });
+    }
     return NextResponse.json({ ok: true, skipped: true, reason: "A candidate with this email or phone already applied for this role" });
   }
 
@@ -103,6 +107,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       source: "GOOGLE_FORM",
       stage: "APPLIED",
       notes: answerLines.length ? `Submitted via Google Form ("${group.title}"):\n\n${answerLines.join("\n")}` : null,
+      ...(submittedAt ? { createdAt: submittedAt } : {}),
     },
   });
 

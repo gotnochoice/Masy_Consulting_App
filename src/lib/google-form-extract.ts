@@ -62,6 +62,18 @@ export function parseAnswersBody(body: unknown): Record<string, unknown> {
     : {};
 }
 
+// The Apps Script sends the response's own submission time separately from the answers
+// (it isn't a question/answer itself) so a candidate's "applied" date reflects when they
+// actually filled out the form, not whenever the webhook happened to run -- which, for a
+// backfill, can be long after the real submission.
+export function parseSubmittedAt(body: unknown): Date | undefined {
+  if (!body || typeof body !== "object" || !("timestamp" in body)) return undefined;
+  const raw = (body as { timestamp: unknown }).timestamp;
+  if (typeof raw !== "string") return undefined;
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
 // Re-running a Google Form's "import existing responses" backfill re-posts every historical
 // response again, with nothing upstream to tell it's already been imported -- so each run
 // would otherwise create a full new set of duplicate candidates. This catches that at the
@@ -77,6 +89,6 @@ export async function findExistingCandidateForRole(roleId: string, email: string
         ...(phone ? [{ phone }] : []),
       ],
     },
-    select: { id: true },
+    select: { id: true, createdAt: true },
   });
 }

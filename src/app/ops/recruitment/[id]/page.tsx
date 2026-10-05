@@ -393,7 +393,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
     : null;
   const googleFormAppsScript = `// Fires automatically once you add the "On form submit" trigger below.
 function onFormSubmit(e) {
-  postAnswers(buildAnswers(e.response));
+  postAnswers(buildAnswers(e.response), e.response.getTimestamp().toISOString());
 }
 
 // One-time only: brings in responses this form already collected before you
@@ -404,7 +404,7 @@ function importExistingResponses() {
   var form = FormApp.getActiveForm();
   var responses = form.getResponses();
   responses.forEach(function (response) {
-    postAnswers(buildAnswers(response));
+    postAnswers(buildAnswers(response), response.getTimestamp().toISOString());
   });
   Logger.log("Imported " + responses.length + " existing response(s).");
 }
@@ -431,11 +431,11 @@ function buildAnswers(response) {
   return answers;
 }
 
-function postAnswers(answers) {
+function postAnswers(answers, timestamp) {
   UrlFetchApp.fetch("${googleFormWebhookUrl ?? "PASTE_YOUR_WEBHOOK_URL_HERE"}", {
     method: "post",
     contentType: "application/json",
-    payload: JSON.stringify({ answers: answers }),
+    payload: JSON.stringify({ answers: answers, timestamp: timestamp }),
   });
 }`;
 
