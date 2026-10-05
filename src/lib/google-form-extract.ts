@@ -1,3 +1,5 @@
+import { db } from "@/lib/db";
+
 const NAME_KEYWORDS = ["name"];
 const PHONE_KEYWORDS = ["phone", "whatsapp", "mobile", "number"];
 const EMAIL_KEYWORDS = ["email", "e-mail"];
@@ -58,4 +60,23 @@ export function parseAnswersBody(body: unknown): Record<string, unknown> {
   return body && typeof body === "object" && "answers" in body && typeof (body as { answers: unknown }).answers === "object"
     ? ((body as { answers: Record<string, unknown> }).answers ?? {})
     : {};
+}
+
+// Re-running a Google Form's "import existing responses" backfill re-posts every historical
+// response again, with nothing upstream to tell it's already been imported -- so each run
+// would otherwise create a full new set of duplicate candidates. This catches that at the
+// point of creation by checking whether this role already has a candidate with the same
+// email or phone.
+export async function findExistingCandidateForRole(roleId: string, email: string | undefined, phone: string | undefined) {
+  if (!email && !phone) return null;
+  return db.candidate.findFirst({
+    where: {
+      openRoleId: roleId,
+      OR: [
+        ...(email ? [{ email: { equals: email, mode: "insensitive" as const } }] : []),
+        ...(phone ? [{ phone }] : []),
+      ],
+    },
+    select: { id: true },
+  });
 }

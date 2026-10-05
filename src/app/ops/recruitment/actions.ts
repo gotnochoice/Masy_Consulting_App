@@ -818,6 +818,48 @@ export async function clearAllCandidates(roleId: string) {
   revalidatePath(`/ops/recruitment/${roleId}`);
 }
 
+// Finds candidates that share the same email (or phone, when there's no email) within a
+// role and deletes every one but the earliest -- this is what a Google Form backfill
+// (`importExistingResponses`) accidentally run more than once produces, since each run
+// re-posts every historical response again with nothing to stop it being re-created.
+export async function removeDuplicateCandidates(roleId: string) {
+  await requireRole("MASY_OPS");
+
+  const candidates = await db.candidate.findMany({
+    where: { openRoleId: roleId },
+    select: { id: true, email: true, phone: true, createdAt: true, convertedEmployeeId: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // Group by email (or phone, when there's no email). Within a group, a candidate already
+  // converted to an employee record is always kept, regardless of creation order -- deleting
+  // it wouldn't touch the employee record itself, but it would wipe its application history.
+  const groups = new Map<string, typeof candidates>();
+  for (const c of candidates) {
+    const key = c.email?.trim().toLowerCase() || c.phone?.trim() || null;
+    if (!key) continue;
+    const group = groups.get(key);
+    if (group) group.push(c);
+    else groups.set(key, [c]);
+  }
+
+  const toDelete: string[] = [];
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    const keep = group.find((c) => c.convertedEmployeeId) ?? group[0];
+    for (const c of group) {
+      if (c.id !== keep.id) toDelete.push(c.id);
+    }
+  }
+
+  if (toDelete.length > 0) {
+    await db.candidate.deleteMany({ where: { id: { in: toDelete } } });
+  }
+
+  revalidatePath(`/ops/recruitment/${roleId}`);
+  revalidatePath("/ops/applicants");
+}
+
 export type ConvertToEmployeeState = { employeeId: string } | { error: string } | undefined;
 
 const convertToEmployeeSchema = z.object({

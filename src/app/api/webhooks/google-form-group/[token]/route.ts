@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
 import { sendOpsNotification } from "@/lib/email";
-import { formatAnswerValue, extractApplicantFields, parseAnswersBody } from "@/lib/google-form-extract";
+import { formatAnswerValue, extractApplicantFields, parseAnswersBody, findExistingCandidateForRole } from "@/lib/google-form-extract";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -82,6 +82,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       { error: "Could not find a name, phone, or email in the submitted answers" },
       { status: 400 },
     );
+  }
+
+  const existing = await findExistingCandidateForRole(role.id, email, phone);
+  if (existing) {
+    return NextResponse.json({ ok: true, skipped: true, reason: "A candidate with this email or phone already applied for this role" });
   }
 
   const answerLines = Object.entries(answers).map(([question, value]) => `${question}: ${formatAnswerValue(value)}`);

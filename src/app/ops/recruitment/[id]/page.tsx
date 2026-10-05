@@ -41,6 +41,7 @@ import {
   moveQuestionSection,
   deleteCandidate,
   clearAllCandidates,
+  removeDuplicateCandidates,
   sendCandidateRejectionEmail,
   sendCandidateInterviewInviteEmail,
   sendCandidateOfferEmail,
@@ -358,6 +359,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             name: true,
             email: true,
             phone: true,
+            createdAt: true,
             yearsExperience: true,
             location: true,
             resumeLink: true,
@@ -458,6 +460,23 @@ function postAnswers(answers) {
   const addQuestionWithId = addQuestion.bind(null, role.id);
   const createSectionWithId = createQuestionSection.bind(null, role.id);
   const clearAllWithId = clearAllCandidates.bind(null, role.id);
+  const removeDuplicatesWithId = removeDuplicateCandidates.bind(null, role.id);
+
+  // Mirrors removeDuplicateCandidates' own grouping logic, purely to show an accurate count
+  // here before anyone clicks the button -- the action recomputes it from the database itself.
+  const duplicateCandidateCount = (() => {
+    const groups = new Map<string, number>();
+    for (const c of role.candidates) {
+      const key = c.email?.trim().toLowerCase() || c.phone?.trim() || null;
+      if (!key) continue;
+      groups.set(key, (groups.get(key) ?? 0) + 1);
+    }
+    let total = 0;
+    for (const count of groups.values()) {
+      if (count > 1) total += count - 1;
+    }
+    return total;
+  })();
 
   const ungroupedQuestions = role.questions.filter((q) => !q.sectionId);
   const questionsBySection = new Map(
@@ -524,16 +543,34 @@ function postAnswers(answers) {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-ink">Pipeline</h2>
-          {role.candidates.length > 0 && (
-            <ConfirmSubmitButton
-              action={clearAllWithId}
-              confirmMessage={`Delete all ${role.candidates.length} candidate(s) for this role? This can't be undone, so export a CSV first if you want to keep a record.`}
-              className="text-xs font-medium text-slate hover:text-orange"
-            >
-              Clear all candidates
-            </ConfirmSubmitButton>
-          )}
+          <div className="flex items-center gap-3">
+            {duplicateCandidateCount > 0 && (
+              <ConfirmSubmitButton
+                action={removeDuplicatesWithId}
+                confirmMessage={`Remove ${duplicateCandidateCount} duplicate application(s)? For each applicant who shows up more than once (same email or phone), this keeps one copy and deletes the rest. Can't be undone.`}
+                className="text-xs font-medium text-orange hover:text-orange"
+              >
+                Remove {duplicateCandidateCount} duplicate{duplicateCandidateCount === 1 ? "" : "s"}
+              </ConfirmSubmitButton>
+            )}
+            {role.candidates.length > 0 && (
+              <ConfirmSubmitButton
+                action={clearAllWithId}
+                confirmMessage={`Delete all ${role.candidates.length} candidate(s) for this role? This can't be undone, so export a CSV first if you want to keep a record.`}
+                className="text-xs font-medium text-slate hover:text-orange"
+              >
+                Clear all candidates
+              </ConfirmSubmitButton>
+            )}
+          </div>
         </div>
+        {duplicateCandidateCount > 0 && (
+          <p className="rounded-card border border-orange/30 bg-orange/5 px-3.5 py-2.5 text-xs text-orange">
+            Found {duplicateCandidateCount} likely duplicate application{duplicateCandidateCount === 1 ? "" : "s"} --
+            usually caused by running a Google Form&rsquo;s &ldquo;import existing responses&rdquo; step more than
+            once. Use &ldquo;Remove duplicates&rdquo; above to clean them up.
+          </p>
+        )}
         <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {columns.map(({ stage, candidates }) => (
             <div key={stage} className="space-y-3">
