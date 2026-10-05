@@ -825,8 +825,13 @@ export async function clearAllCandidates(roleId: string) {
 export async function removeDuplicateCandidates(roleId: string) {
   await requireRole("MASY_OPS");
 
+  // Scoped to GOOGLE_FORM only -- this exists to clean up the specific mess a re-run
+  // "import existing responses" backfill makes. A candidate who applied directly through
+  // the site's own apply form (or was sourced by Masy) must never be touched here, even if
+  // they happen to share an email/phone with a Google Form entry -- that's two separate,
+  // deliberate applications, not backfill noise, and this action has no business deleting one.
   const candidates = await db.candidate.findMany({
-    where: { openRoleId: roleId },
+    where: { openRoleId: roleId, source: "GOOGLE_FORM" },
     select: { id: true, email: true, phone: true, createdAt: true, convertedEmployeeId: true },
     orderBy: { createdAt: "asc" },
   });

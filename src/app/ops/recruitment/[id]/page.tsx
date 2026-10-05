@@ -462,11 +462,12 @@ function postAnswers(answers, timestamp) {
   const clearAllWithId = clearAllCandidates.bind(null, role.id);
   const removeDuplicatesWithId = removeDuplicateCandidates.bind(null, role.id);
 
-  // Mirrors removeDuplicateCandidates' own grouping logic, purely to show an accurate count
-  // here before anyone clicks the button -- the action recomputes it from the database itself.
+  // Mirrors removeDuplicateCandidates' own grouping logic (GOOGLE_FORM only -- see the
+  // comment there), purely to show an accurate count before anyone clicks the button.
   const duplicateCandidateCount = (() => {
     const groups = new Map<string, number>();
     for (const c of role.candidates) {
+      if (c.source !== "GOOGLE_FORM") continue;
       const key = c.email?.trim().toLowerCase() || c.phone?.trim() || null;
       if (!key) continue;
       groups.set(key, (groups.get(key) ?? 0) + 1);
@@ -547,7 +548,7 @@ function postAnswers(answers, timestamp) {
             {duplicateCandidateCount > 0 && (
               <ConfirmSubmitButton
                 action={removeDuplicatesWithId}
-                confirmMessage={`Remove ${duplicateCandidateCount} duplicate application(s)? For each applicant who shows up more than once (same email or phone), this keeps one copy and deletes the rest. Can't be undone.`}
+                confirmMessage={`Remove ${duplicateCandidateCount} duplicate Google Form application(s)? For each Google Form applicant who shows up more than once (same email or phone), this keeps one copy and deletes the rest. Candidates from your website apply form are never touched by this. Can't be undone.`}
                 className="text-xs font-medium text-orange hover:text-orange"
               >
                 Remove {duplicateCandidateCount} duplicate{duplicateCandidateCount === 1 ? "" : "s"}
@@ -566,9 +567,10 @@ function postAnswers(answers, timestamp) {
         </div>
         {duplicateCandidateCount > 0 && (
           <p className="rounded-card border border-orange/30 bg-orange/5 px-3.5 py-2.5 text-xs text-orange">
-            Found {duplicateCandidateCount} likely duplicate application{duplicateCandidateCount === 1 ? "" : "s"} --
+            Found {duplicateCandidateCount} likely duplicate Google Form application{duplicateCandidateCount === 1 ? "" : "s"} --
             usually caused by running a Google Form&rsquo;s &ldquo;import existing responses&rdquo; step more than
-            once. Use &ldquo;Remove duplicates&rdquo; above to clean them up.
+            once. Use &ldquo;Remove duplicates&rdquo; above to clean them up -- this never touches candidates who
+            applied through your website apply form.
           </p>
         )}
         <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
