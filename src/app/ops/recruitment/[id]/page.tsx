@@ -353,7 +353,7 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
         questions: { orderBy: { order: "asc" } },
         questionSections: { orderBy: { order: "asc" } },
         candidates: {
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: "asc" },
           select: {
             id: true,
             name: true,

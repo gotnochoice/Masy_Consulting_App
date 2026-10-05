@@ -9,6 +9,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { linkify } from "@/lib/linkify";
 import { resolveImageUrl } from "@/lib/drive-image";
 import { AnswerValue } from "@/components/answer-value";
+import { formatDateShort } from "@/lib/leave";
 import type { ConvertToEmployeeState } from "../actions";
 
 const GOOGLE_FORM_NOTES_PREFIX = /^Submitted via Google Form(?: \(".*"\))?:\n\n/;
@@ -45,6 +46,7 @@ type CandidateWithAnswers = {
   interviewInviteSentAt: Date | null;
   offerEmailSentAt: Date | null;
   convertedEmployeeId: string | null;
+  createdAt: Date;
   answers: { id: string; value: string; roleQuestion: { label: string; type: string } }[];
   generalAnswers: { id: string; value: string; generalQuestion: { label: string; type: string } }[];
 };
@@ -84,8 +86,9 @@ export function CandidateCard({
         >
           {candidate.name}
         </button>
-        <div className="mt-1.5">
+        <div className="mt-1.5 flex items-center gap-2">
           <CandidateSourceBadge source={candidate.source} />
+          <span className="text-xs text-slate-light">Applied {formatDateShort(candidate.createdAt)}</span>
         </div>
       </div>
       <div className="space-y-1">
