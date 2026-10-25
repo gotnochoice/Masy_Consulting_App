@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { autoSendStageEmail } from "@/lib/candidate-emails";
 
 const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
 
@@ -18,7 +19,13 @@ export async function updateCandidateStageShared(candidateId: string, stage: unk
 
   const candidate = await db.candidate.findUnique({
     where: { id: candidateId },
-    select: { openRole: { select: { clientOrgId: true } } },
+    select: {
+      openRole: { select: { clientOrgId: true } },
+      email: true,
+      rejectionEmailSentAt: true,
+      interviewInviteSentAt: true,
+      offerEmailSentAt: true,
+    },
   });
   if (!candidate) throw new Error("Candidate not found");
 
@@ -27,4 +34,5 @@ export async function updateCandidateStageShared(candidateId: string, stage: unk
   }
 
   await db.candidate.update({ where: { id: candidateId }, data: { stage: parsedStage.data } });
+  await autoSendStageEmail(candidateId, session.user.id, parsedStage.data, candidate);
 }

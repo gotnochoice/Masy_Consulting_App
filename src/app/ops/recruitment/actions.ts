@@ -9,8 +9,12 @@ import { requireRole } from "@/lib/rbac";
 import { uniqueRoleSlug } from "@/lib/slug";
 import { generateShortCode } from "@/lib/short-code";
 import { suggestRoleQuestions, rankCandidates, type SuggestedQuestion } from "@/lib/ai";
-import { sendNotification } from "@/lib/email";
-import { rejectionEmail, interviewInviteEmail, offerEmail } from "@/lib/candidate-email-templates";
+import {
+  sendRejectionEmailCore,
+  sendInterviewInviteEmailCore,
+  sendOfferEmailCore,
+  autoSendStageEmail,
+} from "@/lib/candidate-emails";
 import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
@@ -789,12 +793,18 @@ export async function addCandidate(roleId: string, formData: FormData) {
 }
 
 export async function updateCandidateStage(candidateId: string, roleId: string, formData: FormData) {
-  await requireRole("MASY_OPS");
+  const session = await requireRole("MASY_OPS");
 
   const stage = z.enum(CANDIDATE_STAGES).safeParse(formData.get("stage"));
   if (!stage.success) throw new Error("Invalid stage");
 
+  const before = await db.candidate.findUnique({
+    where: { id: candidateId },
+    select: { email: true, rejectionEmailSentAt: true, interviewInviteSentAt: true, offerEmailSentAt: true },
+  });
+
   await db.candidate.update({ where: { id: candidateId }, data: { stage: stage.data } });
+  await autoSendStageEmail(candidateId, session.user.id, stage.data, before ?? null);
 
   revalidatePath(`/ops/recruitment/${roleId}`);
   revalidatePath("/ops/applicants");
@@ -1015,71 +1025,24 @@ export async function convertCandidateToEmployee(
   return { employeeId: employee.id };
 }
 
-async function loadCandidateForEmail(candidateId: string) {
-  const candidate = await db.candidate.findUnique({
-    where: { id: candidateId },
-    include: { openRole: { include: { clientOrg: true } } },
-  });
-  if (!candidate) throw new Error("Candidate not found");
-  if (!candidate.email) throw new Error(`${candidate.name} has no email address on file`);
-  return candidate;
-}
-
 export async function sendCandidateRejectionEmail(candidateId: string, roleId: string) {
   const session = await requireRole("MASY_OPS");
-  const candidate = await loadCandidateForEmail(candidateId);
-
-  const { subject, body } = rejectionEmail(candidate.name, candidate.openRole.title, candidate.openRole.clientOrg.name);
-  await sendNotification(candidate.email!, subject, body);
-
-  await db.candidate.update({ where: { id: candidateId }, data: { rejectionEmailSentAt: new Date() } });
-  await db.auditLog.create({
-    data: { actorId: session.user.id, action: "candidate.send_rejection_email", targetType: "Candidate", targetId: candidateId },
-  });
-
+  await sendRejectionEmailCore(candidateId, session.user.id);
   revalidatePath(`/ops/recruitment/${roleId}`);
   revalidatePath(`/ops/applicants/${candidateId}`);
 }
 
 export async function sendCandidateInterviewInviteEmail(candidateId: string, roleId: string) {
   const session = await requireRole("MASY_OPS");
-  const candidate = await loadCandidateForEmail(candidateId);
-
-  const { subject, body } = interviewInviteEmail(
-    candidate.name,
-    candidate.openRole.title,
-    candidate.openRole.clientOrg.name,
-    candidate.openRole.schedulingLink,
-    candidate.openRole.customInterviewMessage,
-  );
-  await sendNotification(candidate.email!, subject, body);
-
-  await db.candidate.update({ where: { id: candidateId }, data: { interviewInviteSentAt: new Date() } });
-  await db.auditLog.create({
-    data: { actorId: session.user.id, action: "candidate.send_interview_invite", targetType: "Candidate", targetId: candidateId },
-  });
-
+  await sendInterviewInviteEmailCore(candidateId, session.user.id);
   revalidatePath(`/ops/recruitment/${roleId}`);
   revalidatePath(`/ops/applicants/${candidateId}`);
 }
 
 export async function sendCandidateOfferEmail(candidateId: string, roleId: string) {
   const session = await requireRole("MASY_OPS");
-  const candidate = await loadCandidateForEmail(candidateId);
-
-  const { subject, body } = offerEmail(
-    candidate.name,
-    candidate.openRole.title,
-    candidate.openRole.clientOrg.name,
-    candidate.openRole.customOfferMessage,
-  );
-  await sendNotification(candidate.email!, subject, body);
-
-  await db.candidate.update({ where: { id: candidateId }, data: { offerEmailSentAt: new Date() } });
-  await db.auditLog.create({
-    data: { actorId: session.user.id, action: "candidate.send_offer_email", targetType: "Candidate", targetId: candidateId },
-  });
-
+  await sendOfferEmailCore(candidateId, session.user.id);
   revalidatePath(`/ops/recruitment/${roleId}`);
   revalidatePath(`/ops/applicants/${candidateId}`);
 }
+
