@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uniqueRoleSlug } from "@/lib/slug";
 import { generateShortCode } from "@/lib/short-code";
-import { suggestRoleQuestions, rankCandidates, type SuggestedQuestion } from "@/lib/ai";
+import { suggestRoleQuestions, rankCandidates, draftJobDescription, type SuggestedQuestion } from "@/lib/ai";
 import {
   sendRejectionEmailCore,
   sendInterviewInviteEmailCore,
@@ -208,6 +208,24 @@ export async function updateRoleDescription(roleId: string, formData: FormData) 
   await db.openRole.update({ where: { id: roleId }, data: { description: parsed.data.description } });
 
   revalidatePath(`/ops/recruitment/${roleId}`);
+}
+
+export type DraftDescriptionResult = { description: string } | { error: string };
+
+export async function draftRoleDescription(roleId: string, brief: string): Promise<DraftDescriptionResult> {
+  await requireRole("MASY_OPS");
+
+  if (!brief.trim()) return { error: "Tell it a bit about the role first." };
+
+  const role = await db.openRole.findUnique({ where: { id: roleId }, select: { title: true } });
+  if (!role) return { error: "Role not found" };
+
+  try {
+    const description = await draftJobDescription(role.title, brief);
+    return { description };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Something went wrong drafting the description." };
+  }
 }
 
 const updateLocationSchema = z.object({

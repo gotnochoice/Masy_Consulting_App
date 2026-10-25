@@ -307,3 +307,25 @@ should be false and message should be empty.`;
   return { hasIssue: !!result.hasIssue, message: result.message || "" };
 }
 
+export async function draftJobDescription(roleTitle: string, brief: string): Promise<string> {
+  const prompt = `You are drafting a job application page description for a recruiter to review and edit before
+publishing.
+
+Role title: ${roleTitle}
+What the recruiter told you about this role: ${brief}
+
+Write a description candidates will see on the application page: what the role involves day to day, and what
+makes someone a good fit. 2-4 short paragraphs. Plain, direct language -- no corporate buzzwords ("synergy",
+"dynamic self-starter", etc). You may bold a short label like **Key Responsibilities** by wrapping it in ** if it
+helps structure the description, but don't overdo formatting. Do not invent specific facts (salary, exact hours,
+company history) that weren't given to you in the brief.`;
+
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: { description: { type: "string" } },
+    required: ["description"],
+  })) as { description: string };
+
+  return result.description.trim();
+}
+

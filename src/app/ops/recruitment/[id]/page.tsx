@@ -9,6 +9,7 @@ import { CandidateCard } from "./candidate-card";
 import { CopyLinkButton } from "./copy-link-button";
 import { SuggestQuestionsPanel } from "./suggest-questions-panel";
 import { RankCandidatesPanel } from "./rank-candidates-panel";
+import { DescriptionEditor } from "./description-editor";
 import { SectionMoveSelect } from "./section-move-select";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import {
@@ -803,23 +804,11 @@ function postAnswers(answers, timestamp) {
             <p className="text-xs text-slate-light">Shown to applicants on the public job listing.</p>
           </form>
 
-          <form action={updateDescriptionWithId} className="space-y-1 border-t border-border pt-4">
-            <label className={labelClass} htmlFor="description">What candidates see on the application page</label>
-            <textarea
-              id="description"
-              name="description"
-              rows={3}
-              defaultValue={role.description ?? ""}
-              placeholder="A short description of the role, responsibilities, and what makes this a good fit."
-              className={inputClass}
-            />
-            <p className="text-xs text-slate-light">
-              Wrap text in ** to bold it, e.g. **Key Responsibilities** shows up bold to applicants.
-            </p>
-            <button type="submit" className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-slate hover:text-ink">
-              Save description
-            </button>
-          </form>
+          <DescriptionEditor
+            roleId={role.id}
+            initialDescription={role.description ?? ""}
+            updateDescription={updateDescriptionWithId}
+          />
 
           <form action={updateSchedulingLinkWithId} className="space-y-1 border-t border-border pt-4">
             <label className={labelClass} htmlFor="schedulingLink">Interview scheduling link</label>
