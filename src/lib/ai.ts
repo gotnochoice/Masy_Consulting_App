@@ -7,62 +7,74 @@ export type SuggestedOnboardingQuestion = {
   options: string[];
 };
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const CLAUDE_MODEL = "claude-sonnet-5";
 const ONBOARDING_QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES"];
+const RESULT_TOOL_NAME = "return_result";
 
-async function callGemini(
+// Claude has no "response schema" mode like some other providers -- the reliable way to get
+// back JSON matching a shape is to force it to call a single tool whose input_schema is that
+// shape. The tool is never actually "run"; its input *is* the structured result we want.
+async function callClaude(
   prompt: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  responseSchema: Record<string, any>,
+  resultSchema: Record<string, any>,
   file?: { mimeType: string; data: string },
 ): Promise<unknown> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    throw new Error("AI suggestions aren't set up yet. Ask your developer to add a GEMINI_API_KEY.");
+    throw new Error("AI suggestions aren't set up yet. Ask your developer to add an ANTHROPIC_API_KEY.");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const parts: any[] = [{ text: prompt }];
-  if (file) parts.push({ inlineData: { mimeType: file.mimeType, data: file.data } });
+  const content: any[] = [];
+  if (file) {
+    content.push({
+      type: "document",
+      source: { type: "base64", media_type: file.mimeType, data: file.data },
+    });
+  }
+  content.push({ type: "text", text: prompt });
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema,
-        },
-      }),
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
     },
-  );
+    body: JSON.stringify({
+      model: CLAUDE_MODEL,
+      max_tokens: 4096,
+      tools: [{ name: RESULT_TOOL_NAME, description: "Returns the structured result.", input_schema: resultSchema }],
+      tool_choice: { type: "tool", name: RESULT_TOOL_NAME },
+      messages: [{ role: "user", content }],
+    }),
+  });
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => "");
-    console.error("Gemini API error", res.status, errBody);
+    console.error("Claude API error", res.status, errBody);
 
     if (res.status === 429) {
-      throw new Error(
-        "Gemini's free tier is rate-limited right now (too many requests). Wait a minute and try again. " +
-          "If it keeps happening, check your usage and quota at aistudio.google.com.",
-      );
+      throw new Error("Claude is rate-limited right now (too many requests). Wait a moment and try again.");
     }
-    if (res.status === 400 || res.status === 403) {
-      throw new Error("Gemini rejected the request. Double-check the GEMINI_API_KEY is correct and active.");
+    if (res.status === 401 || res.status === 403) {
+      throw new Error("Claude rejected the request. Double-check the ANTHROPIC_API_KEY is correct and active.");
     }
-    throw new Error(`Gemini request failed (${res.status}). Try again in a moment.`);
+    if (res.status === 400) {
+      throw new Error("Claude couldn't process that request. Try again, or with a smaller document.");
+    }
+    throw new Error(`Claude request failed (${res.status}). Try again in a moment.`);
   }
 
   const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error("Gemini didn't return any suggestions. Try again in a moment.");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toolUse = data.content?.find((block: any) => block.type === "tool_use" && block.name === RESULT_TOOL_NAME);
+  if (!toolUse) {
+    throw new Error("Claude didn't return any suggestions. Try again in a moment.");
   }
 
-  return JSON.parse(text);
+  return toolUse.input;
 }
 
 export async function suggestRoleQuestions(title: string, description: string | null): Promise<SuggestedQuestion[]> {
@@ -77,20 +89,26 @@ portfolio, situational judgment, etc). For each, choose the best answer type: SH
 LONG_TEXT for an answer needing a paragraph, LINK for a URL such as a portfolio or work sample. Mark "required" true
 only for questions essential to screening this candidate, false for nice-to-have ones.`;
 
-  const parsed = (await callGemini(prompt, {
-    type: "ARRAY",
-    items: {
-      type: "OBJECT",
-      properties: {
-        label: { type: "STRING" },
-        type: { type: "STRING", enum: ["SHORT_TEXT", "LONG_TEXT", "LINK"] },
-        required: { type: "BOOLEAN" },
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: {
+      questions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            label: { type: "string" },
+            type: { type: "string", enum: ["SHORT_TEXT", "LONG_TEXT", "LINK"] },
+            required: { type: "boolean" },
+          },
+          required: ["label", "type", "required"],
+        },
       },
-      required: ["label", "type", "required"],
     },
-  })) as SuggestedQuestion[];
+    required: ["questions"],
+  })) as { questions: SuggestedQuestion[] };
 
-  return parsed
+  return result.questions
     .filter((q) => q.label && ["SHORT_TEXT", "LONG_TEXT", "LINK"].includes(q.type))
     .slice(0, 6);
 }
@@ -106,19 +124,25 @@ someone in this specific role. Each section should have 2 to 4 concise questions
 honest reflection, not yes/no answers. Do not include generic closing sections like "Challenges",
 "Improvements for Next Month", or "Support Needed" — those are added separately.`;
 
-  const parsed = (await callGemini(prompt, {
-    type: "ARRAY",
-    items: {
-      type: "OBJECT",
-      properties: {
-        section: { type: "STRING" },
-        questions: { type: "ARRAY", items: { type: "STRING" } },
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: {
+      sections: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            section: { type: "string" },
+            questions: { type: "array", items: { type: "string" } },
+          },
+          required: ["section", "questions"],
+        },
       },
-      required: ["section", "questions"],
     },
-  })) as ReviewTemplateSection[];
+    required: ["sections"],
+  })) as { sections: ReviewTemplateSection[] };
 
-  return parsed
+  return result.sections
     .filter((s) => s.section && Array.isArray(s.questions) && s.questions.length > 0)
     .slice(0, 5);
 }
@@ -137,18 +161,24 @@ section heading, instructions, a signature line, or a date-of-signing line. For 
   as given in the document (use "Yes" and "No" for a yes/no question). Leave options empty for every other type.
 - Mark "required" true unless the document clearly marks the field optional.`;
 
-const onboardingQuestionSchema = {
-  type: "ARRAY",
-  items: {
-    type: "OBJECT",
-    properties: {
-      label: { type: "STRING" },
-      type: { type: "STRING", enum: ONBOARDING_QUESTION_TYPES },
-      required: { type: "BOOLEAN" },
-      options: { type: "ARRAY", items: { type: "STRING" } },
+const onboardingQuestionResultSchema = {
+  type: "object",
+  properties: {
+    questions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          label: { type: "string" },
+          type: { type: "string", enum: ONBOARDING_QUESTION_TYPES },
+          required: { type: "boolean" },
+          options: { type: "array", items: { type: "string" } },
+        },
+        required: ["label", "type", "required", "options"],
+      },
     },
-    required: ["label", "type", "required", "options"],
   },
+  required: ["questions"],
 };
 
 export async function extractOnboardingQuestionsFromDocument(
@@ -159,13 +189,13 @@ export async function extractOnboardingQuestionsFromDocument(
       ? `${ONBOARDING_EXTRACTION_INSTRUCTIONS}\n\nDocument content:\n"""\n${input.text}\n"""`
       : `${ONBOARDING_EXTRACTION_INSTRUCTIONS}\n\nThe document is attached.`;
 
-  const parsed = (await callGemini(
+  const result = (await callClaude(
     prompt,
-    onboardingQuestionSchema,
+    onboardingQuestionResultSchema,
     "file" in input ? input.file : undefined,
-  )) as SuggestedOnboardingQuestion[];
+  )) as { questions: SuggestedOnboardingQuestion[] };
 
-  return parsed
+  return result.questions
     .filter((q) => q.label && ONBOARDING_QUESTION_TYPES.includes(q.type))
     .map((q) => ({ ...q, options: Array.isArray(q.options) ? q.options.filter(Boolean) : [] }))
     .slice(0, 20);
