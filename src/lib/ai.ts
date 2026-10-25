@@ -269,3 +269,41 @@ ${candidateBlock}`;
   );
 }
 
+export type ReviewQualityCheck = { hasIssue: boolean; message: string };
+
+// Catches a one-word/thin self-assessment at submission time so the employee can add detail
+// before it ever reaches Masy, rather than Masy discovering it's unusable after the fact.
+// Deliberately lenient: a short answer that genuinely and sufficiently answers the question
+// is not an issue -- only answers that don't actually engage with what was asked are.
+export async function checkReviewQuality(
+  sections: { section: string; answers: { question: string; answer: string }[] }[],
+): Promise<ReviewQualityCheck> {
+  const qaBlock = sections
+    .map((s) => `${s.section}:\n${s.answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join("\n")}`)
+    .join("\n\n");
+
+  const prompt = `You are checking a submitted employee self-assessment for quality before it's accepted.
+
+Flag it ONLY if one or more answers are too thin to be useful to a reviewer -- a single word, "fine", "nothing",
+"n/a" on a question that clearly expects more, or an answer that doesn't actually address what was asked. Do NOT
+flag an answer just because it's short -- a brief answer that genuinely and sufficiently answers its question is
+fine as-is.
+
+${qaBlock}
+
+If there's a real issue, write a short, friendly message (1-2 sentences) telling the employee specifically which
+answer(s) need more detail and why, so they can revise before resubmitting. If everything is adequate, hasIssue
+should be false and message should be empty.`;
+
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: {
+      hasIssue: { type: "boolean" },
+      message: { type: "string" },
+    },
+    required: ["hasIssue", "message"],
+  })) as ReviewQualityCheck;
+
+  return { hasIssue: !!result.hasIssue, message: result.message || "" };
+}
+

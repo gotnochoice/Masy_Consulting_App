@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { getReviewTemplate } from "@/lib/review-templates";
+import { checkReviewQuality } from "@/lib/ai";
 
 const schema = z.object({
   cycle: z.string().min(1, "Cycle is required"),
@@ -40,6 +41,18 @@ export async function submitReview(formData: FormData) {
       return { question, answer };
     }),
   }));
+
+  // Catches a thin/one-word self-assessment before it's saved, so the employee can add
+  // detail now instead of Masy discovering it's unusable later. If the quality check itself
+  // fails for any reason (AI outage, missing key, etc.), that must never block a real
+  // submission -- fail open and let it through.
+  const quality = await checkReviewQuality(responses).catch((err) => {
+    console.error("[submitReview] quality check failed, allowing submission:", err);
+    return { hasIssue: false, message: "" };
+  });
+  if (quality.hasIssue) {
+    throw new Error(quality.message || "A couple of your answers could use more detail before this is submitted.");
+  }
 
   await db.performanceReview.create({
     data: {
