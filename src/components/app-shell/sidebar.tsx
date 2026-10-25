@@ -19,6 +19,7 @@ import {
   UserSearch,
   History,
   Wallet,
+  Sparkles,
   X,
 } from "lucide-react";
 
@@ -39,6 +40,7 @@ const ICONS = {
   pulse: Activity,
   audit: History,
   payroll: Wallet,
+  ask: Sparkles,
 } as const;
 
 export type NavIconName = keyof typeof ICONS;
