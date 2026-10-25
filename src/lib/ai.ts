@@ -6,6 +6,15 @@ export type SuggestedOnboardingQuestion = {
   required: boolean;
   options: string[];
 };
+export type CandidateToRank = {
+  id: string;
+  name: string;
+  yearsExperience: string | null;
+  location: string | null;
+  expectedPay: string | null;
+  answers: { label: string; value: string }[];
+};
+export type CandidateRanking = { candidateId: string; score: number; rationale: string };
 
 const CLAUDE_MODEL = "claude-sonnet-5";
 const ONBOARDING_QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES"];
@@ -200,3 +209,63 @@ export async function extractOnboardingQuestionsFromDocument(
     .map((q) => ({ ...q, options: Array.isArray(q.options) ? q.options.filter(Boolean) : [] }))
     .slice(0, 20);
 }
+
+// Pure triage aid: scores candidates against a role so a reviewer can scan the strongest
+// first, and nothing more. No stage changes, no emails, no decisions -- every candidate
+// stays exactly where they are regardless of score.
+export async function rankCandidates(
+  role: { title: string; description: string | null },
+  candidates: CandidateToRank[],
+): Promise<CandidateRanking[]> {
+  const candidateBlock = candidates
+    .map((c, i) => {
+      const details = [
+        c.yearsExperience && `Years of experience: ${c.yearsExperience}`,
+        c.location && `Location: ${c.location}`,
+        c.expectedPay && `Expected pay: ${c.expectedPay}`,
+        ...c.answers.map((a) => `${a.label}: ${a.value}`),
+      ].filter(Boolean);
+      return `Candidate ${i + 1} (id: "${c.id}"):\nName: ${c.name}\n${details.join("\n")}`;
+    })
+    .join("\n---\n");
+
+  const prompt = `You are helping a recruiter triage a pile of job applications. You are NOT deciding who gets
+rejected or advanced -- you are only ranking candidates so a human reviewer can scan the strongest ones first.
+Every candidate stays in the pipeline regardless of score; nothing gets auto-rejected, and the recruiter makes
+every actual decision.
+
+Role: ${role.title}
+Role description: ${role.description || "not provided"}
+
+Score each candidate below from 0 to 100 on how well they fit this specific role, based only on what they
+actually wrote in their answers -- do not infer anything they didn't state. Give a short, specific one-sentence
+rationale citing something they actually said (not a generic summary). Do not penalize a short answer that still
+clearly and sufficiently answers the question.
+
+${candidateBlock}`;
+
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: {
+      rankings: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            candidateId: { type: "string" },
+            score: { type: "integer", minimum: 0, maximum: 100 },
+            rationale: { type: "string" },
+          },
+          required: ["candidateId", "score", "rationale"],
+        },
+      },
+    },
+    required: ["rankings"],
+  })) as { rankings: CandidateRanking[] };
+
+  const validIds = new Set(candidates.map((c) => c.id));
+  return result.rankings.filter(
+    (r) => validIds.has(r.candidateId) && typeof r.score === "number" && r.score >= 0 && r.score <= 100,
+  );
+}
+

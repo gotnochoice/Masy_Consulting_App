@@ -8,6 +8,7 @@ import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { CandidateCard } from "./candidate-card";
 import { CopyLinkButton } from "./copy-link-button";
 import { SuggestQuestionsPanel } from "./suggest-questions-panel";
+import { RankCandidatesPanel } from "./rank-candidates-panel";
 import { SectionMoveSelect } from "./section-move-select";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import {
@@ -376,6 +377,8 @@ export default async function RolePipelinePage({ params }: { params: Promise<{ i
             interviewInviteSentAt: true,
             offerEmailSentAt: true,
             convertedEmployeeId: true,
+            aiScore: true,
+            aiRationale: true,
             answers: { include: { roleQuestion: true } },
             generalAnswers: { include: { generalQuestion: true } },
           },
@@ -520,10 +523,23 @@ function postAnswers(answers, timestamp) {
     cvUrl: c.resumeFileUrl ?? c.resumeLink,
   }));
 
-  const columns = CANDIDATE_STAGE_ORDER.map((stage) => ({
-    stage,
-    candidates: candidatesWithCvUrl.filter((c) => c.stage === stage),
-  }));
+  const columns = CANDIDATE_STAGE_ORDER.map((stage) => {
+    const stageCandidates = candidatesWithCvUrl.filter((c) => c.stage === stage);
+    // Applied is the actual screening backlog, so once candidates are scored it's sorted
+    // strongest-first to scan -- unscored ones (not yet ranked, or ranking was skipped)
+    // stay in their normal newest-first order, after the scored ones.
+    if (stage === "APPLIED") {
+      stageCandidates.sort((a, b) => {
+        if (a.aiScore === null && b.aiScore === null) return 0;
+        if (a.aiScore === null) return 1;
+        if (b.aiScore === null) return -1;
+        return b.aiScore - a.aiScore;
+      });
+    }
+    return { stage, candidates: stageCandidates };
+  });
+
+  const unscoredAppliedCount = role.candidates.filter((c) => c.stage === "APPLIED" && c.aiScore === null).length;
 
   return (
     <div className="space-y-8">
@@ -556,6 +572,7 @@ function postAnswers(answers, timestamp) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-ink">Pipeline</h2>
           <div className="flex items-center gap-3">
+            <RankCandidatesPanel roleId={role.id} unscoredCount={unscoredAppliedCount} />
             {duplicateCandidateCount > 0 && (
               <ConfirmSubmitButton
                 action={removeDuplicatesWithId}

@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uniqueRoleSlug } from "@/lib/slug";
 import { generateShortCode } from "@/lib/short-code";
-import { suggestRoleQuestions, type SuggestedQuestion } from "@/lib/ai";
+import { suggestRoleQuestions, rankCandidates, type SuggestedQuestion } from "@/lib/ai";
 import { sendNotification } from "@/lib/email";
 import { rejectionEmail, interviewInviteEmail, offerEmail } from "@/lib/candidate-email-templates";
 import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
@@ -863,6 +863,76 @@ export async function removeDuplicateCandidates(roleId: string) {
 
   revalidatePath(`/ops/recruitment/${roleId}`);
   revalidatePath("/ops/applicants");
+}
+
+export type RankCandidatesState = { ranked: number; remaining: number } | { error: string } | undefined;
+
+const RANK_BATCH_SIZE = 20;
+
+// Scores up to one batch of not-yet-scored Applied candidates at a time (keeps each call
+// well within a serverless function's execution time, rather than one huge request for a
+// large backlog). The returned `remaining` count tells the UI whether to offer "rank more."
+export async function rankUnscoredCandidates(
+  roleId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  prevState: RankCandidatesState,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  formData: FormData,
+): Promise<RankCandidatesState> {
+  await requireRole("MASY_OPS");
+
+  const role = await db.openRole.findUnique({ where: { id: roleId }, select: { title: true, description: true } });
+  if (!role) return { error: "Role not found" };
+
+  const unscored = await db.candidate.findMany({
+    where: { openRoleId: roleId, stage: "APPLIED", aiScore: null },
+    select: {
+      id: true,
+      name: true,
+      yearsExperience: true,
+      location: true,
+      expectedPay: true,
+      answers: { include: { roleQuestion: true } },
+      generalAnswers: { include: { generalQuestion: true } },
+    },
+    orderBy: { createdAt: "asc" },
+    take: RANK_BATCH_SIZE,
+  });
+
+  if (unscored.length === 0) return { ranked: 0, remaining: 0 };
+
+  try {
+    const rankings = await rankCandidates(
+      { title: role.title, description: role.description },
+      unscored.map((c) => ({
+        id: c.id,
+        name: c.name,
+        yearsExperience: c.yearsExperience,
+        location: c.location,
+        expectedPay: c.expectedPay,
+        answers: [
+          ...c.generalAnswers.map((a) => ({ label: a.generalQuestion.label, value: a.value })),
+          ...c.answers
+            .filter((a) => a.roleQuestion.type !== "PHOTO")
+            .map((a) => ({ label: a.roleQuestion.label, value: a.value })),
+        ],
+      })),
+    );
+
+    if (rankings.length > 0) {
+      await db.$transaction(
+        rankings.map((r) =>
+          db.candidate.update({ where: { id: r.candidateId }, data: { aiScore: r.score, aiRationale: r.rationale } }),
+        ),
+      );
+    }
+
+    const remaining = await db.candidate.count({ where: { openRoleId: roleId, stage: "APPLIED", aiScore: null } });
+    revalidatePath(`/ops/recruitment/${roleId}`);
+    return { ranked: rankings.length, remaining };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Something went wrong ranking candidates." };
+  }
 }
 
 export type ConvertToEmployeeState = { employeeId: string } | { error: string } | undefined;

@@ -47,6 +47,8 @@ type CandidateWithAnswers = {
   offerEmailSentAt: Date | null;
   convertedEmployeeId: string | null;
   createdAt: Date;
+  aiScore: number | null;
+  aiRationale: string | null;
   answers: { id: string; value: string; roleQuestion: { label: string; type: string } }[];
   generalAnswers: { id: string; value: string; generalQuestion: { label: string; type: string } }[];
 };
@@ -86,10 +88,21 @@ export function CandidateCard({
         >
           {candidate.name}
         </button>
-        <div className="mt-1.5 flex items-center gap-2">
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
           <CandidateSourceBadge source={candidate.source} />
           <span className="text-xs text-slate-light">Applied {formatDateShort(candidate.createdAt)}</span>
+          {candidate.aiScore !== null && (
+            <span
+              title="AI fit score -- a ranking aid only, never a decision"
+              className="rounded-btn bg-indigo-tint px-1.5 py-0.5 text-xs font-semibold text-indigo"
+            >
+              AI {candidate.aiScore}
+            </span>
+          )}
         </div>
+        {candidate.aiRationale && (
+          <p className="mt-1 text-xs italic text-slate-light">{candidate.aiRationale}</p>
+        )}
       </div>
       <div className="space-y-1">
         {candidate.email && <p className="truncate text-xs text-slate">{candidate.email}</p>}

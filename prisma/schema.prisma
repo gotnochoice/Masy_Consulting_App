@@ -421,6 +421,8 @@ model Candidate {
   convertedEmployeeId String?           @unique
   convertedEmployee   Employee?         @relation(fields: [convertedEmployeeId], references: [id])
   convertedAt         DateTime?
+  aiScore         Int?
+  aiRationale     String?
   answers         CandidateAnswer[]
   generalAnswers  GeneralAnswer[]
   createdAt       DateTime          @default(now())
