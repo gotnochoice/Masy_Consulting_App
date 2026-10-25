@@ -329,3 +329,34 @@ company history) that weren't given to you in the brief.`;
   return result.description.trim();
 }
 
+export async function draftContractLetter(details: {
+  employeeName: string;
+  roleTitle: string;
+  companyName: string;
+  startDate: string;
+  salary: string | null;
+}): Promise<string> {
+  const prompt = `You are drafting an offer/contract letter for an HR consultancy (Masy Consulting) to review, edit,
+and send on behalf of its client company. This is a DRAFT a human will check before it ever goes out -- write it
+as a complete, ready-to-send letter, but do not invent any detail not given to you below (no made-up benefits,
+notice periods, or clauses).
+
+Employee name: ${details.employeeName}
+Role title: ${details.roleTitle}
+Company: ${details.companyName}
+Start date: ${details.startDate}
+${details.salary ? `Monthly salary: ₦${details.salary}` : "Salary: not provided -- leave a clear [SALARY] placeholder for Ops to fill in"}
+
+Write a short, professional offer letter: greeting, confirmation of the role and start date, salary line (or the
+placeholder if not provided), a line about Masy Consulting administering HR on the company's behalf, and a warm
+closing. Plain text, no markdown formatting, ready to paste into an email or document.`;
+
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: { letter: { type: "string" } },
+    required: ["letter"],
+  })) as { letter: string };
+
+  return result.letter.trim();
+}
+

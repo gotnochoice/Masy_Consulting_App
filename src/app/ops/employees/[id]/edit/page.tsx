@@ -5,6 +5,7 @@ import { updateEmployee } from "../../actions";
 import { EmployeeForm } from "../../employee-form";
 import { DocumentManager } from "./document-manager";
 import { OnboardingQuestionsManager } from "./onboarding-questions-manager";
+import { ContractLetterPanel } from "./contract-letter-panel";
 
 export default async function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole("MASY_OPS");
@@ -26,6 +27,7 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
       <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
       <h1 className="text-2xl font-bold tracking-tight text-ink">Edit employee</h1>
       <EmployeeForm orgs={orgs} employee={employee} action={updateWithId} submitLabel="Save changes" />
+      <ContractLetterPanel employeeId={employee.id} initialDraft={employee.contractLetterDraft} />
       <OnboardingQuestionsManager employeeId={employee.id} questions={onboardingQuestions} />
       <DocumentManager employeeId={employee.id} documents={documents} />
     </div>

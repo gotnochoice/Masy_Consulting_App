@@ -15,7 +15,7 @@ import { uploadEmployeePhoto } from "@/lib/photo";
 import { uploadEmployeeDocumentFile } from "@/lib/employee-documents-server";
 import { notifyEmployeeDocumentsShared } from "@/lib/notify-document";
 import mammoth from "mammoth";
-import { extractOnboardingQuestionsFromDocument, type SuggestedOnboardingQuestion } from "@/lib/ai";
+import { extractOnboardingQuestionsFromDocument, draftContractLetter, type SuggestedOnboardingQuestion } from "@/lib/ai";
 
 const baseFields = {
   clientOrgId: z.string().min(1, "Organization is required"),
@@ -643,5 +643,36 @@ export async function addSuggestedOnboardingQuestions(employeeId: string, questi
     })),
   });
 
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+export type DraftContractLetterResult = { letter: string } | { error: string };
+
+export async function draftEmployeeContractLetter(employeeId: string): Promise<DraftContractLetterResult> {
+  await requireRole("MASY_OPS");
+
+  const employee = await db.employee.findUnique({
+    where: { id: employeeId },
+    include: { clientOrg: { select: { name: true } } },
+  });
+  if (!employee) return { error: "Employee not found" };
+
+  try {
+    const letter = await draftContractLetter({
+      employeeName: employee.name,
+      roleTitle: employee.roleTitle,
+      companyName: employee.clientOrg.name,
+      startDate: employee.startDate.toLocaleDateString([], { year: "numeric", month: "long", day: "numeric" }),
+      salary: employee.salary ? employee.salary.toString() : null,
+    });
+    return { letter };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Something went wrong drafting the letter." };
+  }
+}
+
+export async function saveEmployeeContractLetterDraft(employeeId: string, letter: string) {
+  await requireRole("MASY_OPS");
+  await db.employee.update({ where: { id: employeeId }, data: { contractLetterDraft: letter } });
   revalidatePath(`/ops/employees/${employeeId}/edit`);
 }

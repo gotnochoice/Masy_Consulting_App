@@ -178,6 +178,7 @@ model Employee {
   salary             Decimal?            @db.Decimal(12, 2)
   leaveBalanceDays   Int                 @default(0)
   reviewTemplate     Json?
+  contractLetterDraft String?
   user               User?
   attendanceRecords  AttendanceRecord[]
   leaveRequests      LeaveRequest[]
