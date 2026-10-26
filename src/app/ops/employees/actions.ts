@@ -15,7 +15,9 @@ import { uploadEmployeePhoto } from "@/lib/photo";
 import { uploadEmployeeDocumentFile } from "@/lib/employee-documents-server";
 import { notifyEmployeeDocumentsShared } from "@/lib/notify-document";
 import mammoth from "mammoth";
-import { extractOnboardingQuestionsFromDocument, draftContractLetter, type SuggestedOnboardingQuestion } from "@/lib/ai";
+import { extractOnboardingQuestionsFromDocument, draftContractLetter, transcribeDocumentText, type SuggestedOnboardingQuestion } from "@/lib/ai";
+import { getContractLetterTemplate, saveContractLetterTemplate, removeContractLetterTemplate } from "@/lib/contract-letter-template";
+import { MAX_TEMPLATE_FILE_BYTES, MAX_TEMPLATE_FILE_LABEL } from "@/lib/contract-letter-template-constants";
 
 const baseFields = {
   clientOrgId: z.string().min(1, "Organization is required"),
@@ -658,12 +660,14 @@ export async function draftEmployeeContractLetter(employeeId: string): Promise<D
   if (!employee) return { error: "Employee not found" };
 
   try {
+    const template = await getContractLetterTemplate();
     const letter = await draftContractLetter({
       employeeName: employee.name,
       roleTitle: employee.roleTitle,
       companyName: employee.clientOrg.name,
       startDate: employee.startDate.toLocaleDateString([], { year: "numeric", month: "long", day: "numeric" }),
       salary: employee.salary ? employee.salary.toString() : null,
+      template: template?.text ?? null,
     });
     return { letter };
   } catch (err) {
@@ -674,5 +678,52 @@ export async function draftEmployeeContractLetter(employeeId: string): Promise<D
 export async function saveEmployeeContractLetterDraft(employeeId: string, letter: string) {
   await requireRole("MASY_OPS");
   await db.employee.update({ where: { id: employeeId }, data: { contractLetterDraft: letter } });
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+export type UploadContractLetterTemplateState = { fileName: string } | { error: string } | undefined;
+
+export async function uploadContractLetterTemplate(
+  employeeId: string,
+  _prevState: UploadContractLetterTemplateState,
+  formData: FormData,
+): Promise<UploadContractLetterTemplateState> {
+  await requireRole("MASY_OPS");
+
+  const file = formData.get("template");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose a document to upload first." };
+  }
+  if (file.size > MAX_TEMPLATE_FILE_BYTES) {
+    return { error: `That file is too large. Please keep it under ${MAX_TEMPLATE_FILE_LABEL}.` };
+  }
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const name = file.name.toLowerCase();
+
+    let text: string;
+    if (name.endsWith(".docx")) {
+      const { value } = await mammoth.extractRawText({ buffer });
+      text = value;
+    } else if (name.endsWith(".pdf") || file.type === "application/pdf") {
+      text = await transcribeDocumentText({ mimeType: "application/pdf", data: buffer.toString("base64") });
+    } else {
+      text = buffer.toString("utf-8");
+    }
+
+    if (!text.trim()) return { error: "Couldn't find any text in that document." };
+
+    await saveContractLetterTemplate(text, file.name);
+    revalidatePath(`/ops/employees/${employeeId}/edit`);
+    return { fileName: file.name };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Something went wrong reading that document." };
+  }
+}
+
+export async function removeEmployeeContractLetterTemplate(employeeId: string) {
+  await requireRole("MASY_OPS");
+  await removeContractLetterTemplate();
   revalidatePath(`/ops/employees/${employeeId}/edit`);
 }

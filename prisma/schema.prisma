@@ -502,6 +502,15 @@ model AuditLog {
   timestamp  DateTime @default(now())
 }
 
+// Single row (id is always "contract-letter-template"), not per-employee or per-client --
+// one offer/contract letter template is uploaded once and reused for every letter drafted.
+model CompanySettings {
+  id                          String   @id
+  contractLetterTemplateText  String?
+  contractLetterTemplateName  String?
+  updatedAt                   DateTime @updatedAt
+}
+
 model ApplicationAttempt {
   id         String   @id @default(cuid())
   ip         String

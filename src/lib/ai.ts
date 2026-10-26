@@ -16,7 +16,7 @@ export type CandidateToRank = {
 };
 export type CandidateRanking = { candidateId: string; score: number; rationale: string };
 
-const CLAUDE_MODEL = "claude-sonnet-5";
+const CLAUDE_MODEL = "claude-haiku-5-5";
 const ONBOARDING_QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "LINK", "MULTIPLE_CHOICE", "CHECKBOXES"];
 const RESULT_TOOL_NAME = "return_result";
 
@@ -335,6 +335,7 @@ export async function draftContractLetter(details: {
   companyName: string;
   startDate: string;
   salary: string | null;
+  template: string | null;
 }): Promise<string> {
   const prompt = `You are drafting an offer/contract letter for an HR consultancy (Masy Consulting) to review, edit,
 and send on behalf of its client company. This is a DRAFT a human will check before it ever goes out -- write it
@@ -347,9 +348,21 @@ Company: ${details.companyName}
 Start date: ${details.startDate}
 ${details.salary ? `Monthly salary: ₦${details.salary}` : "Salary: not provided -- leave a clear [SALARY] placeholder for Ops to fill in"}
 
-Write a short, professional offer letter: greeting, confirmation of the role and start date, salary line (or the
-placeholder if not provided), a line about Masy Consulting administering HR on the company's behalf, and a warm
-closing. Plain text, no markdown formatting, ready to paste into an email or document.`;
+${
+  details.template
+    ? `Masy Consulting's standard offer letter template is below -- match its structure, letterhead/header text,
+section order, standard clauses, and sign-off as closely as possible. Only change the parts that depend on the
+employee details above (name, role, start date, salary). Keep everything else -- wording, clause order, tone --
+consistent with this template:
+"""
+${details.template}
+"""`
+    : `Write a short, professional offer letter: greeting, confirmation of the role and start date, salary line (or
+the placeholder if not provided), a line about Masy Consulting administering HR on the company's behalf, and a
+warm closing.`
+}
+
+Plain text, no markdown formatting, ready to paste into an email or document.`;
 
   const result = (await callClaude(prompt, {
     type: "object",
@@ -358,6 +371,23 @@ closing. Plain text, no markdown formatting, ready to paste into an email or doc
   })) as { letter: string };
 
   return result.letter.trim();
+}
+
+// Transcribes an uploaded reference document (offer letter template/letterhead) to plain
+// text once, at upload time -- so drafting a letter later only needs that stored text, not
+// a fresh document re-sent to Claude on every single draft.
+export async function transcribeDocumentText(file: { mimeType: string; data: string }): Promise<string> {
+  const prompt = `Transcribe the full text content of the attached document, verbatim. Preserve paragraph breaks,
+headings, and line structure as plain text. Do not summarize, explain, or add anything -- just the document's own
+text content, exactly as written.`;
+
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: { text: { type: "string" } },
+    required: ["text"],
+  }, file)) as { text: string };
+
+  return result.text.trim();
 }
 
 export type RoleDraft = { description: string; questions: SuggestedQuestion[] };
