@@ -5,42 +5,64 @@ import { CandidateStageBadge, CandidateSourceBadge, CANDIDATE_STAGE_ORDER, CANDI
 import { formatDateShort } from "@/lib/leave";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { CopyValuesButton } from "@/components/copy-values-button";
-import type { CandidateStage } from "@/generated/prisma/client";
+import type { CandidateStage, Prisma } from "@/generated/prisma/client";
+
+const PAGE_SIZE = 50;
 
 export default async function OpsApplicantsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; roleId?: string; stage?: string }>;
+  searchParams: Promise<{ q?: string; roleId?: string; stage?: string; page?: string }>;
 }) {
   await requireRole("MASY_OPS");
-  const { q, roleId, stage } = await searchParams;
+  const { q, roleId, stage, page: pageParam } = await searchParams;
   const validStage = stage && (CANDIDATE_STAGE_ORDER as string[]).includes(stage) ? (stage as CandidateStage) : undefined;
+  const page = Math.max(1, Number.parseInt(pageParam ?? "1", 10) || 1);
 
-  const [candidates, roles] = await Promise.all([
+  const where: Prisma.CandidateWhereInput = {
+    ...(roleId ? { openRoleId: roleId } : {}),
+    ...(validStage ? { stage: validStage } : {}),
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { email: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const [totalCount, candidates, roles, contactRows] = await Promise.all([
+    db.candidate.count({ where }),
     db.candidate.findMany({
-      where: {
-        ...(roleId ? { openRoleId: roleId } : {}),
-        ...(validStage ? { stage: validStage } : {}),
-        ...(q
-          ? {
-              OR: [
-                { name: { contains: q, mode: "insensitive" } },
-                { email: { contains: q, mode: "insensitive" } },
-              ],
-            }
-          : {}),
-      },
+      where,
       include: { openRole: { include: { clientOrg: true } } },
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
     }),
     db.openRole.findMany({ include: { clientOrg: true }, orderBy: [{ clientOrg: { name: "asc" } }, { title: "asc" }] }),
+    // Copy-all-emails/phones and the missing-contact counts need every matching candidate,
+    // not just the current page -- kept cheap by selecting only the two columns they need.
+    db.candidate.findMany({ where, select: { email: true, phone: true } }),
   ]);
 
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const hasFilters = !!(q || roleId || validStage);
-  const missingEmailCount = candidates.filter((c) => !c.email).length;
-  const missingPhoneCount = candidates.filter((c) => !c.phone).length;
-  const emails = [...new Set(candidates.map((c) => c.email).filter((e): e is string => !!e))];
-  const phones = [...new Set(candidates.map((c) => c.phone).filter((p): p is string => !!p))];
+  const missingEmailCount = contactRows.filter((c) => !c.email).length;
+  const missingPhoneCount = contactRows.filter((c) => !c.phone).length;
+  const emails = [...new Set(contactRows.map((c) => c.email).filter((e): e is string => !!e))];
+  const phones = [...new Set(contactRows.map((c) => c.phone).filter((p): p is string => !!p))];
+
+  const pageHref = (p: number) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (roleId) params.set("roleId", roleId);
+    if (validStage) params.set("stage", validStage);
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return `/ops/applicants${qs ? `?${qs}` : ""}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -83,7 +105,8 @@ export default async function OpsApplicantsPage({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-slate-light">
-          {candidates.length} applicant{candidates.length === 1 ? "" : "s"}
+          {totalCount} applicant{totalCount === 1 ? "" : "s"}
+          {totalPages > 1 && ` · page ${page} of ${totalPages}`}
           {!hasFilters && " · every stage, all time. The Recruitment/Applicants badge only counts those still unreviewed."}
           {missingEmailCount > 0 && ` · ${missingEmailCount} without an email on file`}
           {missingPhoneCount > 0 && ` · ${missingPhoneCount} without a phone on file`}
@@ -159,6 +182,30 @@ export default async function OpsApplicantsPage({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href={pageHref(page - 1)}
+            aria-disabled={page <= 1}
+            className={`rounded-btn border border-border px-3 py-1.5 text-xs font-medium ${
+              page <= 1 ? "pointer-events-none text-slate-light opacity-50" : "text-slate hover:text-ink"
+            }`}
+          >
+            ← Previous
+          </Link>
+          <p className="text-xs text-slate-light">Page {page} of {totalPages}</p>
+          <Link
+            href={pageHref(page + 1)}
+            aria-disabled={page >= totalPages}
+            className={`rounded-btn border border-border px-3 py-1.5 text-xs font-medium ${
+              page >= totalPages ? "pointer-events-none text-slate-light opacity-50" : "text-slate hover:text-ink"
+            }`}
+          >
+            Next →
+          </Link>
         </div>
       )}
     </div>

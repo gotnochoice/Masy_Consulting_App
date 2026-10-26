@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { getOrigin } from "@/lib/url";
@@ -345,49 +346,70 @@ function ${submitFnName}(e) {
 }`;
 }
 
+const CANDIDATES_PER_COLUMN = 30;
+
+const candidateSelect = {
+  id: true,
+  name: true,
+  email: true,
+  phone: true,
+  createdAt: true,
+  yearsExperience: true,
+  location: true,
+  resumeLink: true,
+  resumeFileUrl: true,
+  workSampleUrl: true,
+  expectedPay: true,
+  howHeard: true,
+  followedSocials: true,
+  stage: true,
+  source: true,
+  notes: true,
+  rejectionEmailSentAt: true,
+  interviewInviteSentAt: true,
+  offerEmailSentAt: true,
+  convertedEmployeeId: true,
+  aiScore: true,
+  aiRationale: true,
+  answers: { include: { roleQuestion: true } },
+  generalAnswers: { include: { generalQuestion: true } },
+} as const;
+
 export default async function RolePipelinePage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole("MASY_OPS");
   const { id } = await params;
 
-  const [role, orgs] = await Promise.all([
+  const [role, orgs, allCandidatesLite, ...stageCandidateLists] = await Promise.all([
     db.openRole.findUnique({
       where: { id },
       include: {
         clientOrg: true,
         questions: { orderBy: { order: "asc" } },
         questionSections: { orderBy: { order: "asc" } },
-        candidates: {
-          orderBy: { createdAt: "desc" },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            createdAt: true,
-            yearsExperience: true,
-            location: true,
-            resumeLink: true,
-            resumeFileUrl: true,
-            workSampleUrl: true,
-            expectedPay: true,
-            howHeard: true,
-            followedSocials: true,
-            stage: true,
-            source: true,
-            notes: true,
-            rejectionEmailSentAt: true,
-            interviewInviteSentAt: true,
-            offerEmailSentAt: true,
-            convertedEmployeeId: true,
-            aiScore: true,
-            aiRationale: true,
-            answers: { include: { roleQuestion: true } },
-            generalAnswers: { include: { generalQuestion: true } },
-          },
-        },
       },
     }),
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
+    // Lightweight: every candidate for this role, but only the columns needed for
+    // role-wide counts (dedup, unscored, "clear all") -- never just what's rendered below.
+    db.candidate.findMany({
+      where: { openRoleId: id },
+      select: { id: true, stage: true, source: true, email: true, phone: true, aiScore: true },
+    }),
+    // One capped, fully-loaded query per pipeline column -- keeps the board fast for
+    // roles with hundreds of applicants instead of rendering every one of them at once.
+    ...CANDIDATE_STAGE_ORDER.map((stage) =>
+      db.candidate.findMany({
+        where: { openRoleId: id, stage },
+        select: candidateSelect,
+        // Applied is the actual screening backlog, so once candidates are scored it's sorted
+        // strongest-first to scan -- unscored ones stay in newest-first order, after the scored ones.
+        orderBy:
+          stage === "APPLIED"
+            ? [{ aiScore: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }]
+            : { createdAt: "desc" },
+        take: CANDIDATES_PER_COLUMN,
+      }),
+    ),
   ]);
   if (!role) notFound();
 
@@ -482,7 +504,7 @@ function postAnswers(answers, timestamp) {
   // comment there), purely to show an accurate count before anyone clicks the button.
   const duplicateCandidateCount = (() => {
     const groups = new Map<string, number>();
-    for (const c of role.candidates) {
+    for (const c of allCandidatesLite) {
       if (c.source !== "GOOGLE_FORM") continue;
       const key = c.email?.trim().toLowerCase() || c.phone?.trim() || null;
       if (!key) continue;
@@ -520,28 +542,19 @@ function postAnswers(answers, timestamp) {
     : null;
   const googleFormCreateFnName = `createApplicationForm_${role.id.replace(/[^a-zA-Z0-9]/g, "")}`;
 
-  const candidatesWithCvUrl = role.candidates.map((c) => ({
-    ...c,
-    cvUrl: c.resumeFileUrl ?? c.resumeLink,
+  const stageTotalCounts = new Map<string, number>();
+  for (const c of allCandidatesLite) {
+    stageTotalCounts.set(c.stage, (stageTotalCounts.get(c.stage) ?? 0) + 1);
+  }
+
+  const columns = CANDIDATE_STAGE_ORDER.map((stage, i) => ({
+    stage,
+    candidates: stageCandidateLists[i].map((c) => ({ ...c, cvUrl: c.resumeFileUrl ?? c.resumeLink })),
+    totalCount: stageTotalCounts.get(stage) ?? 0,
   }));
 
-  const columns = CANDIDATE_STAGE_ORDER.map((stage) => {
-    const stageCandidates = candidatesWithCvUrl.filter((c) => c.stage === stage);
-    // Applied is the actual screening backlog, so once candidates are scored it's sorted
-    // strongest-first to scan -- unscored ones (not yet ranked, or ranking was skipped)
-    // stay in their normal newest-first order, after the scored ones.
-    if (stage === "APPLIED") {
-      stageCandidates.sort((a, b) => {
-        if (a.aiScore === null && b.aiScore === null) return 0;
-        if (a.aiScore === null) return 1;
-        if (b.aiScore === null) return -1;
-        return b.aiScore - a.aiScore;
-      });
-    }
-    return { stage, candidates: stageCandidates };
-  });
-
-  const unscoredAppliedCount = role.candidates.filter((c) => c.stage === "APPLIED" && c.aiScore === null).length;
+  const totalCandidateCount = allCandidatesLite.length;
+  const unscoredAppliedCount = allCandidatesLite.filter((c) => c.stage === "APPLIED" && c.aiScore === null).length;
 
   return (
     <div className="space-y-8">
@@ -586,10 +599,10 @@ function postAnswers(answers, timestamp) {
                 Remove {duplicateCandidateCount} duplicate{duplicateCandidateCount === 1 ? "" : "s"}
               </ConfirmSubmitButton>
             )}
-            {role.candidates.length > 0 && (
+            {totalCandidateCount > 0 && (
               <ConfirmSubmitButton
                 action={clearAllWithId}
-                confirmMessage={`Delete all ${role.candidates.length} candidate(s) for this role? This can't be undone, so export a CSV first if you want to keep a record.`}
+                confirmMessage={`Delete all ${totalCandidateCount} candidate(s) for this role? This can't be undone, so export a CSV first if you want to keep a record.`}
                 className="text-xs font-medium text-slate hover:text-orange"
               >
                 Clear all candidates
@@ -606,13 +619,13 @@ function postAnswers(answers, timestamp) {
           </p>
         )}
         <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {columns.map(({ stage, candidates }) => (
+          {columns.map(({ stage, candidates, totalCount }) => (
             <div key={stage} className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-light">
                   {CANDIDATE_STAGE_LABELS[stage]}
                 </p>
-                <span className="text-xs text-slate-light">{candidates.length}</span>
+                <span className="text-xs text-slate-light">{totalCount}</span>
               </div>
               <div className="space-y-3">
                 {candidates.map((candidate) => {
@@ -640,6 +653,14 @@ function postAnswers(answers, timestamp) {
                   <p className="rounded-card border border-dashed border-border px-3 py-4 text-center text-xs text-slate-light">
                     None
                   </p>
+                )}
+                {totalCount > candidates.length && (
+                  <Link
+                    href={`/ops/applicants?roleId=${role.id}&stage=${stage}`}
+                    className="block rounded-card border border-dashed border-border px-3 py-2 text-center text-xs font-medium text-indigo hover:bg-indigo-tint/20"
+                  >
+                    +{totalCount - candidates.length} more -- view all in Applicants
+                  </Link>
                 )}
               </div>
             </div>
