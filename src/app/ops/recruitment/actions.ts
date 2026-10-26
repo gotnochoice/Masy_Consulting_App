@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uniqueRoleSlug } from "@/lib/slug";
 import { generateShortCode } from "@/lib/short-code";
-import { suggestRoleQuestions, rankCandidates, draftJobDescription, type SuggestedQuestion } from "@/lib/ai";
+import { suggestRoleQuestions, rankCandidates, draftJobDescription, draftRoleFromWorkReq, type SuggestedQuestion, type RoleDraft } from "@/lib/ai";
 import {
   sendRejectionEmailCore,
   sendInterviewInviteEmailCore,
@@ -225,6 +225,25 @@ export async function draftRoleDescription(roleId: string, brief: string): Promi
     return { description };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Something went wrong drafting the description." };
+  }
+}
+
+export type RoleDraftResult = RoleDraft | { error: string };
+
+// The combined "work req in, description + questions out" path -- one Claude call instead of
+// drafting the description, saving it, then separately generating questions off of it.
+export async function draftRoleFromBrief(roleId: string, workReq: string): Promise<RoleDraftResult> {
+  await requireRole("MASY_OPS");
+
+  if (!workReq.trim()) return { error: "Paste the work req first." };
+
+  const role = await db.openRole.findUnique({ where: { id: roleId }, select: { title: true } });
+  if (!role) return { error: "Role not found" };
+
+  try {
+    return await draftRoleFromWorkReq(role.title, workReq);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Something went wrong drafting the role." };
   }
 }
 

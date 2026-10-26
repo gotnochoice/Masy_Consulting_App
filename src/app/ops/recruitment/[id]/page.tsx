@@ -10,6 +10,7 @@ import { CopyLinkButton } from "./copy-link-button";
 import { SuggestQuestionsPanel } from "./suggest-questions-panel";
 import { RankCandidatesPanel } from "./rank-candidates-panel";
 import { DescriptionEditor } from "./description-editor";
+import { WorkReqPanel } from "./work-req-panel";
 import { SectionMoveSelect } from "./section-move-select";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import {
@@ -568,6 +569,8 @@ function postAnswers(answers, timestamp) {
           </a>
         </div>
       </div>
+
+      <WorkReqPanel roleId={role.id} updateDescription={updateDescriptionWithId} />
 
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

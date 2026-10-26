@@ -360,3 +360,61 @@ closing. Plain text, no markdown formatting, ready to paste into an email or doc
   return result.letter.trim();
 }
 
+export type RoleDraft = { description: string; questions: SuggestedQuestion[] };
+
+// One shot from a work req to everything a new role's application page needs, so Ops only
+// has to review and save rather than drafting the description and then separately
+// generating questions off of it.
+export async function draftRoleFromWorkReq(roleTitle: string, workReq: string): Promise<RoleDraft> {
+  const prompt = `You are helping a recruiter set up a new job application page from a work requisition / brief
+they wrote internally for their own reference -- it may be informal, a bullet list, or unstructured notes.
+
+Role title: ${roleTitle}
+Work requisition:
+"""
+${workReq}
+"""
+
+Produce two things from this:
+
+1. A candidate-facing description for the application page: what the role involves day to day, and what makes
+someone a good fit. 2-4 short paragraphs, plain direct language, no corporate buzzwords ("synergy", "dynamic
+self-starter", etc). You may bold a short label like **Key Responsibilities** by wrapping it in ** if it helps
+structure it, but don't overdo formatting. Do not invent specific facts (salary, exact hours, company history)
+that weren't given in the work req.
+
+2. 4 to 6 concise screening questions specific to this role that help judge fit (skills, tools, availability,
+portfolio, situational judgment, etc), based on what the work req says this role actually needs. The application
+form already collects name, email, phone, years of experience, and a CV/resume link -- do not suggest those. For
+each question choose the best answer type: SHORT_TEXT for a brief factual answer, LONG_TEXT for an answer needing
+a paragraph, LINK for a URL such as a portfolio or work sample. Mark "required" true only for questions essential
+to screening this candidate, false for nice-to-have ones.`;
+
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: {
+      description: { type: "string" },
+      questions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            label: { type: "string" },
+            type: { type: "string", enum: ["SHORT_TEXT", "LONG_TEXT", "LINK"] },
+            required: { type: "boolean" },
+          },
+          required: ["label", "type", "required"],
+        },
+      },
+    },
+    required: ["description", "questions"],
+  })) as RoleDraft;
+
+  return {
+    description: result.description.trim(),
+    questions: result.questions
+      .filter((q) => q.label && ["SHORT_TEXT", "LONG_TEXT", "LINK"].includes(q.type))
+      .slice(0, 6),
+  };
+}
+
