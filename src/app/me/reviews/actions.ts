@@ -13,34 +13,38 @@ const schema = z.object({
   selfAssessment: z.string().optional(),
 });
 
-export async function submitReview(formData: FormData) {
+export type SubmitReviewState = { error: string } | undefined;
+
+export async function submitReview(_prevState: SubmitReviewState, formData: FormData): Promise<SubmitReviewState> {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
-  if (!employeeId) throw new Error("No employee record linked to this account");
+  if (!employeeId) return { error: "No employee record linked to this account" };
 
   const employee = await db.employee.findUnique({ where: { id: employeeId } });
-  if (!employee) throw new Error("Employee not found");
+  if (!employee) return { error: "Employee not found" };
 
   const parsed = schema.safeParse({
     cycle: formData.get("cycle"),
     selfAssessment: formData.get("selfAssessment") || "",
   });
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message ?? "Invalid review submission");
+    return { error: parsed.error.issues[0]?.message ?? "Invalid review submission" };
   }
 
   const template = await getReviewTemplate(employeeId, employee.roleTitle, employee.reviewTemplate);
-  const responses = template.map((section, si) => ({
-    section: section.section,
-    answers: section.questions.map((question, qi) => {
+  const responses: { section: string; answers: { question: string; answer: string }[] }[] = [];
+  for (const [si, section] of template.entries()) {
+    const answers: { question: string; answer: string }[] = [];
+    for (const [qi, question] of section.questions.entries()) {
       const raw = formData.get(`s${si}_q${qi}`);
       const answer = typeof raw === "string" ? raw.trim() : "";
       if (!answer) {
-        throw new Error(`Please answer: "${question}"`);
+        return { error: `Please answer: "${question}"` };
       }
-      return { question, answer };
-    }),
-  }));
+      answers.push({ question, answer });
+    }
+    responses.push({ section: section.section, answers });
+  }
 
   // Catches a thin/one-word self-assessment before it's saved, so the employee can add
   // detail now instead of Masy discovering it's unusable later. If the quality check itself
@@ -51,7 +55,7 @@ export async function submitReview(formData: FormData) {
     return { hasIssue: false, message: "" };
   });
   if (quality.hasIssue) {
-    throw new Error(quality.message || "A couple of your answers could use more detail before this is submitted.");
+    return { error: quality.message || "A couple of your answers could use more detail before this is submitted." };
   }
 
   await db.performanceReview.create({
