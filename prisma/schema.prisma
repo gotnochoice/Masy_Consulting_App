@@ -36,6 +36,7 @@ enum LeaveStatus {
 }
 
 enum ReviewStatus {
+  DRAFT
   SUBMITTED
   MASY_REVIEWED
   RELEASED

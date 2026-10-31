@@ -54,7 +54,8 @@ export async function runAskQuestion(key: AskQuestionKey): Promise<AskResult> {
           select: { id: true, name: true, clientOrg: { select: { name: true } } },
         }),
         db.performanceReview.findMany({
-          where: { createdAt: { gte: since } },
+          // An unsent DRAFT doesn't count as reviewed.
+          where: { createdAt: { gte: since }, status: { not: "DRAFT" } },
           select: { employeeId: true },
           distinct: ["employeeId"],
         }),

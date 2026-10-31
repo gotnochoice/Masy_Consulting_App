@@ -11,6 +11,8 @@ export default async function OpsReviewsPage() {
   await requireRole("MASY_OPS");
 
   const reviews = await db.performanceReview.findMany({
+    // DRAFT reviews are an employee's unsent work-in-progress -- never shown to Ops.
+    where: { status: { not: "DRAFT" } },
     include: { employee: { include: { clientOrg: true } } },
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
   });

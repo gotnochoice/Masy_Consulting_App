@@ -37,7 +37,8 @@ export async function getMonthlyReportData(clientOrgId: string, monthValue: stri
     db.leaveRequest.findMany({
       where: { employee: { clientOrgId }, status: "APPROVED", startDate: { lt: monthEnd }, endDate: { gte: monthStart } },
     }),
-    db.performanceReview.findMany({ where: { employee: { clientOrgId } } }),
+    // Drafts are an employee's unsent work-in-progress -- never counted in a client-facing report.
+    db.performanceReview.findMany({ where: { employee: { clientOrgId }, status: { not: "DRAFT" } } }),
     db.concern.count({ where: { employee: { clientOrgId }, createdAt: { gte: monthStart, lt: monthEnd } } }),
     db.concern.count({
       where: { employee: { clientOrgId }, createdAt: { gte: monthStart, lt: monthEnd }, visibility: "CLIENT_VISIBLE" },

@@ -27,6 +27,8 @@ export default async function MyReviewsPage() {
   }
 
   const template = await getReviewTemplate(employeeId, employee.roleTitle, employee.reviewTemplate);
+  const draft = reviews.find((r) => r.status === "DRAFT") ?? null;
+  const submittedReviews = reviews.filter((r) => r.status !== "DRAFT");
 
   return (
     <div className="space-y-8">
@@ -37,10 +39,22 @@ export default async function MyReviewsPage() {
       </div>
 
       <SuccessBanner />
-      <ReviewForm roleTitle={employee.roleTitle} template={template} />
+      <ReviewForm
+        roleTitle={employee.roleTitle}
+        template={template}
+        draft={
+          draft
+            ? {
+                cycle: draft.cycle,
+                selfAssessment: draft.selfAssessment,
+                responses: Array.isArray(draft.responses) ? (draft.responses as unknown as ReviewResponseSection[]) : [],
+              }
+            : null
+        }
+      />
 
       <div className="space-y-3">
-        {reviews.map((review) => {
+        {submittedReviews.map((review) => {
           const responses = Array.isArray(review.responses)
             ? (review.responses as unknown as ReviewResponseSection[])
             : [];
@@ -74,7 +88,7 @@ export default async function MyReviewsPage() {
             </div>
           );
         })}
-        {reviews.length === 0 && (
+        {submittedReviews.length === 0 && (
           <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             No reviews submitted yet.
           </p>

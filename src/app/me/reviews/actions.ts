@@ -58,15 +58,55 @@ export async function submitReview(_prevState: SubmitReviewState, formData: Form
     return { error: quality.message || "A couple of your answers could use more detail before this is submitted." };
   }
 
-  await db.performanceReview.create({
-    data: {
-      employeeId,
-      cycle: parsed.data.cycle,
-      selfAssessment: parsed.data.selfAssessment || "",
-      responses,
-    },
-  });
+  // A saved draft becomes the submission in place, so nothing already written is lost or
+  // duplicated -- only one row ever exists per employee while they're still working on it.
+  const draft = await db.performanceReview.findFirst({ where: { employeeId, status: "DRAFT" } });
+  const data = { cycle: parsed.data.cycle, selfAssessment: parsed.data.selfAssessment || "", responses };
+  if (draft) {
+    await db.performanceReview.update({ where: { id: draft.id }, data: { ...data, status: "SUBMITTED" } });
+  } else {
+    await db.performanceReview.create({ data: { employeeId, ...data } });
+  }
 
   revalidatePath("/me/reviews");
   redirect(`/me/reviews?done=${encodeURIComponent("Review submitted")}`);
+}
+
+export type SaveReviewDraftState = { savedAt: number } | { error: string } | undefined;
+
+// Deliberately unvalidated -- a draft can be partial or even empty. This exists so an
+// employee's typed answers are never lost: not to a rejected submission, a closed tab, or
+// a dead session, since nothing here depends on the quality check or required fields.
+export async function saveReviewDraft(
+  _prevState: SaveReviewDraftState,
+  formData: FormData,
+): Promise<SaveReviewDraftState> {
+  const session = await requireRole("EMPLOYEE");
+  const employeeId = session.user.employeeId;
+  if (!employeeId) return { error: "No employee record linked to this account" };
+
+  const employee = await db.employee.findUnique({ where: { id: employeeId } });
+  if (!employee) return { error: "Employee not found" };
+
+  const cycle = (formData.get("cycle") as string | null)?.trim() ?? "";
+  const selfAssessment = (formData.get("selfAssessment") as string | null)?.trim() ?? "";
+
+  const template = await getReviewTemplate(employeeId, employee.roleTitle, employee.reviewTemplate);
+  const responses = template.map((section, si) => ({
+    section: section.section,
+    answers: section.questions.map((question, qi) => {
+      const raw = formData.get(`s${si}_q${qi}`);
+      return { question, answer: typeof raw === "string" ? raw.trim() : "" };
+    }),
+  }));
+
+  const existing = await db.performanceReview.findFirst({ where: { employeeId, status: "DRAFT" } });
+  if (existing) {
+    await db.performanceReview.update({ where: { id: existing.id }, data: { cycle, selfAssessment, responses } });
+  } else {
+    await db.performanceReview.create({ data: { employeeId, cycle, selfAssessment, responses, status: "DRAFT" } });
+  }
+
+  revalidatePath("/me/reviews");
+  return { savedAt: Date.now() };
 }

@@ -26,7 +26,9 @@ export async function buildNudgesDigest(): Promise<NudgesDigest> {
       orderBy: { createdAt: "asc" },
     }),
     db.performanceReview.findMany({
-      where: { createdAt: { gte: reviewOverdueSince } },
+      // An unsent DRAFT must never count as "reviewed recently" -- that would silently
+      // suppress the overdue nudge for someone who hasn't actually submitted anything.
+      where: { createdAt: { gte: reviewOverdueSince }, status: { not: "DRAFT" } },
       select: { employeeId: true },
       distinct: ["employeeId"],
     }),
