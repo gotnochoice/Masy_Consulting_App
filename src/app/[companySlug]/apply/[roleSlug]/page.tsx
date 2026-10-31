@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { CareersHeader } from "@/components/careers-header";
+import { formatBoldText } from "@/lib/format-text";
 import { ApplyForm } from "./apply-form";
 import { submitApplication } from "./actions";
+import { InformalApplyForm } from "./informal-apply-form";
+import { submitInformalApplication } from "./informal-actions";
 
 export default async function ApplyPage({
   params,
@@ -23,6 +26,7 @@ export default async function ApplyPage({
   if (!role) notFound();
 
   const submitWithSlugs = submitApplication.bind(null, companySlug, roleSlug);
+  const submitInformalWithSlugs = submitInformalApplication.bind(null, companySlug, roleSlug);
 
   return (
     <main className="min-h-screen bg-paper-2">
@@ -48,24 +52,37 @@ export default async function ApplyPage({
                 <p className="mt-2 text-sm text-slate">
                   {role.clientOrg.name} · Recruitment managed by Masy Consulting
                 </p>
+                {role.location && <p className="mt-1 text-sm text-slate">📍 {role.location}</p>}
               </div>
 
               <div className="relative overflow-hidden rounded-card border border-border bg-paper p-6 shadow-[0_8px_30px_rgba(26,19,48,0.08)] sm:p-10">
                 <div className="absolute inset-x-0 top-0 h-1 bg-indigo" />
                 {role.description && (
-                  <p className="mb-8 whitespace-pre-line text-sm leading-relaxed text-slate">{role.description}</p>
+                  <p className="mb-8 whitespace-pre-line text-sm leading-relaxed text-slate">
+                    {formatBoldText(role.description)}
+                  </p>
                 )}
-                <ApplyForm
-                  action={submitWithSlugs}
-                  questions={role.questions}
-                  questionSections={role.questionSections}
-                  roleTitle={role.title}
-                  companyName={role.clientOrg.name}
-                  askYearsExperience={role.askYearsExperience}
-                  askExpectedPay={role.askExpectedPay}
-                  askHowHeard={role.askHowHeard}
-                  askResumeLink={role.askResumeLink}
-                />
+                {role.mode === "INFORMAL" ? (
+                  <InformalApplyForm
+                    action={submitInformalWithSlugs}
+                    roleTitle={role.title}
+                    companyName={role.clientOrg.name}
+                    workSampleLabel={role.workSampleLabel ?? "Photo of your best work"}
+                  />
+                ) : (
+                  <ApplyForm
+                    action={submitWithSlugs}
+                    questions={role.questions}
+                    questionSections={role.questionSections}
+                    roleTitle={role.title}
+                    companyName={role.clientOrg.name}
+                    askYearsExperience={role.askYearsExperience}
+                    askExpectedPay={role.askExpectedPay}
+                    askHowHeard={role.askHowHeard}
+                    askResumeLink={role.askResumeLink}
+                    askApplicantLocation={role.askApplicantLocation}
+                  />
+                )}
               </div>
             </>
           )}

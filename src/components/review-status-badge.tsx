@@ -1,12 +1,14 @@
 import type { ReviewStatus } from "@/generated/prisma/client";
 
 const STYLES: Record<ReviewStatus, string> = {
+  DRAFT: "bg-paper-2 text-slate-light border border-dashed border-border",
   SUBMITTED: "bg-orange-light/40 text-orange",
   MASY_REVIEWED: "bg-indigo-tint text-indigo",
   RELEASED: "bg-paper-2 text-slate border border-border",
 };
 
 const LABELS: Record<ReviewStatus, string> = {
+  DRAFT: "Draft",
   SUBMITTED: "Awaiting review",
   MASY_REVIEWED: "Reviewed",
   RELEASED: "Released to client",

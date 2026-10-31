@@ -9,36 +9,50 @@ import { MasyLogo } from "@/components/masy-logo";
 import { acknowledgeAnnouncement } from "@/lib/actions/announcements";
 import { acknowledgeConcern } from "@/lib/actions/concerns";
 import { acknowledgeReview } from "@/lib/actions/reviews";
+import { acknowledgeEmployeeDocument } from "@/lib/actions/employee-documents";
 
 type NavItem = { label: string; href: string; badge?: number };
 type UnreadAnnouncement = { id: string; title: string; body: string; authorLabel: string; createdAt: string };
 type UnresolvedConcern = { id: string; summary: string; updatedAt: string };
 type UnresolvedReview = { id: string; employeeName: string; cycle: string };
+type UnreadDocument = { id: string; label: string; employeeName: string; createdAt: string };
 type PendingLeave = { count: number; href: string };
+type NewApplicants = { count: number; href: string };
 
 export function DashboardHeader({
   roleLabel,
   personName,
+  logoUrl,
   nav,
   unreadAnnouncements = [],
   unresolvedConcerns = [],
   unresolvedReviews = [],
+  unreadDocuments = [],
   pendingLeave,
+  newApplicants,
 }: {
   roleLabel: string;
   personName: string;
+  logoUrl?: string | null;
   nav: NavItem[];
   unreadAnnouncements?: UnreadAnnouncement[];
   unresolvedConcerns?: UnresolvedConcern[];
   unresolvedReviews?: UnresolvedReview[];
+  unreadDocuments?: UnreadDocument[];
   pendingLeave?: PendingLeave;
+  newApplicants?: NewApplicants;
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const initial = personName.trim().charAt(0).toUpperCase() || "M";
   const totalUnread =
-    unreadAnnouncements.length + unresolvedConcerns.length + unresolvedReviews.length + (pendingLeave?.count ?? 0);
+    unreadAnnouncements.length +
+    unresolvedConcerns.length +
+    unresolvedReviews.length +
+    unreadDocuments.length +
+    (pendingLeave?.count ?? 0) +
+    (newApplicants?.count ?? 0);
 
   return (
     <header className="border-b border-border bg-paper shadow-sm">
@@ -87,6 +101,18 @@ export function DashboardHeader({
                         <p className="text-[11px] text-slate-light">Tap to review</p>
                       </Link>
                     )}
+                    {newApplicants && newApplicants.count > 0 && (
+                      <Link
+                        href={newApplicants.href}
+                        onClick={() => setBellOpen(false)}
+                        className="block px-4 py-3 hover:bg-paper-2"
+                      >
+                        <p className="text-sm font-medium text-ink">
+                          {newApplicants.count} new applicant{newApplicants.count === 1 ? "" : "s"} to review
+                        </p>
+                        <p className="text-[11px] text-slate-light">Tap to view</p>
+                      </Link>
+                    )}
                     {unresolvedConcerns.map((c) => (
                       <div key={c.id} className="px-4 py-3">
                         <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-light">
@@ -121,6 +147,24 @@ export function DashboardHeader({
                         </form>
                       </div>
                     ))}
+                    {unreadDocuments.map((d) => (
+                      <div key={d.id} className="px-4 py-3">
+                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-light">
+                          New document
+                        </p>
+                        <p className="mb-2 text-xs text-slate">
+                          {d.label} · {d.employeeName} · {d.createdAt}
+                        </p>
+                        <form action={acknowledgeEmployeeDocument.bind(null, d.id)}>
+                          <button
+                            type="submit"
+                            className="rounded-btn bg-indigo px-2.5 py-1 text-xs font-medium text-white hover:bg-indigo-light"
+                          >
+                            Mark as seen
+                          </button>
+                        </form>
+                      </div>
+                    ))}
                     {unreadAnnouncements.map((a) => (
                       <div key={a.id} className="px-4 py-3">
                         <p className="text-sm font-medium text-ink">{a.title}</p>
@@ -145,9 +189,14 @@ export function DashboardHeader({
             )}
           </div>
           <div className="hidden items-center gap-2.5 sm:flex">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-tint font-semibold text-indigo">
-              {initial}
-            </div>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- external Blob URL thumbnail, not worth next/image config
+              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-full border border-border bg-paper object-contain p-1" />
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-tint font-semibold text-indigo">
+                {initial}
+              </div>
+            )}
             <div className="leading-tight">
               <p className="text-sm font-medium text-ink">{personName}</p>
               <p className="text-[10px] uppercase tracking-wide text-slate-light">{roleLabel}</p>

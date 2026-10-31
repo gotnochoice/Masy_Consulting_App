@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { NigeriaHolidaysWidget } from "@/components/nigeria-holidays-widget";
 import { createAnnouncement, deleteAnnouncement } from "./actions";
 
 export default async function OpsAnnouncementsPage() {
@@ -23,6 +24,8 @@ export default async function OpsAnnouncementsPage() {
         <h1 className="text-2xl font-bold tracking-tight text-ink">Announcements</h1>
         <p className="text-sm text-slate">Post updates to a single client, or everyone at once.</p>
       </div>
+
+      <NigeriaHolidaysWidget />
 
       <div className="rounded-card border border-border bg-paper p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">New announcement</h2>

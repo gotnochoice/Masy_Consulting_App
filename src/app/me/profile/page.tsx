@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Clock, CalendarDays, Award } from "lucide-react";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
@@ -10,6 +11,7 @@ import { LeaveStatusBadge } from "@/components/leave-status-badge";
 import { StatCard } from "@/components/stat-card";
 import { MilestonesPanel } from "@/components/milestones-panel";
 import { SuccessBanner } from "@/components/success-banner";
+import { EmployeeAvatar } from "@/components/employee-avatar";
 
 export default async function MyProfilePage() {
   const session = await requireRole("EMPLOYEE");
@@ -53,10 +55,13 @@ export default async function MyProfilePage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">Welcome back, {firstName}</h1>
-        <p className="mt-1 text-sm text-slate">{employee.roleTitle} at {employee.clientOrg.name}</p>
+      <div className="flex items-center gap-4">
+        <EmployeeAvatar name={employee.name} photoUrl={employee.photoUrl} size="lg" />
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo">{today}</p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">Welcome back, {firstName}</h1>
+          <p className="mt-1 text-sm text-slate">{employee.roleTitle} at {employee.clientOrg.name}</p>
+        </div>
       </div>
 
       <SuccessBanner />
@@ -71,9 +76,9 @@ export default async function MyProfilePage() {
         <div className="rounded-card border border-border bg-paper p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-ink">Your details</h2>
-            <a href="/me/profile/edit" className="text-xs font-medium text-indigo hover:text-indigo-light">
+            <Link href="/me/profile/edit" className="text-xs font-medium text-indigo hover:text-indigo-light">
               Edit
-            </a>
+            </Link>
           </div>
           <dl className="space-y-3 text-sm">
             <div className="flex items-start justify-between gap-4">

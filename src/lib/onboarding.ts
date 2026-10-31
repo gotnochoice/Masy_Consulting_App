@@ -5,3 +5,5 @@ export const DEFAULT_ONBOARDING_TASKS = [
   "Welcome / intro call scheduled",
   "Introduced to team",
 ];
+
+export const MAX_ONBOARDING_QUESTION_FILE_LABEL = "8MB";

@@ -35,11 +35,13 @@ const CANDIDATE_LABELS: Record<CandidateStage, string> = {
 const SOURCE_STYLES: Record<CandidateSource, string> = {
   WEBSITE: "bg-indigo-tint text-indigo",
   MASY_SOURCED: "bg-paper-2 text-slate border border-border",
+  GOOGLE_FORM: "bg-orange-light/40 text-orange",
 };
 
-const SOURCE_LABELS: Record<CandidateSource, string> = {
+export const CANDIDATE_SOURCE_LABELS: Record<CandidateSource, string> = {
   WEBSITE: "Applied online",
   MASY_SOURCED: "Added by Masy",
+  GOOGLE_FORM: "Google Form",
 };
 
 function badgeClass(styles: string) {
@@ -55,7 +57,7 @@ export function CandidateStageBadge({ stage }: { stage: CandidateStage }) {
 }
 
 export function CandidateSourceBadge({ source }: { source: CandidateSource }) {
-  return <span className={badgeClass(SOURCE_STYLES[source])}>{SOURCE_LABELS[source]}</span>;
+  return <span className={badgeClass(SOURCE_STYLES[source])}>{CANDIDATE_SOURCE_LABELS[source]}</span>;
 }
 
 export const CANDIDATE_STAGE_ORDER: CandidateStage[] = [

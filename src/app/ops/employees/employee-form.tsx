@@ -1,5 +1,7 @@
 import type { ClientOrg, Employee } from "@/generated/prisma/client";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
+import { EmployeeAvatar } from "@/components/employee-avatar";
+import { MAX_PHOTO_FILE_LABEL } from "@/lib/photo";
 
 type Props = {
   orgs: Pick<ClientOrg, "id" | "name">[];
@@ -20,10 +22,37 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
     <form action={action} className="space-y-6">
       <div className="space-y-4">
         <p className={sectionLabelClass}>Basic info</p>
+        <div className="flex items-center gap-4">
+          <EmployeeAvatar name={employee?.name ?? "?"} photoUrl={employee?.photoUrl} size="lg" />
+          <div className="flex-1">
+            <label className={labelClass} htmlFor="photo">Photo</label>
+            <input
+              id="photo"
+              name="photo"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className={`${inputClass} file:mr-3 file:rounded-btn file:border-0 file:bg-indigo-tint file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo`}
+            />
+            <p className="mt-1 text-xs text-slate-light">JPG, PNG, or WEBP, up to {MAX_PHOTO_FILE_LABEL}.</p>
+          </div>
+        </div>
+        {!employee && (
+          <p className="text-xs text-slate-light">
+            Not confirmed yet? Just fill in Role and Organization below and leave the rest blank -- they&rsquo;ll set
+            their own name, email, and other details when they fill out their onboarding link.
+          </p>
+        )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="name">Name</label>
-            <input id="name" name="name" defaultValue={employee?.name} required className={inputClass} />
+            <input
+              id="name"
+              name="name"
+              defaultValue={employee?.name}
+              required={!!employee}
+              placeholder={employee ? undefined : "Leave blank if not confirmed yet"}
+              className={inputClass}
+            />
           </div>
           <div>
             <label className={labelClass} htmlFor="roleTitle">Role</label>
@@ -33,7 +62,15 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" defaultValue={employee?.email} required className={inputClass} />
+            <input
+              id="email"
+              name="email"
+              type="email"
+              defaultValue={employee?.email}
+              required={!!employee}
+              placeholder={employee ? undefined : "Leave blank if not confirmed yet"}
+              className={inputClass}
+            />
           </div>
           <div>
             <label className={labelClass} htmlFor="phone">Phone</label>
@@ -42,18 +79,28 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
+            <label className={labelClass} htmlFor="whatsappNumber">WhatsApp number</label>
+            <input
+              id="whatsappNumber"
+              name="whatsappNumber"
+              type="tel"
+              defaultValue={employee?.whatsappNumber ?? ""}
+              className={inputClass}
+            />
+          </div>
+          <div>
             <label className={labelClass} htmlFor="dateOfBirth">Date of birth</label>
             <input id="dateOfBirth" name="dateOfBirth" type="date" defaultValue={dateOfBirthValue} className={inputClass} />
           </div>
-          <div>
-            <label className={labelClass} htmlFor="gender">Gender</label>
-            <select id="gender" name="gender" defaultValue={employee?.gender ?? ""} className={inputClass}>
-              <option value="">Not specified</option>
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-              <option value="OTHER">Other</option>
-            </select>
-          </div>
+        </div>
+        <div className="sm:w-1/2 sm:pr-2">
+          <label className={labelClass} htmlFor="gender">Gender</label>
+          <select id="gender" name="gender" defaultValue={employee?.gender ?? ""} className={inputClass}>
+            <option value="">Not specified</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+            <option value="OTHER">Other</option>
+          </select>
         </div>
       </div>
 
@@ -81,7 +128,15 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
           </div>
           <div>
             <label className={labelClass} htmlFor="startDate">Start date</label>
-            <input id="startDate" name="startDate" type="date" defaultValue={startDateValue} required className={inputClass} />
+            <input
+              id="startDate"
+              name="startDate"
+              type="date"
+              defaultValue={startDateValue}
+              required={!!employee}
+              className={inputClass}
+            />
+            {!employee && <p className="mt-1 text-xs text-slate-light">Defaults to today if left blank.</p>}
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -89,10 +144,15 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
             <div>
               <label className={labelClass} htmlFor="status">Status</label>
               <select id="status" name="status" defaultValue={employee.status} required className={inputClass}>
+                <option value="PENDING">Pending onboarding</option>
                 <option value="ACTIVE">Active</option>
                 <option value="ON_LEAVE">On leave</option>
                 <option value="OFFBOARDED">Offboarded</option>
               </select>
+              <p className="mt-1 text-xs text-slate-light">
+                Switches to Active automatically once they complete onboarding, or set it yourself if they won&rsquo;t
+                use a login.
+              </p>
             </div>
           )}
           <div>
@@ -141,7 +201,7 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
       </div>
 
       <div className="space-y-4">
-        <p className={sectionLabelClass}>Compensation (admin only)</p>
+        <p className={sectionLabelClass}>Compensation & bank details (admin only)</p>
         <div className="sm:w-1/2 sm:pr-2">
           <label className={labelClass} htmlFor="salary">Salary / pay rate</label>
           <input
@@ -153,7 +213,34 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
             defaultValue={salaryValue}
             className={inputClass}
           />
-          <p className="mt-1 text-xs text-slate-light">Visible to Masy Ops only. Not shown to the client or the employee.</p>
+          <p className="mt-1 text-xs text-slate-light">
+            Visible to Masy Ops and the client&rsquo;s Payroll page. Not shown to the employee.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelClass} htmlFor="bankName">Bank name</label>
+            <input id="bankName" name="bankName" defaultValue={employee?.bankName ?? ""} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="bankAccountNumber">Account number</label>
+            <input
+              id="bankAccountNumber"
+              name="bankAccountNumber"
+              defaultValue={employee?.bankAccountNumber ?? ""}
+              className={inputClass}
+            />
+          </div>
+        </div>
+        <div className="sm:w-1/2 sm:pr-2">
+          <label className={labelClass} htmlFor="bankAccountHolderName">Account holder name</label>
+          <input
+            id="bankAccountHolderName"
+            name="bankAccountHolderName"
+            defaultValue={employee?.bankAccountHolderName ?? ""}
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-slate-light">The employee can also add or correct this from their own profile.</p>
         </div>
       </div>
 
