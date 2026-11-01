@@ -282,17 +282,21 @@ export async function checkReviewQuality(
     .map((s) => `${s.section}:\n${s.answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join("\n")}`)
     .join("\n\n");
 
-  const prompt = `You are checking a submitted employee self-assessment for quality before it's accepted.
+  const prompt = `You are checking a submitted employee self-assessment for quality before it's accepted. Be
+generous -- this check exists only to catch answers nobody could learn anything from, not to demand a more
+thorough or complete version of a real answer.
 
-Flag it ONLY if one or more answers are too thin to be useful to a reviewer -- a single word, "fine", "nothing",
-"n/a" on a question that clearly expects more, or an answer that doesn't actually address what was asked. Do NOT
-flag an answer just because it's short -- a brief answer that genuinely and sufficiently answers its question is
-fine as-is.
+Flag it ONLY if one or more answers are essentially empty of content: blank, a single word, "fine", "nothing",
+"n/a", gibberish, or copy-pasted filler that doesn't address the question at all. Any answer with real,
+specific content -- names, tools, examples, concrete situations -- passes, even if it's brief, imperfect, only
+partly answers the question, or a reviewer might reasonably want more. Never flag an answer for lacking extra
+detail, specificity, or additional examples beyond what was given -- only flag answers with no real content at
+all. If you're unsure whether an answer clears the bar, let it pass.
 
 ${qaBlock}
 
-If there's a real issue, write a short, friendly message (1-2 sentences) telling the employee specifically which
-answer(s) need more detail and why, so they can revise before resubmitting. If everything is adequate, hasIssue
+If there's a real issue, write a short, friendly message (1-2 sentences) naming specifically which answer(s) have
+no real content and need something written before resubmitting. If everything clears the bar above, hasIssue
 should be false and message should be empty.`;
 
   const result = (await callClaude(prompt, {
