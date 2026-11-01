@@ -24,27 +24,27 @@ export default async function OpsLeavePage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Employee</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Type</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Dates</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Reason</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
-              <th className="px-4 py-2.5" />
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Employee</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Type</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Dates</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Reason</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
+              <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {requests.map((r) => (
               <tr key={r.id} className="hover:bg-paper-2">
-                <td className="px-4 py-3 font-medium text-ink">{r.employee.name}</td>
-                <td className="px-4 py-3 text-slate">{r.employee.clientOrg.name}</td>
-                <td className="px-4 py-3 capitalize text-slate">{r.type.toLowerCase()}</td>
-                <td className="px-4 py-3 text-xs text-slate">
+                <td className="px-3 py-2.5 font-medium text-ink">{r.employee.name}</td>
+                <td className="px-3 py-2.5 text-slate">{r.employee.clientOrg.name}</td>
+                <td className="px-3 py-2.5 capitalize text-slate">{r.type.toLowerCase()}</td>
+                <td className="px-3 py-2.5 text-xs text-slate">
                   {formatDateShort(r.startDate)} – {formatDateShort(r.endDate)} ({leaveDaysBetween(r.startDate, r.endDate)}d)
                 </td>
-                <td className="px-4 py-3 text-slate">{r.reason || "-"}</td>
-                <td className="px-4 py-3"><LeaveStatusBadge status={r.status} /></td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-3 py-2.5 text-slate">{r.reason || "-"}</td>
+                <td className="px-3 py-2.5"><LeaveStatusBadge status={r.status} /></td>
+                <td className="px-3 py-2.5 text-right">
                   {r.status === "PENDING" && (
                     <div className="flex justify-end gap-3">
                       <form action={approveLeave.bind(null, r.id)}>

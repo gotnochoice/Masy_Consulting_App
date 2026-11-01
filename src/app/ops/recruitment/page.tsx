@@ -1,90 +1,225 @@
 import Link from "next/link";
+import { Briefcase, Users, UserPlus } from "lucide-react";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { RoleStageBadge } from "@/components/stage-badge";
+import { StatCard } from "@/components/stat-card";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { createRole, deleteRole } from "./actions";
+import { getNewApplicantsCount } from "@/lib/recruitment";
+import { createRole, deleteRole, cloneRole, moveRole } from "./actions";
 
 export default async function OpsRecruitmentPage() {
   await requireRole("MASY_OPS");
 
-  const [roles, orgs, websiteCounts] = await Promise.all([
+  const [roles, orgs, websiteCounts, totalCandidates, newApplicants] = await Promise.all([
     db.openRole.findMany({
       include: { clientOrg: true, _count: { select: { candidates: true } } },
-      orderBy: [{ clientOrg: { name: "asc" } }, { createdAt: "desc" }],
+      orderBy: [{ displayOrder: "asc" }, { clientOrg: { name: "asc" } }, { createdAt: "desc" }],
     }),
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
-    db.candidate.groupBy({ by: ["openRoleId"], where: { source: "WEBSITE" }, _count: { _all: true } }),
+    db.candidate.groupBy({
+      by: ["openRoleId"],
+      where: { source: { in: ["WEBSITE", "GOOGLE_FORM"] } },
+      _count: { _all: true },
+    }),
+    db.candidate.count(),
+    getNewApplicantsCount(),
   ]);
   const websiteCountByRole = new Map(websiteCounts.map((c) => [c.openRoleId, c._count._all]));
 
   return (
     <div className="space-y-8">
-      <div>
-        <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
-        <h1 className="text-2xl font-bold tracking-tight text-ink">Recruitment</h1>
-        <p className="text-sm text-slate">Open roles and candidate pipelines across every client organization.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+          <h1 className="text-2xl font-bold tracking-tight text-ink">Recruitment</h1>
+          <p className="text-sm text-slate">Open roles and candidate pipelines across every client organization.</p>
+        </div>
+        <Link
+          href="/ops/recruitment/groups"
+          className="rounded-btn border border-border px-3 py-2 text-xs font-medium text-slate hover:text-ink"
+        >
+          Application groups
+        </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border bg-paper">
-        <table className="min-w-full divide-y divide-border text-sm">
-          <thead className="bg-paper-2">
-            <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Candidates</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Applications</th>
-              <th className="px-4 py-2.5" />
-              <th className="px-4 py-2.5" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {roles.map((role) => {
-              const deleteRoleWithId = deleteRole.bind(null, role.id);
-              return (
-                <tr key={role.id} className="hover:bg-paper-2">
-                  <td className="px-4 py-3 font-medium text-ink">{role.title}</td>
-                  <td className="px-4 py-3 text-slate">{role.clientOrg.name}</td>
-                  <td className="px-4 py-3"><RoleStageBadge stage={role.stage} /></td>
-                  <td className="px-4 py-3 text-slate">{role._count.candidates}</td>
-                  <td className="px-4 py-3 text-slate">
-                    {role.acceptingApplications ? (
-                      <span>{websiteCountByRole.get(role.id) ?? 0} online</span>
-                    ) : (
-                      <span className="text-slate-light">Closed</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link href={`/ops/recruitment/${role.id}`} className="text-sm font-medium text-indigo hover:text-indigo-light">
-                      View pipeline
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <ConfirmSubmitButton
-                      action={deleteRoleWithId}
-                      confirmMessage={
-                        role._count.candidates > 0
-                          ? `Delete "${role.title}"? This will also delete all ${role._count.candidates} candidate(s) in its pipeline. This can't be undone, so export a CSV first if you want to keep a record.`
-                          : `Delete "${role.title}"? This can't be undone.`
-                      }
-                      className="text-sm font-medium text-slate hover:text-orange"
-                    >
-                      Delete
-                    </ConfirmSubmitButton>
-                  </td>
-                </tr>
-              );
-            })}
-            {roles.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-light">No open roles yet.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Open roles" value={roles.length} icon={Briefcase} />
+        <StatCard label="Total candidates" value={totalCandidates} icon={Users} />
+        <StatCard
+          label="New applicants to review"
+          value={newApplicants}
+          icon={UserPlus}
+          tone="orange"
+        />
       </div>
+
+      {roles.length === 0 && (
+        <div className="rounded-card border border-border bg-paper px-4 py-8 text-center text-sm text-slate-light">
+          No open roles yet.
+        </div>
+      )}
+
+      {roles.length > 1 && (
+        <p className="text-xs text-slate-light">
+          Use the ↑↓ arrows to set the order roles appear in on the public Careers page — this list is the same
+          order applicants see, top to bottom, across every company.
+        </p>
+      )}
+
+      {/* Mobile: stacked cards */}
+      <div className="space-y-3 sm:hidden">
+        {roles.map((role, index) => {
+          const deleteRoleWithId = deleteRole.bind(null, role.id);
+          const cloneRoleWithId = cloneRole.bind(null, role.id);
+          const moveRoleWithId = moveRole.bind(null, role.id);
+          return (
+            <div key={role.id} className="rounded-card border border-border bg-paper p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-medium text-ink">{role.title}</p>
+                  <p className="text-xs text-slate">
+                    {role.clientOrg.name}
+                    {role.location && ` · ${role.location}`}
+                  </p>
+                </div>
+                <RoleStageBadge stage={role.stage} />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate">
+                <span>{role._count.candidates} candidate{role._count.candidates === 1 ? "" : "s"}</span>
+                {role.acceptingApplications ? (
+                  <span>{websiteCountByRole.get(role.id) ?? 0} online</span>
+                ) : (
+                  <span className="text-slate-light">Applications closed</span>
+                )}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3">
+                <div className="flex items-center gap-2">
+                  <form action={moveRoleWithId}>
+                    <input type="hidden" name="direction" value="up" />
+                    <button type="submit" disabled={index === 0} aria-label="Move role up" className="text-sm font-medium text-slate hover:text-ink disabled:opacity-30">
+                      ↑
+                    </button>
+                  </form>
+                  <form action={moveRoleWithId}>
+                    <input type="hidden" name="direction" value="down" />
+                    <button type="submit" disabled={index === roles.length - 1} aria-label="Move role down" className="text-sm font-medium text-slate hover:text-ink disabled:opacity-30">
+                      ↓
+                    </button>
+                  </form>
+                </div>
+                <Link href={`/ops/recruitment/${role.id}`} className="text-sm font-medium text-indigo hover:text-indigo-light">
+                  View pipeline
+                </Link>
+                <form action={cloneRoleWithId}>
+                  <button type="submit" className="text-sm font-medium text-slate hover:text-ink">
+                    Clone
+                  </button>
+                </form>
+                <ConfirmSubmitButton
+                  action={deleteRoleWithId}
+                  confirmMessage={
+                    role._count.candidates > 0
+                      ? `Delete "${role.title}"? This will also delete all ${role._count.candidates} candidate(s) in its pipeline. This can't be undone, so export a CSV first if you want to keep a record.`
+                      : `Delete "${role.title}"? This can't be undone.`
+                  }
+                  className="text-sm font-medium text-slate hover:text-orange"
+                >
+                  Delete
+                </ConfirmSubmitButton>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: table */}
+      {roles.length > 0 && (
+        <div className="hidden overflow-x-auto rounded-card border border-border bg-paper sm:block">
+          <table className="min-w-full divide-y divide-border text-xs">
+            <thead className="bg-paper-2">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Order</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Role</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Organization</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Stage</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Candidates</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Applications</th>
+                <th className="px-3 py-2" />
+                <th className="px-3 py-2" />
+                <th className="px-3 py-2" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {roles.map((role, index) => {
+                const deleteRoleWithId = deleteRole.bind(null, role.id);
+                const cloneRoleWithId = cloneRole.bind(null, role.id);
+                const moveRoleWithId = moveRole.bind(null, role.id);
+                return (
+                  <tr key={role.id} className="hover:bg-paper-2">
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <form action={moveRoleWithId}>
+                          <input type="hidden" name="direction" value="up" />
+                          <button type="submit" disabled={index === 0} aria-label="Move role up" className="text-sm font-medium text-slate hover:text-ink disabled:opacity-30">
+                            ↑
+                          </button>
+                        </form>
+                        <form action={moveRoleWithId}>
+                          <input type="hidden" name="direction" value="down" />
+                          <button type="submit" disabled={index === roles.length - 1} aria-label="Move role down" className="text-sm font-medium text-slate hover:text-ink disabled:opacity-30">
+                            ↓
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5 font-medium text-ink">{role.title}</td>
+                    <td className="px-3 py-2.5 text-slate">
+                      {role.clientOrg.name}
+                      {role.location && <span className="block text-xs text-slate-light">{role.location}</span>}
+                    </td>
+                    <td className="px-3 py-2.5"><RoleStageBadge stage={role.stage} /></td>
+                    <td className="px-3 py-2.5 text-slate">{role._count.candidates}</td>
+                    <td className="px-3 py-2.5 text-slate">
+                      {role.acceptingApplications ? (
+                        <span>{websiteCountByRole.get(role.id) ?? 0} online</span>
+                      ) : (
+                        <span className="text-slate-light">Closed</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <Link href={`/ops/recruitment/${role.id}`} className="text-sm font-medium text-indigo hover:text-indigo-light">
+                        View pipeline
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <form action={cloneRoleWithId}>
+                        <button type="submit" className="text-sm font-medium text-slate hover:text-ink">
+                          Clone
+                        </button>
+                      </form>
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <ConfirmSubmitButton
+                        action={deleteRoleWithId}
+                        confirmMessage={
+                          role._count.candidates > 0
+                            ? `Delete "${role.title}"? This will also delete all ${role._count.candidates} candidate(s) in its pipeline. This can't be undone, so export a CSV first if you want to keep a record.`
+                            : `Delete "${role.title}"? This can't be undone.`
+                        }
+                        className="text-sm font-medium text-slate hover:text-orange"
+                      >
+                        Delete
+                      </ConfirmSubmitButton>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="max-w-xl rounded-card border border-border bg-paper p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">Open a role</h2>
@@ -102,8 +237,20 @@ export default async function OpsRecruitmentPage() {
               ))}
             </select>
           </div>
+          <div className="flex-1">
+            <label className={labelClass} htmlFor="mode">Type</label>
+            <select id="mode" name="mode" defaultValue="FORMAL" className={inputClass}>
+              <option value="FORMAL">Formal (application form)</option>
+              <option value="INFORMAL">Informal (name, phone, photo of work)</option>
+            </select>
+          </div>
           <button type="submit" className={buttonClass}>Open role</button>
         </form>
+        <p className="mt-3 text-xs text-slate-light">
+          Informal roles get a super simple public form: name, phone, optional email, location, and a photo of
+          their best work, built for applicants like tailors, hairdressers, or shoemakers applying from Instagram
+          or TikTok who may not read or write much.
+        </p>
       </div>
     </div>
   );
