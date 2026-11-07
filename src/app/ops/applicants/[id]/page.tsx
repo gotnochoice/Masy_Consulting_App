@@ -6,7 +6,8 @@ import { CandidateSourceBadge, CANDIDATE_STAGE_ORDER, CANDIDATE_STAGE_LABELS } f
 import { formatDateShort } from "@/lib/leave";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { updateCandidateStage } from "../../recruitment/actions";
+import { ConvertToEmployeeAction } from "@/components/convert-to-employee-action";
+import { updateCandidateStage, convertCandidateToEmployee } from "../../recruitment/actions";
 import { deleteCandidateAndRedirect } from "../actions";
 
 export default async function ApplicantDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,6 +26,7 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
   const cvUrl = candidate.resumeFileUrl ?? candidate.resumeLink;
   const updateStageWithIds = updateCandidateStage.bind(null, candidate.id, candidate.openRoleId);
   const deleteWithIds = deleteCandidateAndRedirect.bind(null, candidate.id, candidate.openRoleId);
+  const convertToEmployeeWithIds = convertCandidateToEmployee.bind(null, candidate.id, candidate.openRoleId);
   const hasMoreDetails = candidate.howHeard || candidate.answers.length > 0 || candidate.notes;
 
   return (
@@ -69,6 +71,17 @@ export default async function ApplicantDetailPage({ params }: { params: Promise<
           </div>
           <button type="submit" className={buttonClass}>Update stage</button>
         </form>
+
+        {candidate.stage === "HIRED" && (
+          <div className="border-t border-border pt-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-light">Create employee record</p>
+            <ConvertToEmployeeAction
+              candidate={candidate}
+              roleTitle={candidate.openRole.title}
+              action={convertToEmployeeWithIds}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4 border-t border-border pt-4 sm:grid-cols-3">
           {candidate.yearsExperience && (
