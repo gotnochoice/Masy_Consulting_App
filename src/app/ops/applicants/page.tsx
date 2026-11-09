@@ -12,15 +12,17 @@ const PAGE_SIZE = 50;
 export default async function OpsApplicantsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; roleId?: string; stage?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; roleId?: string; excludeRole?: string; stage?: string; page?: string }>;
 }) {
   await requireRole("MASY_OPS");
-  const { q, roleId, stage, page: pageParam } = await searchParams;
+  const { q, roleId, excludeRole, stage, page: pageParam } = await searchParams;
   const validStage = stage && (CANDIDATE_STAGE_ORDER as string[]).includes(stage) ? (stage as CandidateStage) : undefined;
   const page = Math.max(1, Number.parseInt(pageParam ?? "1", 10) || 1);
+  // "Exclude this role" only does anything once a role is actually picked.
+  const excludingRole = !!(roleId && excludeRole === "1");
 
   const where: Prisma.CandidateWhereInput = {
-    ...(roleId ? { openRoleId: roleId } : {}),
+    ...(roleId ? { openRoleId: excludingRole ? { not: roleId } : roleId } : {}),
     ...(validStage ? { stage: validStage } : {}),
     ...(q
       ? {
@@ -49,6 +51,7 @@ export default async function OpsApplicantsPage({
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const hasFilters = !!(q || roleId || validStage);
+  const selectedRole = roleId ? roles.find((r) => r.id === roleId) : undefined;
   const missingEmailCount = contactRows.filter((c) => !c.email).length;
   const missingPhoneCount = contactRows.filter((c) => !c.phone).length;
   const emails = [...new Set(contactRows.map((c) => c.email).filter((e): e is string => !!e))];
@@ -58,6 +61,7 @@ export default async function OpsApplicantsPage({
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (roleId) params.set("roleId", roleId);
+    if (excludingRole) params.set("excludeRole", "1");
     if (validStage) params.set("stage", validStage);
     if (p > 1) params.set("page", String(p));
     const qs = params.toString();
@@ -85,6 +89,10 @@ export default async function OpsApplicantsPage({
               <option key={r.id} value={r.id}>{r.title}, {r.clientOrg.name}</option>
             ))}
           </select>
+          <label className="mt-1.5 flex items-center gap-1.5 text-xs text-slate">
+            <input type="checkbox" name="excludeRole" value="1" defaultChecked={excludingRole} className="rounded border-border" />
+            Exclude this role instead (show everyone else)
+          </label>
         </div>
         <div className="min-w-[160px]">
           <label className={labelClass} htmlFor="stage">Stage</label>
@@ -107,6 +115,7 @@ export default async function OpsApplicantsPage({
         <p className="text-xs text-slate-light">
           {totalCount} applicant{totalCount === 1 ? "" : "s"}
           {totalPages > 1 && ` · page ${page} of ${totalPages}`}
+          {excludingRole && selectedRole && ` · everyone except ${selectedRole.title}, ${selectedRole.clientOrg.name}`}
           {!hasFilters && " · every stage, all time. The Recruitment/Applicants badge only counts those still unreviewed."}
           {missingEmailCount > 0 && ` · ${missingEmailCount} without an email on file`}
           {missingPhoneCount > 0 && ` · ${missingPhoneCount} without a phone on file`}
