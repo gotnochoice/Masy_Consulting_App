@@ -261,6 +261,10 @@ model OnboardingTask {
   createdAt  DateTime @default(now())
 }
 
+// Stays the day-summary row everything else (reports, nudges, payroll sheets) already reads:
+// clockIn/clockInNote mirror the day's FIRST session, clockOut/clockOutNote mirror the most
+// recent one (null clockOut still means "currently clocked in", same as before). The detailed
+// in/out/reason history for the day lives in `sessions`.
 model AttendanceRecord {
   id           String    @id @default(cuid())
   employeeId   String
@@ -272,8 +276,23 @@ model AttendanceRecord {
   clockOutNote String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  sessions     AttendanceSession[]
 
   @@unique([employeeId, date])
+}
+
+// One row per clock-in/clock-out pair within a day -- lets an employee step away from their
+// desk (clock out with a reason) and clock back in later the same day without losing the
+// earlier session's time.
+model AttendanceSession {
+  id                 String           @id @default(cuid())
+  attendanceRecordId String
+  attendanceRecord   AttendanceRecord @relation(fields: [attendanceRecordId], references: [id], onDelete: Cascade)
+  clockIn            DateTime
+  clockInNote        String?
+  clockOut           DateTime?
+  clockOutNote       String?
+  createdAt          DateTime         @default(now())
 }
 
 model LeaveRequest {

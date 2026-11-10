@@ -1,11 +1,17 @@
 import Link from "next/link";
-import { formatTime, formatHours } from "@/lib/attendance";
+import { formatTime, formatWorkedHours, totalWorkedMs } from "@/lib/attendance";
 
-type Record = {
+type Session = {
   clockIn: Date;
   clockOut: Date | null;
   clockInNote: string | null;
   clockOutNote: string | null;
+};
+
+type Record = {
+  clockIn: Date;
+  clockOut: Date | null;
+  sessions: Session[];
 };
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -16,8 +22,10 @@ function dateKey(date: Date) {
 
 function notesFor(record: Record) {
   const parts: string[] = [];
-  if (record.clockInNote) parts.push(`In: ${record.clockInNote}`);
-  if (record.clockOutNote) parts.push(`Out: ${record.clockOutNote}`);
+  for (const s of record.sessions) {
+    if (s.clockInNote) parts.push(`In: ${s.clockInNote}`);
+    if (s.clockOutNote) parts.push(`Out: ${s.clockOutNote}`);
+  }
   return parts;
 }
 
@@ -36,10 +44,7 @@ export function AttendanceSheet({
 }) {
   const records = Array.from(recordsByDate.values());
   const daysPresent = records.length;
-  const totalHoursMs = records.reduce(
-    (sum, r) => (r.clockOut ? sum + (r.clockOut.getTime() - r.clockIn.getTime()) : sum),
-    0,
-  );
+  const totalHoursMs = records.reduce((sum, r) => sum + totalWorkedMs(r.sessions), 0);
   const totalHours = (totalHoursMs / 3_600_000).toFixed(1);
 
   return (
@@ -86,7 +91,7 @@ export function AttendanceSheet({
                   <td className="px-4 py-2.5 text-xs text-slate">{record ? formatTime(record.clockIn) : "–"}</td>
                   <td className="px-4 py-2.5 text-xs text-slate">{record ? formatTime(record.clockOut) : "–"}</td>
                   <td className="px-4 py-2.5 text-xs text-slate">
-                    {record ? formatHours(record.clockIn, record.clockOut) : "–"}
+                    {record ? formatWorkedHours(record.sessions) : "–"}
                   </td>
                   <td className="px-4 py-2.5 text-slate">
                     {notes.length > 0 ? (
@@ -125,7 +130,7 @@ export function AttendanceSheet({
                 </p>
                 {record ? (
                   <p className="text-xs text-slate">
-                    {formatTime(record.clockIn)} – {formatTime(record.clockOut)} · {formatHours(record.clockIn, record.clockOut)}
+                    {formatTime(record.clockIn)} – {formatTime(record.clockOut)} · {formatWorkedHours(record.sessions)}
                   </p>
                 ) : (
                   <p className="text-xs text-slate-light">No record</p>

@@ -9,6 +9,21 @@ export function formatHours(clockIn: Date, clockOut: Date | null): string {
   return `${hours.toFixed(1)}h`;
 }
 
+export type AttendanceSessionLike = { clockIn: Date; clockOut: Date | null };
+
+// Sums only closed sessions, so time spent away from a desk between clocking out and clocking
+// back in the same day is never counted as worked -- unlike a naive first-clock-in-to-last-
+// clock-out span, which would include the gap.
+export function totalWorkedMs(sessions: AttendanceSessionLike[]): number {
+  return sessions.reduce((sum, s) => (s.clockOut ? sum + (s.clockOut.getTime() - s.clockIn.getTime()) : sum), 0);
+}
+
+export function formatWorkedHours(sessions: AttendanceSessionLike[]): string {
+  const ms = totalWorkedMs(sessions);
+  if (ms === 0) return "–";
+  return `${(ms / 3_600_000).toFixed(1)}h`;
+}
+
 export function formatTime(date: Date | null): string {
   if (!date) return "–";
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });

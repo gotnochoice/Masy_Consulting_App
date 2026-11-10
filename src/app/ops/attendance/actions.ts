@@ -39,15 +39,22 @@ export async function createAttendanceRecord(formData: FormData) {
   }
 
   const { employeeId, date, clockIn, clockInNote, clockOut, clockOutNote } = parsed.data;
+  const clockInAt = new Date(`${date}T${clockIn}`);
+  const clockOutAt = clockOut ? new Date(`${date}T${clockOut}`) : null;
 
+  // Also creates a matching session, so this manually-entered day sums into hours totals
+  // the same way a self-serve clock in/out would.
   const record = await db.attendanceRecord.create({
     data: {
       employeeId,
       date: new Date(date),
-      clockIn: new Date(`${date}T${clockIn}`),
+      clockIn: clockInAt,
       clockInNote: clockInNote || null,
-      clockOut: clockOut ? new Date(`${date}T${clockOut}`) : null,
+      clockOut: clockOutAt,
       clockOutNote: clockOutNote || null,
+      sessions: {
+        create: { clockIn: clockInAt, clockInNote: clockInNote || null, clockOut: clockOutAt, clockOutNote: clockOutNote || null },
+      },
     },
   });
 
@@ -77,17 +84,28 @@ export async function updateAttendanceRecord(recordId: string, formData: FormDat
   }
 
   const { date, clockIn, clockInNote, clockOut, clockOutNote } = parsed.data;
+  const clockInAt = new Date(`${date}T${clockIn}`);
+  const clockOutAt = clockOut ? new Date(`${date}T${clockOut}`) : null;
 
-  await db.attendanceRecord.update({
-    where: { id: recordId },
-    data: {
-      date: new Date(date),
-      clockIn: new Date(`${date}T${clockIn}`),
-      clockInNote: clockInNote || null,
-      clockOut: clockOut ? new Date(`${date}T${clockOut}`) : null,
-      clockOutNote: clockOutNote || null,
-    },
-  });
+  // A manual correction replaces the day's sessions with exactly one spanning the edited
+  // range, rather than trying to reconcile against whatever self-serve sessions existed --
+  // keeps the hours total matching exactly what Ops just entered.
+  await db.$transaction([
+    db.attendanceSession.deleteMany({ where: { attendanceRecordId: recordId } }),
+    db.attendanceRecord.update({
+      where: { id: recordId },
+      data: {
+        date: new Date(date),
+        clockIn: clockInAt,
+        clockInNote: clockInNote || null,
+        clockOut: clockOutAt,
+        clockOutNote: clockOutNote || null,
+        sessions: {
+          create: { clockIn: clockInAt, clockInNote: clockInNote || null, clockOut: clockOutAt, clockOutNote: clockOutNote || null },
+        },
+      },
+    }),
+  ]);
 
   await db.auditLog.create({
     data: {

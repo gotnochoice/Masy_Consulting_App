@@ -25,6 +25,7 @@ export default async function ClientEmployeeAttendanceSheetPage({
 
   const records = await db.attendanceRecord.findMany({
     where: { employeeId, date: { gte: monthStart, lt: monthEnd } },
+    include: { sessions: { orderBy: { clockIn: "asc" } } },
   });
   const recordsByDate = new Map(records.map((r) => [r.date.toISOString().slice(0, 10), r]));
 

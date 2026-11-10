@@ -29,6 +29,7 @@ export default async function OpsEmployeeAttendanceSheetPage({
   const [records, totalRecordCount] = await Promise.all([
     db.attendanceRecord.findMany({
       where: { employeeId, date: { gte: monthStart, lt: monthEnd } },
+      include: { sessions: { orderBy: { clockIn: "asc" } } },
     }),
     db.attendanceRecord.count({ where: { employeeId } }),
   ]);

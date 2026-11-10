@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
-import { formatDate, formatTime, formatHours } from "@/lib/attendance";
+import { formatDate, formatTime, formatWorkedHours } from "@/lib/attendance";
 import { createAttendanceRecord } from "./actions";
 import { AttendanceForm } from "./attendance-form";
 import { EmployeeAvatar } from "@/components/employee-avatar";
@@ -20,7 +20,7 @@ export default async function OpsAttendancePage() {
       },
     }),
     db.attendanceRecord.findMany({
-      include: { employee: { include: { clientOrg: true } } },
+      include: { employee: { include: { clientOrg: true } }, sessions: { orderBy: { clockIn: "asc" } } },
       orderBy: { date: "desc" },
       take: 100,
     }),
@@ -93,7 +93,10 @@ export default async function OpsAttendancePage() {
             </thead>
             <tbody className="divide-y divide-border">
               {recentRecords.map((record) => {
-                const notes = [record.clockInNote, record.clockOutNote].filter(Boolean).join(" / ");
+                const notes = record.sessions
+                  .flatMap((s) => [s.clockInNote ? `In: ${s.clockInNote}` : null, s.clockOutNote ? `Out: ${s.clockOutNote}` : null])
+                  .filter(Boolean)
+                  .join(" / ");
                 return (
                   <tr key={record.id} className="hover:bg-paper-2">
                     <td className="px-4 py-3 text-xs text-slate">{formatDate(record.date)}</td>
@@ -101,7 +104,7 @@ export default async function OpsAttendancePage() {
                     <td className="px-4 py-3 text-slate">{record.employee.clientOrg.name}</td>
                     <td className="px-4 py-3 text-xs text-slate">{formatTime(record.clockIn)}</td>
                     <td className="px-4 py-3 text-xs text-slate">{formatTime(record.clockOut)}</td>
-                    <td className="px-4 py-3 text-xs text-slate">{formatHours(record.clockIn, record.clockOut)}</td>
+                    <td className="px-4 py-3 text-xs text-slate">{formatWorkedHours(record.sessions)}</td>
                     <td className="px-4 py-3 max-w-[16rem] truncate text-slate" title={notes || undefined}>
                       {notes || "–"}
                     </td>

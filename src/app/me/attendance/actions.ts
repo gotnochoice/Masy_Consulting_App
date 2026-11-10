@@ -11,24 +11,43 @@ export async function clockIn(formData: FormData) {
   const employeeId = session.user.employeeId;
   if (!employeeId) throw new Error("No employee record linked to this account");
 
+  const note = formData.get("note");
+  const trimmedNote = typeof note === "string" ? note.trim() : "";
+  if (!trimmedNote) throw new Error("Add a short note on what you're working on");
+
   const date = todayDateOnly();
   const existing = await db.attendanceRecord.findUnique({
     where: { employeeId_date: { employeeId, date } },
+    include: { sessions: { orderBy: { clockIn: "desc" }, take: 1 } },
   });
-  if (existing) return;
+  const openSession = existing?.sessions[0] && !existing.sessions[0].clockOut ? existing.sessions[0] : null;
+  if (openSession) return;
 
-  const note = formData.get("note");
-  const trimmedNote = typeof note === "string" ? note.trim() : "";
-  if (!trimmedNote) throw new Error("Add a short note on what you're working on today");
+  const now = new Date();
 
-  await db.attendanceRecord.create({
-    data: {
-      employeeId,
-      date,
-      clockIn: new Date(),
-      clockInNote: trimmedNote,
-    },
-  });
+  if (!existing) {
+    await db.attendanceRecord.create({
+      data: {
+        employeeId,
+        date,
+        clockIn: now,
+        clockInNote: trimmedNote,
+        sessions: { create: { clockIn: now, clockInNote: trimmedNote } },
+      },
+    });
+  } else {
+    // Clocking back in after stepping away earlier today -- starts a new session. The day's
+    // summary row goes back to "currently clocked in" (clockOut cleared) without touching the
+    // earlier session already recorded.
+    await db.attendanceRecord.update({
+      where: { id: existing.id },
+      data: {
+        clockOut: null,
+        clockOutNote: null,
+        sessions: { create: { clockIn: now, clockInNote: trimmedNote } },
+      },
+    });
+  }
 
   revalidatePath("/me/attendance");
   redirect(`/me/attendance?done=${encodeURIComponent("Clocked in")}`);
@@ -39,23 +58,30 @@ export async function clockOut(formData: FormData) {
   const employeeId = session.user.employeeId;
   if (!employeeId) throw new Error("No employee record linked to this account");
 
+  const note = formData.get("note");
+  const trimmedNote = typeof note === "string" ? note.trim() : "";
+  if (!trimmedNote) throw new Error("Add a short reason for clocking out");
+
   const date = todayDateOnly();
   const existing = await db.attendanceRecord.findUnique({
     where: { employeeId_date: { employeeId, date } },
+    include: { sessions: { orderBy: { clockIn: "desc" }, take: 1 } },
   });
-  if (!existing || existing.clockOut) return;
+  const openSession = existing?.sessions[0] && !existing.sessions[0].clockOut ? existing.sessions[0] : null;
+  if (!existing || !openSession) return;
 
-  const note = formData.get("note");
-  const trimmedNote = typeof note === "string" ? note.trim() : "";
-  if (!trimmedNote) throw new Error("Add a short note on what you got done today");
+  const now = new Date();
 
-  await db.attendanceRecord.update({
-    where: { id: existing.id },
-    data: {
-      clockOut: new Date(),
-      clockOutNote: trimmedNote,
-    },
-  });
+  await db.$transaction([
+    db.attendanceSession.update({
+      where: { id: openSession.id },
+      data: { clockOut: now, clockOutNote: trimmedNote },
+    }),
+    db.attendanceRecord.update({
+      where: { id: existing.id },
+      data: { clockOut: now, clockOutNote: trimmedNote },
+    }),
+  ]);
 
   revalidatePath("/me/attendance");
   redirect(`/me/attendance?done=${encodeURIComponent("Clocked out")}`);
