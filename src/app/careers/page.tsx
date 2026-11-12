@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { CareersHeader } from "@/components/careers-header";
 import { SocialLinks } from "@/components/social-links";
+import { stripBoldMarkers } from "@/lib/format-text";
 
 export const metadata: Metadata = {
   title: "Careers | Masy Consulting",
@@ -16,7 +17,7 @@ export default async function CareersPage() {
   const roles = await db.openRole.findMany({
     where: { acceptingApplications: true },
     include: { clientOrg: true },
-    orderBy: [{ clientOrg: { name: "asc" } }, { createdAt: "desc" }],
+    orderBy: [{ displayOrder: "asc" }, { clientOrg: { name: "asc" } }, { createdAt: "desc" }],
   });
 
   return (
@@ -50,8 +51,9 @@ export default async function CareersPage() {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-light">{role.clientOrg.name}</p>
                     <p className="mt-1 text-base font-bold text-ink">{role.title}</p>
+                    {role.location && <p className="mt-0.5 text-xs text-slate">📍 {role.location}</p>}
                     {role.description && (
-                      <p className="mt-1 line-clamp-1 text-sm text-slate">{role.description}</p>
+                      <p className="mt-1 line-clamp-1 text-sm text-slate">{stripBoldMarkers(role.description)}</p>
                     )}
                   </div>
                   <span className="shrink-0 text-sm font-semibold text-indigo">View role &rarr;</span>

@@ -3,9 +3,8 @@ import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { getReviewTemplate } from "@/lib/review-templates";
 import { ReviewStatusBadge } from "@/components/review-status-badge";
-import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { SuccessBanner } from "@/components/success-banner";
-import { submitReview } from "./actions";
+import { ReviewForm } from "./review-form";
 
 const sectionLabelClass = "text-xs font-semibold uppercase tracking-widest text-slate-light";
 
@@ -28,6 +27,8 @@ export default async function MyReviewsPage() {
   }
 
   const template = await getReviewTemplate(employeeId, employee.roleTitle, employee.reviewTemplate);
+  const draft = reviews.find((r) => r.status === "DRAFT") ?? null;
+  const submittedReviews = reviews.filter((r) => r.status !== "DRAFT");
 
   return (
     <div className="space-y-8">
@@ -37,39 +38,23 @@ export default async function MyReviewsPage() {
         <p className="text-sm text-slate">Masy reviews every submission before anything reaches your employer.</p>
       </div>
 
-      <div className="rounded-card border border-border bg-paper p-6">
-        <SuccessBanner />
-        <h2 className="mb-1 text-sm font-semibold text-ink">Submit a self-assessment</h2>
-        <p className="mb-4 text-xs text-slate-light">Tailored to your role as {employee.roleTitle}.</p>
-        <form action={submitReview} className="space-y-8">
-          <div className="max-w-xs">
-            <label className={labelClass} htmlFor="cycle">Review cycle</label>
-            <input id="cycle" name="cycle" placeholder="e.g. July 2026" required className={inputClass} />
-          </div>
-
-          {template.map((section, si) => (
-            <div key={si} className="space-y-4">
-              <p className="border-b border-border pb-2 text-sm font-semibold text-ink">{section.section}</p>
-              {section.questions.map((question, qi) => (
-                <div key={qi}>
-                  <label className={labelClass} htmlFor={`s${si}_q${qi}`}>{question}</label>
-                  <textarea id={`s${si}_q${qi}`} name={`s${si}_q${qi}`} rows={3} required className={inputClass} />
-                </div>
-              ))}
-            </div>
-          ))}
-
-          <div className="border-t border-border pt-4">
-            <label className={labelClass} htmlFor="selfAssessment">Anything else you&apos;d like to add? (optional)</label>
-            <textarea id="selfAssessment" name="selfAssessment" rows={3} className={inputClass} />
-          </div>
-
-          <button type="submit" className={buttonClass}>Submit</button>
-        </form>
-      </div>
+      <SuccessBanner />
+      <ReviewForm
+        roleTitle={employee.roleTitle}
+        template={template}
+        draft={
+          draft
+            ? {
+                cycle: draft.cycle,
+                selfAssessment: draft.selfAssessment,
+                responses: Array.isArray(draft.responses) ? (draft.responses as unknown as ReviewResponseSection[]) : [],
+              }
+            : null
+        }
+      />
 
       <div className="space-y-3">
-        {reviews.map((review) => {
+        {submittedReviews.map((review) => {
           const responses = Array.isArray(review.responses)
             ? (review.responses as unknown as ReviewResponseSection[])
             : [];
@@ -103,7 +88,7 @@ export default async function MyReviewsPage() {
             </div>
           );
         })}
-        {reviews.length === 0 && (
+        {submittedReviews.length === 0 && (
           <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
             No reviews submitted yet.
           </p>

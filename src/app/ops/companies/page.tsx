@@ -4,8 +4,9 @@ import { db } from "@/lib/db";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ResetPasswordForm } from "@/components/reset-password-form";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { createCompany, deleteCompany } from "./actions";
+import { createCompany, deleteCompany, deactivateCompany, reactivateCompany, updateCompanyLogo } from "./actions";
 import { InviteClientForm } from "./invite-client-form";
+import { CompanyLogoUpload } from "./company-logo-upload";
 
 export default async function OpsCompaniesPage() {
   await requireRole("MASY_OPS");
@@ -30,37 +31,51 @@ export default async function OpsCompaniesPage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Staff</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Client login</th>
-              <th className="px-4 py-2.5" />
-              <th className="px-4 py-2.5" />
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Logo</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Name</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Staff</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Client login</th>
+              <th className="px-3 py-2" />
+              <th className="px-3 py-2" />
+              <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {orgs.map((org) => {
               const deleteCompanyWithId = deleteCompany.bind(null, org.id);
+              const deactivateWithId = deactivateCompany.bind(null, org.id);
+              const reactivateWithId = reactivateCompany.bind(null, org.id);
+              const isActive = org.status === "active";
+              const updateLogoWithId = updateCompanyLogo.bind(null, org.id);
               return (
-              <tr key={org.id} className="hover:bg-paper-2">
-                <td className="px-4 py-3 font-medium text-ink">{org.name}</td>
-                <td className="px-4 py-3 text-slate">{org._count.employees}</td>
-                <td className="px-4 py-3">
-                  <span className="rounded-btn bg-indigo-tint px-2.5 py-0.5 text-xs font-medium text-indigo">
+              <tr key={org.id} className={`hover:bg-paper-2 ${isActive ? "" : "opacity-60"}`}>
+                <td className="px-3 py-2.5">
+                  <CompanyLogoUpload name={org.name} logoUrl={org.logoUrl} action={updateLogoWithId} />
+                </td>
+                <td className="px-3 py-2.5 font-medium text-ink">{org.name}</td>
+                <td className="px-3 py-2.5 text-slate">{org._count.employees}</td>
+                <td className="px-3 py-2.5">
+                  <span
+                    className={`rounded-btn px-2.5 py-0.5 text-xs font-medium ${
+                      isActive ? "bg-indigo-tint text-indigo" : "border border-border bg-paper-2 text-slate"
+                    }`}
+                  >
                     {org.status}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  {org.users.length > 0 ? (
-                    <div className="flex items-center justify-end gap-3">
-                      <span className="text-xs text-slate">{org.users[0].email}</span>
-                      <ResetPasswordForm userId={org.users[0].id} />
-                    </div>
-                  ) : (
+                <td className="px-3 py-2.5">
+                  <div className="space-y-2">
+                    {org.users.map((user) => (
+                      <div key={user.id} className="flex items-center justify-end gap-3">
+                        <span className="text-xs text-slate">{user.email}</span>
+                        <ResetPasswordForm userId={user.id} />
+                      </div>
+                    ))}
                     <InviteClientForm clientOrgId={org.id} />
-                  )}
+                  </div>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-3 py-2.5 text-right">
                   <Link
                     href={`/ops/employees?org=${org.id}`}
                     className="text-sm font-medium text-indigo hover:text-indigo-light"
@@ -68,7 +83,24 @@ export default async function OpsCompaniesPage() {
                     Add staff
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-3 py-2.5 text-right">
+                  {isActive ? (
+                    <ConfirmSubmitButton
+                      action={deactivateWithId}
+                      confirmMessage={`Deactivate ${org.name}? Every login tied to this company, the client account and all their staff, will be blocked immediately. Their data stays intact and you can reactivate anytime.`}
+                      className="text-sm font-medium text-slate hover:text-orange"
+                    >
+                      Deactivate
+                    </ConfirmSubmitButton>
+                  ) : (
+                    <form action={reactivateWithId}>
+                      <button type="submit" className="text-sm font-medium text-indigo hover:text-indigo-light">
+                        Reactivate
+                      </button>
+                    </form>
+                  )}
+                </td>
+                <td className="px-3 py-2.5 text-right">
                   <ConfirmSubmitButton
                     action={deleteCompanyWithId}
                     confirmMessage={`Delete ${org.name} and ALL its data, ${org._count.employees} employee(s), attendance, leave, reviews, recruitment, everything? This can't be undone.`}
@@ -82,7 +114,7 @@ export default async function OpsCompaniesPage() {
             })}
             {orgs.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-light">No companies yet.</td>
+                <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-light">No companies yet.</td>
               </tr>
             )}
           </tbody>
