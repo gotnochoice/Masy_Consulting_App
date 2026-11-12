@@ -27,7 +27,7 @@ export default async function EditStaffPage({ params }: { params: Promise<{ id: 
         Correct anything that&rsquo;s out of date. Status, leave balance, and pay are managed by your Masy HR contact.
       </p>
       <ClientEmployeeForm employee={employee} action={updateWithId} />
-      <DocumentList documents={documents} />
+      <DocumentList employeeId={employee.id} documents={documents} />
     </div>
   );
 }

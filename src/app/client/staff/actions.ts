@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uploadEmployeePhoto } from "@/lib/photo";
+import { uploadEmployeeDocumentFile } from "@/lib/employee-documents-server";
+import { notifyEmployeeDocumentsShared } from "@/lib/notify-document";
 
 const updateSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -102,4 +104,92 @@ export async function updateEmployeeDetails(employeeId: string, formData: FormDa
 
   revalidatePath("/client/staff");
   redirect(`/client/staff?done=${encodeURIComponent("Staff details updated")}`);
+}
+
+const uploadDocumentSchema = z.object({
+  label: z.string().min(1, "Give the document a label"),
+  category: z.enum(["EMPLOYMENT_LETTER", "ONBOARDING", "IDENTIFICATION", "CONTRACT", "OTHER"]),
+});
+
+export type UploadClientDocumentState = { error: string } | undefined;
+
+// Returns an error instead of throwing -- a bad file type, an oversized upload, or a blob
+// storage hiccup are all routine, foreseeable outcomes here, not crashes. A thrown Error from
+// a form action with no useActionState takes down the whole page instead of showing what to
+// fix (the same bug that once swallowed a real performance review submission).
+export async function uploadClientEmployeeDocument(
+  employeeId: string,
+  _prevState: UploadClientDocumentState,
+  formData: FormData,
+): Promise<UploadClientDocumentState> {
+  const session = await requireRole("CLIENT");
+
+  const employee = await db.employee.findUnique({ where: { id: employeeId } });
+  if (!employee || employee.clientOrgId !== session.user.clientOrgId) {
+    return { error: "Not authorized for this employee" };
+  }
+
+  const parsed = uploadDocumentSchema.safeParse({
+    label: formData.get("label"),
+    category: formData.get("category"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid document details" };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose a file to upload" };
+  }
+
+  const result = await uploadEmployeeDocumentFile(file);
+  if ("error" in result) return { error: result.error };
+
+  const document = await db.employeeDocument.create({
+    data: {
+      employeeId,
+      label: parsed.data.label,
+      category: parsed.data.category,
+      fileUrl: result.url,
+      fileName: file.name,
+      uploadedById: session.user.id,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "employee_document.upload_by_client",
+      targetType: "EmployeeDocument",
+      targetId: document.id,
+    },
+  });
+
+  await notifyEmployeeDocumentsShared([employeeId], parsed.data.label);
+
+  revalidatePath(`/client/staff/${employeeId}/edit`);
+  revalidatePath("/me/documents");
+}
+
+export async function deleteClientEmployeeDocument(documentId: string, employeeId: string) {
+  const session = await requireRole("CLIENT");
+
+  const employee = await db.employee.findUnique({ where: { id: employeeId } });
+  if (!employee || employee.clientOrgId !== session.user.clientOrgId) {
+    throw new Error("Not authorized for this employee");
+  }
+
+  await db.employeeDocument.deleteMany({ where: { id: documentId, employeeId } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "employee_document.delete_by_client",
+      targetType: "EmployeeDocument",
+      targetId: documentId,
+    },
+  });
+
+  revalidatePath(`/client/staff/${employeeId}/edit`);
+  revalidatePath("/me/documents");
 }
