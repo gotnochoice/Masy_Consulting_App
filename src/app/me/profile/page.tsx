@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Clock, CalendarDays, Award } from "lucide-react";
 import { requireRole } from "@/lib/rbac";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { todayDateOnly } from "@/lib/attendance";
 import { formatDateShort } from "@/lib/leave";
@@ -15,6 +16,7 @@ import { EmployeeAvatar } from "@/components/employee-avatar";
 
 export default async function MyProfilePage() {
   const session = await requireRole("EMPLOYEE");
+  await requireOnboardingComplete(session.user.employeeId);
 
   const employee = session.user.employeeId
     ? await db.employee.findUnique({

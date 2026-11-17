@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/rbac";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
@@ -8,6 +9,7 @@ import { submitConcern } from "./actions";
 export default async function MyConcernsPage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
+  await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
     return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;

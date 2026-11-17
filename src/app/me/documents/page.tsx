@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/rbac";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/documents";
 import { EMPLOYEE_DOCUMENT_CATEGORY_LABELS } from "@/lib/employee-documents";
@@ -10,6 +11,7 @@ import { requestDocument } from "./actions";
 export default async function MyDocumentsPage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
+  await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
     return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;

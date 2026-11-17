@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/rbac";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { getReviewTemplate } from "@/lib/review-templates";
@@ -13,6 +14,7 @@ type ReviewResponseSection = { section: string; answers: { question: string; ans
 export default async function MyReviewsPage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
+  await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
     return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;

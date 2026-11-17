@@ -38,6 +38,8 @@ test("a hired candidate can be converted to an employee from the applicant detai
   expect(employeeRows).toHaveLength(1);
 
   await pool.query(`DELETE FROM "OnboardingTask" WHERE "employeeId" = $1`, [employeeRows[0].id]);
+  await pool.query(`DELETE FROM "OnboardingStep" WHERE "onboardingProcessId" IN (SELECT id FROM "OnboardingProcess" WHERE "employeeId" = $1)`, [employeeRows[0].id]);
+  await pool.query(`DELETE FROM "OnboardingProcess" WHERE "employeeId" = $1`, [employeeRows[0].id]);
   await pool.query(`DELETE FROM "Candidate" WHERE id = $1`, [candidateId]);
   await pool.query(`DELETE FROM "Employee" WHERE id = $1`, [employeeRows[0].id]);
 });

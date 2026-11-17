@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/rbac";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { leaveDaysBetween, formatDateShort } from "@/lib/leave";
 import { LeaveStatusBadge } from "@/components/leave-status-badge";
@@ -9,6 +10,7 @@ import { requestLeave } from "./actions";
 export default async function MyLeavePage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
+  await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
     return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;

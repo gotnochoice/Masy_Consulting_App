@@ -3,9 +3,11 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { acknowledgeAnnouncement } from "@/lib/actions/announcements";
 import { NigeriaHolidaysWidget } from "@/components/nigeria-holidays-widget";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 
 export default async function MyAnnouncementsPage() {
   const session = await requireRole("EMPLOYEE");
+  await requireOnboardingComplete(session.user.employeeId);
 
   const employee = session.user.employeeId
     ? await db.employee.findUnique({ where: { id: session.user.employeeId }, select: { clientOrgId: true } })

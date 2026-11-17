@@ -15,7 +15,7 @@ import {
   sendOfferEmailCore,
   autoSendStageEmail,
 } from "@/lib/candidate-emails";
-import { DEFAULT_ONBOARDING_TASKS } from "@/lib/onboarding";
+import { DEFAULT_ONBOARDING_TASKS, ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
 
 const ROLE_STAGES = ["SOURCING", "INTERVIEWING", "OFFER", "FILLED"] as const;
 const CANDIDATE_STAGES = ["APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED"] as const;
@@ -1037,6 +1037,13 @@ export async function convertCandidateToEmployee(
 
     await tx.onboardingTask.createMany({
       data: DEFAULT_ONBOARDING_TASKS.map((label) => ({ employeeId: created.id, label })),
+    });
+    await tx.onboardingProcess.create({
+      data: {
+        employeeId: created.id,
+        commencementDate: created.startDate,
+        steps: { create: ONBOARDING_STEP_ORDER.map((stepType) => ({ stepType })) },
+      },
     });
 
     await tx.candidate.update({

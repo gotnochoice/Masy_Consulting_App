@@ -10,6 +10,7 @@ import { requireRole } from "@/lib/rbac";
 import { generateTemporaryPassword } from "@/lib/password";
 import { slugify } from "@/lib/slug";
 import { DEFAULT_ONBOARDING_TASKS, MAX_ONBOARDING_QUESTION_FILE_LABEL } from "@/lib/onboarding";
+import { createOnboardingProcess } from "@/lib/onboarding-process";
 import { getOrigin } from "@/lib/url";
 import { uploadEmployeePhoto } from "@/lib/photo";
 import { uploadEmployeeDocumentFile } from "@/lib/employee-documents-server";
@@ -137,6 +138,7 @@ export async function createEmployee(formData: FormData) {
   await db.onboardingTask.createMany({
     data: DEFAULT_ONBOARDING_TASKS.map((label) => ({ employeeId: employee.id, label })),
   });
+  await createOnboardingProcess(employee.id, startDate);
 
   await db.auditLog.create({
     data: {
