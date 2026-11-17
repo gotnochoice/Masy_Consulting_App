@@ -2,7 +2,7 @@ import { put } from "@vercel/blob";
 import { db } from "@/lib/db";
 import { scopedEmployeeWhere } from "@/lib/rbac";
 import type { Session } from "next-auth";
-import { MAX_DOCUMENT_FILE_BYTES, MAX_DOCUMENT_FILE_LABEL } from "@/lib/employee-documents";
+import { MAX_DOCUMENT_FILE_BYTES, MAX_DOCUMENT_FILE_LABEL, HR_ONLY_DOCUMENT_CATEGORIES } from "@/lib/employee-documents";
 
 const ALLOWED_TYPES = new Set([
   "application/pdf",
@@ -31,9 +31,12 @@ export async function uploadEmployeeDocumentFile(file: File): Promise<{ url: str
 }
 
 export async function getUnreadDocumentsForClient(session: Session) {
+  // Identity-verification documents stay HR-only -- never surfaced to a client, including
+  // in their unread-documents notifications.
   return db.employeeDocument.findMany({
     where: {
       employee: scopedEmployeeWhere(session),
+      category: { notIn: HR_ONLY_DOCUMENT_CATEGORIES },
       NOT: { acks: { some: { userId: session.user.id } } },
     },
     include: { employee: true },

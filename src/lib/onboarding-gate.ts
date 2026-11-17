@@ -18,3 +18,19 @@ export async function requireOnboardingComplete(employeeId: string | null | unde
     redirect("/me/onboarding");
   }
 }
+
+// Guards each individual step page: if the early privacy-consent notice hasn't been
+// acknowledged yet, bounce back to the overview page, which shows that notice first. Prevents
+// reaching a step directly by URL before any personal-data collection has been consented to.
+export async function requirePrivacyConsent(employeeId: string | null | undefined) {
+  if (!employeeId) return;
+
+  const process = await db.onboardingProcess.findUnique({
+    where: { employeeId },
+    select: { privacyConsentAt: true },
+  });
+
+  if (process && !process.privacyConsentAt) {
+    redirect("/me/onboarding");
+  }
+}

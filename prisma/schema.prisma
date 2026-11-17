@@ -679,6 +679,10 @@ model OnboardingProcess {
   employeeId     String          @unique
   employee       Employee        @relation(fields: [employeeId], references: [id])
   commencementDate DateTime      @db.Date
+  // Recorded before Step 1 even opens -- a brief notice + consent, timestamped, ahead of any
+  // personal data collection. The full Privacy Notice is still read and acknowledged in detail
+  // at Step 4; this is the separate, earlier "before any personal data is collected" gate.
+  privacyConsentAt DateTime?
   completedAt    DateTime?
   completedById  String?
   steps          OnboardingStep[]

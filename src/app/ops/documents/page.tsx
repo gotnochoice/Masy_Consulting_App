@@ -73,7 +73,7 @@ export default async function OpsDocumentsPage() {
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
                     <a
-                      href={doc.fileUrl}
+                      href={`/api/documents/${doc.id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs font-medium text-indigo hover:text-indigo-light"

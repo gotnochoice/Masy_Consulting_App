@@ -52,7 +52,7 @@ export default async function MyDocumentsPage() {
                   </p>
                 </div>
                 <a
-                  href={doc.fileUrl}
+                  href={`/api/documents/${doc.id}`}
                   target="_blank"
                   rel="noreferrer"
                   className="shrink-0 text-xs font-medium text-indigo hover:text-indigo-light"

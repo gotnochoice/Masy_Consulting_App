@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
+import { requirePrivacyConsent } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
 import { IdentityDocumentsForm } from "./identity-documents-form";
@@ -8,6 +9,7 @@ export default async function IdentityDocumentsStepPage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
   if (!employeeId) redirect("/me/profile");
+  await requirePrivacyConsent(employeeId);
 
   const process = await db.onboardingProcess.findUnique({ where: { employeeId }, include: { steps: true } });
   if (!process) redirect("/me/profile");

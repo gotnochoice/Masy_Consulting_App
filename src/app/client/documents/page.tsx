@@ -1,14 +1,15 @@
 import { CheckCircle2 } from "lucide-react";
 import { requireRole, scopedEmployeeWhere } from "@/lib/rbac";
 import { db } from "@/lib/db";
-import { EMPLOYEE_DOCUMENT_CATEGORY_LABELS } from "@/lib/employee-documents";
+import { EMPLOYEE_DOCUMENT_CATEGORY_LABELS, HR_ONLY_DOCUMENT_CATEGORIES } from "@/lib/employee-documents";
 import { acknowledgeEmployeeDocument } from "@/lib/actions/employee-documents";
 
 export default async function ClientDocumentsPage() {
   const session = await requireRole("CLIENT");
 
+  // Identity-verification documents stay HR-only -- never shown to a client.
   const documents = await db.employeeDocument.findMany({
-    where: { employee: scopedEmployeeWhere(session) },
+    where: { employee: scopedEmployeeWhere(session), category: { notIn: HR_ONLY_DOCUMENT_CATEGORIES } },
     include: { employee: true, acks: { where: { userId: session.user.id } } },
     orderBy: { createdAt: "desc" },
   });
@@ -37,7 +38,7 @@ export default async function ClientDocumentsPage() {
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <a
-                  href={doc.fileUrl}
+                  href={`/api/documents/${doc.id}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-xs font-medium text-indigo hover:text-indigo-light"

@@ -3,13 +3,13 @@
 import { useActionState } from "react";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
-import { EMPLOYEE_DOCUMENT_CATEGORY_LABELS, MAX_DOCUMENT_FILE_LABEL } from "@/lib/employee-documents";
+import { EMPLOYEE_DOCUMENT_CATEGORY_LABELS, MAX_DOCUMENT_FILE_LABEL, HR_ONLY_DOCUMENT_CATEGORIES } from "@/lib/employee-documents";
 import {
   uploadClientEmployeeDocument,
   deleteClientEmployeeDocument,
   type UploadClientDocumentState,
 } from "../../actions";
-import type { EmployeeDocument } from "@/generated/prisma/client";
+import type { EmployeeDocument, EmployeeDocumentCategory } from "@/generated/prisma/client";
 
 export function DocumentList({ employeeId, documents }: { employeeId: string; documents: EmployeeDocument[] }) {
   const uploadWithId = uploadClientEmployeeDocument.bind(null, employeeId);
@@ -39,7 +39,7 @@ export function DocumentList({ employeeId, documents }: { employeeId: string; do
               >
                 <div className="min-w-0">
                   <a
-                    href={doc.fileUrl}
+                    href={`/api/documents/${doc.id}`}
                     target="_blank"
                     rel="noreferrer"
                     className="block truncate text-sm font-medium text-indigo hover:text-indigo-light"
@@ -72,9 +72,11 @@ export function DocumentList({ employeeId, documents }: { employeeId: string; do
         <div>
           <label className={labelClass} htmlFor="category">Category</label>
           <select id="category" name="category" defaultValue="OTHER" className={inputClass}>
-            {Object.entries(EMPLOYEE_DOCUMENT_CATEGORY_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
+            {(Object.entries(EMPLOYEE_DOCUMENT_CATEGORY_LABELS) as [EmployeeDocumentCategory, string][])
+              .filter(([value]) => !HR_ONLY_DOCUMENT_CATEGORIES.includes(value))
+              .map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
           </select>
         </div>
         <div>

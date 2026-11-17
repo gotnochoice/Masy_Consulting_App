@@ -12,3 +12,8 @@ export const EMPLOYEE_DOCUMENT_CATEGORY_LABELS: Record<EmployeeDocumentCategory,
   NIN_SLIP: "NIN slip/card",
   OTHER: "Other",
 };
+
+// Identity-verification documents: HR (Masy Ops) and the employee themselves only. A client
+// org's Founder/staff never see these, even on their own employee's record -- every
+// client-facing document query must exclude these categories.
+export const HR_ONLY_DOCUMENT_CATEGORIES: EmployeeDocumentCategory[] = ["IDENTIFICATION", "NIN_SLIP", "PROOF_OF_ADDRESS"];

@@ -60,6 +60,12 @@ test("a brand-new employee is gated to /me/onboarding until steps are verified; 
   await page.getByLabel("Password", { exact: true }).fill(ZZTEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/me\/onboarding/);
+
+  // The privacy-consent notice gates everything else, recorded with a timestamp before any
+  // personal data collection starts.
+  await expect(page.getByRole("heading", { name: "Before we begin" })).toBeVisible();
+  await page.getByRole("button", { name: "I understand, continue" }).click();
+  await page.waitForTimeout(500);
   await expect(page.getByText("0 of 6 verified")).toBeVisible();
 
   // Direct navigation to a normal page should also bounce back to onboarding, not render it.

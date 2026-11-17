@@ -106,9 +106,11 @@ export async function updateEmployeeDetails(employeeId: string, formData: FormDa
   redirect(`/client/staff?done=${encodeURIComponent("Staff details updated")}`);
 }
 
+// Identity-verification categories (IDENTIFICATION, NIN_SLIP, PROOF_OF_ADDRESS) are deliberately
+// excluded -- those stay HR-only, collected only through the employee's own onboarding flow.
 const uploadDocumentSchema = z.object({
   label: z.string().min(1, "Give the document a label"),
-  category: z.enum(["EMPLOYMENT_LETTER", "ONBOARDING", "IDENTIFICATION", "CONTRACT", "OTHER"]),
+  category: z.enum(["EMPLOYMENT_LETTER", "ONBOARDING", "CONTRACT", "OTHER"]),
 });
 
 export type UploadClientDocumentState = { error: string } | undefined;

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
+import { requirePrivacyConsent } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { listNigerianBanks } from "@/lib/bank-verification";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
@@ -9,6 +10,7 @@ export default async function PersonalDetailsStepPage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
   if (!employeeId) redirect("/me/profile");
+  await requirePrivacyConsent(employeeId);
 
   const [employee, process] = await Promise.all([
     db.employee.findUnique({ where: { id: employeeId }, include: { clientOrg: { select: { name: true } } } }),

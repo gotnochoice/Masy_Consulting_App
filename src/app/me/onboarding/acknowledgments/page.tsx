@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
+import { requirePrivacyConsent } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
 import { AcknowledgmentsFlow } from "./acknowledgments-flow";
@@ -8,6 +9,7 @@ export default async function AcknowledgmentsStepPage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
   if (!employeeId) redirect("/me/profile");
+  await requirePrivacyConsent(employeeId);
 
   const employee = await db.employee.findUnique({ where: { id: employeeId }, include: { clientOrg: true } });
   if (!employee) redirect("/me/profile");

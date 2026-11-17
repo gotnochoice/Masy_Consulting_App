@@ -2,8 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
-import { ONBOARDING_STEP_ORDER, ONBOARDING_STEP_LABELS, ONBOARDING_STEP_ROUTES } from "@/lib/onboarding";
+import { ONBOARDING_STEP_ORDER, ONBOARDING_STEP_LABELS, ONBOARDING_STEP_ROUTES, EARLY_PRIVACY_CONSENT_NOTICE } from "@/lib/onboarding";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
+import { recordPrivacyConsent } from "./actions";
 
 export default async function MyOnboardingPage() {
   const session = await requireRole("EMPLOYEE");
@@ -17,6 +18,25 @@ export default async function MyOnboardingPage() {
 
   // No process (pre-dates this module) or already complete -- nothing to show here.
   if (!process || process.completedAt) redirect("/me/profile");
+
+  if (!process.privacyConsentAt) {
+    return (
+      <div className="max-w-lg space-y-6">
+        <div>
+          <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+          <h1 className="text-2xl font-bold tracking-tight text-ink">Before we begin</h1>
+        </div>
+        <div className="whitespace-pre-wrap rounded-card border border-border bg-paper p-5 text-sm leading-relaxed text-slate">
+          {EARLY_PRIVACY_CONSENT_NOTICE}
+        </div>
+        <form action={recordPrivacyConsent}>
+          <button type="submit" className="rounded-btn bg-indigo px-4 py-2 text-sm font-medium text-white hover:bg-indigo-light">
+            I understand, continue
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   const stepsByType = new Map(process.steps.map((s) => [s.stepType, s]));
   const orderedSteps = ONBOARDING_STEP_ORDER.map((stepType) => stepsByType.get(stepType)).filter((s) => !!s);

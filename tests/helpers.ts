@@ -64,9 +64,11 @@ export async function createOnboardingTestEmployee(
   );
   const employeeId = rows[0].id;
 
+  // privacyConsentAt is pre-set here since these tests exercise a specific step, not the
+  // consent gate itself -- see onboarding-privacy-consent.spec.ts for that.
   await pool.query(
-    `INSERT INTO "OnboardingProcess" (id, "employeeId", "commencementDate", "createdAt", "updatedAt")
-     VALUES (gen_random_uuid()::text, $1, now(), now(), now())`,
+    `INSERT INTO "OnboardingProcess" (id, "employeeId", "commencementDate", "privacyConsentAt", "createdAt", "updatedAt")
+     VALUES (gen_random_uuid()::text, $1, now(), now(), now(), now())`,
     [employeeId],
   );
   const { rows: processRows } = await pool.query<{ id: string }>(`SELECT id FROM "OnboardingProcess" WHERE "employeeId" = $1`, [employeeId]);

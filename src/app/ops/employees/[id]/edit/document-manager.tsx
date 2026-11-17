@@ -33,7 +33,7 @@ export function DocumentManager({
               >
                 <div className="min-w-0">
                   <a
-                    href={doc.fileUrl}
+                    href={`/api/documents/${doc.id}`}
                     target="_blank"
                     rel="noreferrer"
                     className="block truncate text-sm font-medium text-indigo hover:text-indigo-light"
