@@ -7,6 +7,7 @@ import { DocumentManager } from "./document-manager";
 import { OnboardingQuestionsManager } from "./onboarding-questions-manager";
 import { ContractLetterPanel } from "./contract-letter-panel";
 import { CompanyAssetPanel } from "./company-asset-panel";
+import { DataPrivacyPanel } from "./data-privacy-panel";
 import { getContractLetterTemplate } from "@/lib/contract-letter-template";
 import { decryptSensitive } from "@/lib/encryption";
 
@@ -45,6 +46,7 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
       <OnboardingQuestionsManager employeeId={employee.id} questions={onboardingQuestions} />
       <DocumentManager employeeId={employee.id} documents={documents} />
       <CompanyAssetPanel employeeId={employee.id} assets={assets} />
+      <DataPrivacyPanel employeeId={employee.id} />
     </div>
   );
 }

@@ -20,6 +20,7 @@ import { extractOnboardingQuestionsFromDocument, draftContractLetter, transcribe
 import { getContractLetterTemplate, saveContractLetterTemplate, removeContractLetterTemplate } from "@/lib/contract-letter-template";
 import { MAX_TEMPLATE_FILE_BYTES, MAX_TEMPLATE_FILE_LABEL } from "@/lib/contract-letter-template-constants";
 import { encryptSensitive } from "@/lib/encryption";
+import { deleteIdentityDocumentsNow } from "@/lib/data-retention";
 
 const baseFields = {
   clientOrgId: z.string().min(1, "Organization is required"),
@@ -203,6 +204,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
   } = parsed.data;
 
   const existingUser = await db.user.findUnique({ where: { employeeId } });
+  const existingEmployee = await db.employee.findUnique({ where: { id: employeeId }, select: { status: true } });
 
   let photoUrl: string | undefined;
   const photoFile = formData.get("photo");
@@ -232,6 +234,10 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
       bankAccountHolderName: bankAccountHolderName ?? null,
       nin: nin ? encryptSensitive(nin) : null,
       ...(photoUrl ? { photoUrl } : {}),
+      // The retention clock for identity documents starts here, not at updatedAt (which any
+      // later edit would bump) -- only touch it exactly on a transition into or out of OFFBOARDED.
+      ...(parsed.data.status === "OFFBOARDED" && existingEmployee?.status !== "OFFBOARDED" ? { offboardedAt: new Date() } : {}),
+      ...(parsed.data.status !== "OFFBOARDED" && existingEmployee?.status === "OFFBOARDED" ? { offboardedAt: null } : {}),
     },
   });
 
@@ -336,7 +342,7 @@ export async function generateOnboardingLink(
 export async function offboardEmployee(employeeId: string) {
   const session = await requireRole("MASY_OPS");
 
-  await db.employee.update({ where: { id: employeeId }, data: { status: "OFFBOARDED" } });
+  await db.employee.update({ where: { id: employeeId }, data: { status: "OFFBOARDED", offboardedAt: new Date() } });
 
   await db.auditLog.create({
     data: {
@@ -835,5 +841,13 @@ export async function approveCompanyAssetRelease(assetId: string, employeeId: st
 export async function deleteCompanyAsset(assetId: string, employeeId: string) {
   await requireRole("MASY_OPS");
   await db.companyAsset.delete({ where: { id: assetId } });
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+// Deletion-on-request: deletes this employee's identity documents (ID, NIN slip, proof of
+// address) right away, ahead of the normal 1-year-after-exit retention schedule.
+export async function requestIdentityDocumentDeletion(employeeId: string) {
+  const session = await requireRole("MASY_OPS");
+  await deleteIdentityDocumentsNow(employeeId, session.user.id);
   revalidatePath(`/ops/employees/${employeeId}/edit`);
 }

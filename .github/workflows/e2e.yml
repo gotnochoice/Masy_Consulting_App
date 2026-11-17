@@ -27,6 +27,9 @@ jobs:
       AUTH_SECRET: test-secret-not-used-in-production
       EMAIL_FROM: noreply@masyconsulting.example
       OPS_NOTIFICATION_EMAIL: ops@masyconsulting.example
+      # A random 32-byte key, not used anywhere real -- it only needs to exist so CI exercises
+      # the real encryption path instead of the fail-open (no-key) fallback.
+      NIN_ENCRYPTION_KEY: SWVj2ik1V7ynRu4g9zBIQ09BJC2OaxnMvft/72iaEho=
     steps:
       - uses: actions/checkout@v5
 
