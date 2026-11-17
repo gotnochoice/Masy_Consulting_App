@@ -1,67 +1,17 @@
 import { test, expect } from "@playwright/test";
-import bcrypt from "bcryptjs";
-import { pool } from "./helpers";
+import { createOnboardingTestEmployee, cleanupOnboardingTestEmployees, ZZTEST_ONBOARDING_PASSWORD, pool } from "./helpers";
 
 const ZZTEST_EMAIL = "zztest.iddocs@example.com";
-const ZZTEST_PASSWORD = "ZzTest#2026";
 const TEST_PNG_PATH = __dirname + "/fixtures/zztest-doc.png";
 
-async function cleanup() {
-  const { rows } = await pool.query<{ id: string }>(`SELECT id FROM "Employee" WHERE name LIKE 'ZZTEST%'`);
-  for (const { id } of rows) {
-    await pool.query(`DELETE FROM "EmployeeDocument" WHERE "employeeId" = $1`, [id]);
-    await pool.query(`DELETE FROM "OnboardingStep" WHERE "onboardingProcessId" IN (SELECT id FROM "OnboardingProcess" WHERE "employeeId" = $1)`, [id]);
-    await pool.query(`DELETE FROM "OnboardingProcess" WHERE "employeeId" = $1`, [id]);
-    await pool.query(`DELETE FROM "OnboardingTask" WHERE "employeeId" = $1`, [id]);
-    await pool.query(`DELETE FROM "User" WHERE "employeeId" = $1`, [id]);
-  }
-  await pool.query(`DELETE FROM "Employee" WHERE name LIKE 'ZZTEST%'`);
-}
-
-test.afterEach(cleanup);
-
-async function createZzTestEmployeeWithLogin(): Promise<string> {
-  const { rows: orgRows } = await pool.query<{ id: string }>(`SELECT id FROM "ClientOrg" WHERE slug = 'lagos-bites-catering'`);
-  const { rows } = await pool.query<{ id: string }>(
-    `INSERT INTO "Employee" (id, "clientOrgId", name, "roleTitle", email, "startDate", "createdAt", "updatedAt")
-     VALUES (gen_random_uuid()::text, $1, 'ZZTEST Doc Hire', 'ZZTEST Role', 'zztest-doc-hire@example.com', now(), now(), now())
-     RETURNING id`,
-    [orgRows[0].id],
-  );
-  const employeeId = rows[0].id;
-
-  await pool.query(
-    `INSERT INTO "OnboardingProcess" (id, "employeeId", "commencementDate", "createdAt", "updatedAt")
-     VALUES (gen_random_uuid()::text, $1, now(), now(), now())`,
-    [employeeId],
-  );
-  const { rows: processRows } = await pool.query<{ id: string }>(`SELECT id FROM "OnboardingProcess" WHERE "employeeId" = $1`, [employeeId]);
-  const processId = processRows[0].id;
-
-  for (const stepType of ["PERSONAL_DETAILS", "IDENTITY_DOCUMENTS", "GUARANTORS", "ACKNOWLEDGMENTS", "SIGNATURE", "PROPERTY_HANDOVER"]) {
-    const status = stepType === "PERSONAL_DETAILS" ? "SUBMITTED" : "NOT_STARTED";
-    await pool.query(
-      `INSERT INTO "OnboardingStep" (id, "onboardingProcessId", "stepType", status, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, $1, $2::"OnboardingStepType", $3::"OnboardingStepStatus", now(), now())`,
-      [processId, stepType, status],
-    );
-  }
-
-  const passwordHash = await bcrypt.hash(ZZTEST_PASSWORD, 10);
-  await pool.query(`INSERT INTO "User" (id, email, "passwordHash", role, "employeeId", "createdAt") VALUES (gen_random_uuid()::text, $1, $2, 'EMPLOYEE', $3, now())`, [
-    ZZTEST_EMAIL,
-    passwordHash,
-    employeeId,
-  ]);
-
-  return employeeId;
-}
+test.afterEach(cleanupOnboardingTestEmployees);
 
 test("identity documents step rejects an old bill and a malformed NIN, then succeeds with valid input", async ({ page }) => {
-  const employeeId = await createZzTestEmployeeWithLogin();
+  const employeeId = await createOnboardingTestEmployee(ZZTEST_EMAIL, { PERSONAL_DETAILS: "SUBMITTED" });
 
   await page.goto("/login");
   await page.getByLabel("Email").fill(ZZTEST_EMAIL);
-  await page.getByLabel("Password", { exact: true }).fill(ZZTEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(ZZTEST_ONBOARDING_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/me\/onboarding/);
 

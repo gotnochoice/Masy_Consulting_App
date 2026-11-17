@@ -1,5 +1,56 @@
-import { StubStepPage } from "../_stub-step-page";
+import { redirect } from "next/navigation";
+import { requireRole } from "@/lib/rbac";
+import { db } from "@/lib/db";
+import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
+import { GuarantorsForm } from "./guarantors-form";
 
-export default function Page() {
-  return <StubStepPage stepType="GUARANTORS" />;
+export default async function GuarantorsStepPage() {
+  const session = await requireRole("EMPLOYEE");
+  const employeeId = session.user.employeeId;
+  if (!employeeId) redirect("/me/profile");
+
+  const [process, guarantors] = await Promise.all([
+    db.onboardingProcess.findUnique({ where: { employeeId }, include: { steps: true } }),
+    db.guarantor.findMany({ where: { employeeId, replacedAt: null }, orderBy: { createdAt: "asc" } }),
+  ]);
+  if (!process) redirect("/me/profile");
+
+  const step = process.steps.find((s) => s.stepType === "GUARANTORS");
+  if (!step) redirect("/me/onboarding");
+
+  const toValues = (g: (typeof guarantors)[number] | undefined) =>
+    g
+      ? { name: g.name, relationship: g.relationship, phone: g.phone, email: g.email, occupation: g.occupation ?? "", address: g.address }
+      : null;
+
+  return (
+    <div className="max-w-lg space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
+          <h1 className="text-2xl font-bold tracking-tight text-ink">Guarantors</h1>
+          <p className="text-sm text-slate">Two people HR can contact to verify who you are.</p>
+        </div>
+        <OnboardingStepStatusBadge status={step.status} />
+      </div>
+
+      {step.status === "NEEDS_CORRECTION" && step.correctionReason && (
+        <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">
+          HR asked for a correction: {step.correctionReason}
+        </div>
+      )}
+
+      {step.status === "VERIFIED" ? (
+        <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
+          <p className="font-medium">Verified -- this step is locked.</p>
+        </div>
+      ) : step.status === "SUBMITTED" ? (
+        <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
+          <p className="font-medium">Submitted -- waiting on HR to verify.</p>
+        </div>
+      ) : (
+        <GuarantorsForm guarantor1={toValues(guarantors[0])} guarantor2={toValues(guarantors[1])} />
+      )}
+    </div>
+  );
 }
