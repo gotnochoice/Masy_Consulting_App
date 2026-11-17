@@ -66,6 +66,7 @@ export default async function ClientLayout({ children }: { children: React.React
           { label: "Documents", href: "/client/documents", badge: unreadDocuments.length },
           { label: "Announcements", href: "/client/announcements", badge: unread.length },
           { label: "Reports", href: "/client/reports" },
+          { label: "Onboarding setup", href: "/client/settings/onboarding" },
         ]}
       />
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">{children}</main>

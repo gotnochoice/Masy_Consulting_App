@@ -655,12 +655,12 @@ export async function draftEmployeeContractLetter(employeeId: string): Promise<D
 
   const employee = await db.employee.findUnique({
     where: { id: employeeId },
-    include: { clientOrg: { select: { name: true } } },
+    include: { clientOrg: { select: { id: true, name: true } } },
   });
   if (!employee) return { error: "Employee not found" };
 
   try {
-    const template = await getContractLetterTemplate();
+    const template = await getContractLetterTemplate(employee.clientOrg.id);
     const letter = await draftContractLetter({
       employeeName: employee.name,
       roleTitle: employee.roleTitle,
@@ -690,6 +690,9 @@ export async function uploadContractLetterTemplate(
 ): Promise<UploadContractLetterTemplateState> {
   await requireRole("MASY_OPS");
 
+  const employee = await db.employee.findUnique({ where: { id: employeeId }, select: { clientOrgId: true } });
+  if (!employee) return { error: "Employee not found" };
+
   const file = formData.get("template");
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Choose a document to upload first." };
@@ -714,7 +717,7 @@ export async function uploadContractLetterTemplate(
 
     if (!text.trim()) return { error: "Couldn't find any text in that document." };
 
-    await saveContractLetterTemplate(text, file.name);
+    await saveContractLetterTemplate(employee.clientOrgId, text, file.name);
     revalidatePath(`/ops/employees/${employeeId}/edit`);
     return { fileName: file.name };
   } catch (err) {
@@ -724,6 +727,8 @@ export async function uploadContractLetterTemplate(
 
 export async function removeEmployeeContractLetterTemplate(employeeId: string) {
   await requireRole("MASY_OPS");
-  await removeContractLetterTemplate();
+  const employee = await db.employee.findUnique({ where: { id: employeeId }, select: { clientOrgId: true } });
+  if (!employee) return;
+  await removeContractLetterTemplate(employee.clientOrgId);
   revalidatePath(`/ops/employees/${employeeId}/edit`);
 }

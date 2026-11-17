@@ -452,3 +452,152 @@ to screening this candidate, false for nice-to-have ones.`;
   };
 }
 
+export type EmploymentAgreementBrief = {
+  companyName: string;
+  workMode: "REMOTE" | "ON_SITE" | "HYBRID";
+  shiftDescription: string | null;
+  payStructure: string;
+  probationAndNotice: string | null;
+  leavePolicy: string | null;
+  equipmentPolicy: string | null;
+  otherTerms: string | null;
+  existingText: string | null;
+};
+
+// Drafts a full employment agreement a client can edit before it's ever shown to a real
+// employee. Deliberately conservative: only turns what the client actually told us into
+// clauses, never invents specific numbers, policies, or legal terms that weren't given --
+// and the result is explicitly a draft, not a reviewed, compliant contract.
+export async function draftEmploymentAgreement(brief: EmploymentAgreementBrief): Promise<string> {
+  const prompt = `You are helping a small business owner draft an employment agreement for their own employees,
+to review and edit (and ideally have checked by a professional) before any employee ever sees it. This is a
+DRAFT, not a finished legal document -- never invent a specific number, policy, or legal term the owner didn't
+give you below. Where something essential is missing, write a clear [PLACEHOLDER: what's needed] instead of
+guessing.
+
+Company name: ${brief.companyName}
+Work mode: ${brief.workMode}
+${brief.shiftDescription ? `Shift / working hours: ${brief.shiftDescription}` : "Shift / working hours: not provided -- leave a placeholder"}
+Pay structure: ${brief.payStructure}
+${brief.probationAndNotice ? `Probation and notice: ${brief.probationAndNotice}` : "Probation and notice: not provided -- leave a placeholder"}
+${brief.leavePolicy ? `Leave policy: ${brief.leavePolicy}` : "Leave policy: not provided -- leave a placeholder"}
+${brief.equipmentPolicy ? `Company property / equipment policy: ${brief.equipmentPolicy}` : "No equipment policy provided -- omit that clause unless equipment is clearly relevant"}
+${brief.otherTerms ? `Other terms the owner wants included: ${brief.otherTerms}` : ""}
+
+${
+  brief.existingText
+    ? `The owner already has an agreement they use -- match its structure, clause order, and tone as closely as
+possible, only updating the parts that depend on the details above:
+"""
+${brief.existingText}
+"""`
+    : `Write a complete employment agreement using standard numbered clauses covering: position and duties;
+working hours/shift and attendance (clocking in, reachability, what happens if work is missed for reasons
+outside the employee's control); pay (amount, frequency, any bonus structure, and how unpaid time if any is
+calculated); leave; company property, if provided; probation and termination notice; confidentiality; and a
+short "Acknowledgment of Key Terms" summary table at the end restating the most important points in plain
+language. Number the clauses.`
+}
+
+Plain text, no markdown formatting, ready to be reviewed and edited by the owner.`;
+
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: { agreement: { type: "string" } },
+    required: ["agreement"],
+  })) as { agreement: string };
+
+  return result.agreement.trim();
+}
+
+export type HandbookBrief = {
+  companyName: string;
+  workMode: "REMOTE" | "ON_SITE" | "HYBRID";
+  brief: string;
+  existingText: string | null;
+};
+
+export async function draftHandbook(input: HandbookBrief): Promise<string> {
+  const prompt = `You are helping a small business owner draft an employee handbook, to review and edit before
+any employee ever sees it. This is a DRAFT -- only include policies the owner actually described below; where
+something's missing, write a clear [PLACEHOLDER: what's needed] rather than inventing it.
+
+Company name: ${input.companyName}
+Work mode: ${input.workMode}
+What the owner told us about how the team works day to day: ${input.brief}
+
+${
+  input.existingText
+    ? `The owner already has a handbook -- match its structure and tone, updating only what the details above
+change:
+"""
+${input.existingText}
+"""`
+    : `Write a short, practical handbook with clear sections (for example: welcome, communication expectations,
+working hours and attendance, leave, company property if relevant, and conduct). Plain, direct language a new
+hire would actually read.`
+}
+
+Plain text, no markdown formatting.`;
+
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: { handbook: { type: "string" } },
+    required: ["handbook"],
+  })) as { handbook: string };
+
+  return result.handbook.trim();
+}
+
+export type DraftComprehensionQuestion = {
+  question: string;
+  choices: string[];
+  correctChoiceIndex: number;
+  explanation: string;
+};
+
+// Generates the comprehension check from the client's OWN finalized agreement text, so the
+// quiz always matches what that specific agreement actually says. The client reviews and
+// edits every question before it ever reaches a new hire.
+export async function generateComprehensionQuiz(agreementText: string): Promise<DraftComprehensionQuestion[]> {
+  const prompt = `You are writing a short comprehension check for a new hire to pass after reading their
+employment agreement, so there's a record they genuinely understood the key terms (not just scrolled past
+them). This exists to answer "it wasn't in the contract" disputes later.
+
+Read the agreement below and write 6 to 8 multiple-choice questions testing understanding of its most
+consequential, concrete terms -- things like working hours/shift, how attendance or lateness is handled, how
+pay or unpaid time is calculated, whether any bonus is guaranteed, leave entitlements, and notice/probation.
+Only ask about things the agreement actually states. Each question needs exactly 4 answer choices with exactly
+one correct answer, and a short explanation of why that answer is correct (quoting or closely paraphrasing the
+agreement).
+
+Employment agreement:
+"""
+${agreementText}
+"""`;
+
+  const result = (await callClaude(prompt, {
+    type: "object",
+    properties: {
+      questions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            question: { type: "string" },
+            choices: { type: "array", items: { type: "string" } },
+            correctChoiceIndex: { type: "integer", minimum: 0, maximum: 3 },
+            explanation: { type: "string" },
+          },
+          required: ["question", "choices", "correctChoiceIndex", "explanation"],
+        },
+      },
+    },
+    required: ["questions"],
+  })) as { questions: DraftComprehensionQuestion[] };
+
+  return result.questions
+    .filter((q) => q.question && Array.isArray(q.choices) && q.choices.length === 4 && q.correctChoiceIndex >= 0 && q.correctChoiceIndex <= 3)
+    .slice(0, 8);
+}
+

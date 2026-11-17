@@ -209,6 +209,11 @@ model ClientOrg {
   privacyNoticeText            String?
   privacyNoticeVersion          String?   @default("1.0")
   onboardingCountersignerRole CountersignerRole @default(FOUNDER_OR_CLIENT_ADMIN)
+  // Set only when someone has explicitly confirmed the drafted agreement/handbook/quiz were
+  // reviewed (ideally by a professional). The onboarding flow refuses to start a new hire's
+  // Step 4 until this is set, so an unreviewed AI draft can never reach a real employee.
+  onboardingContentReviewedAt   DateTime?
+  onboardingContentReviewedById String?
   comprehensionQuestions       ComprehensionQuestion[]
 }
 
@@ -620,15 +625,6 @@ model AuditLog {
   targetType String
   targetId   String
   timestamp  DateTime @default(now())
-}
-
-// Single row (id is always "contract-letter-template"), not per-employee or per-client --
-// one offer/contract letter template is uploaded once and reused for every letter drafted.
-model CompanySettings {
-  id                          String   @id
-  contractLetterTemplateText  String?
-  contractLetterTemplateName  String?
-  updatedAt                   DateTime @updatedAt
 }
 
 model ApplicationAttempt {

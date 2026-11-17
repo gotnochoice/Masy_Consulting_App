@@ -12,15 +12,15 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
   await requireRole("MASY_OPS");
   const { id } = await params;
 
-  const [employee, orgs, documents, onboardingQuestions, template] = await Promise.all([
-    db.employee.findUnique({ where: { id } }),
+  const employee = await db.employee.findUnique({ where: { id } });
+  if (!employee) notFound();
+
+  const [orgs, documents, onboardingQuestions, template] = await Promise.all([
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
     db.employeeDocument.findMany({ where: { employeeId: id }, orderBy: { createdAt: "desc" } }),
     db.onboardingQuestion.findMany({ where: { employeeId: id }, orderBy: { order: "asc" } }),
-    getContractLetterTemplate(),
+    getContractLetterTemplate(employee.clientOrgId),
   ]);
-
-  if (!employee) notFound();
 
   const updateWithId = updateEmployee.bind(null, employee.id);
 
