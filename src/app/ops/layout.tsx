@@ -15,6 +15,7 @@ export default async function OpsLayout({ children }: { children: React.ReactNod
     { label: "Employees", href: "/ops/employees", icon: "employees" },
     { label: "Payroll", href: "/ops/payroll", icon: "payroll" },
     { label: "Onboarding", href: "/ops/onboarding", icon: "onboarding" },
+    { label: "Assets", href: "/ops/assets", icon: "assets" },
     { label: "Attendance", href: "/ops/attendance", icon: "attendance" },
     { label: "Leave", href: "/ops/leave", icon: "leave", badge: countFor("/ops/leave") },
     { label: "Reviews", href: "/ops/reviews", icon: "reviews", badge: countFor("/ops/reviews") },

@@ -172,6 +172,7 @@ enum SignatureDocumentType {
 }
 
 enum AssetStatus {
+  PENDING
   ISSUED
   RETURNED
   LOST
@@ -821,10 +822,16 @@ model CompanyAsset {
   accessories     String[]    @default([])
   conditionNotes  String?
   conditionPhotoUrls String[] @default([])
-  status          AssetStatus @default(ISSUED)
+  employeeDisagreesNote String?
+  employeeDisagreesPhotoUrls String[] @default([])
+  status          AssetStatus @default(PENDING)
   issueDate       DateTime?   @db.Date
   returnDeadline  DateTime?
   returnedAt      DateTime?
+  verifiedAt             DateTime?
+  verifiedById           String?
+  managementApprovedAt   DateTime?
+  managementApprovedById String?
   createdById     String
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt

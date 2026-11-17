@@ -6,6 +6,7 @@ import { EmployeeForm } from "../../employee-form";
 import { DocumentManager } from "./document-manager";
 import { OnboardingQuestionsManager } from "./onboarding-questions-manager";
 import { ContractLetterPanel } from "./contract-letter-panel";
+import { CompanyAssetPanel } from "./company-asset-panel";
 import { getContractLetterTemplate } from "@/lib/contract-letter-template";
 
 export default async function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
@@ -15,11 +16,12 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
   const employee = await db.employee.findUnique({ where: { id } });
   if (!employee) notFound();
 
-  const [orgs, documents, onboardingQuestions, template] = await Promise.all([
+  const [orgs, documents, onboardingQuestions, template, assets] = await Promise.all([
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
     db.employeeDocument.findMany({ where: { employeeId: id }, orderBy: { createdAt: "desc" } }),
     db.onboardingQuestion.findMany({ where: { employeeId: id }, orderBy: { order: "asc" } }),
     getContractLetterTemplate(employee.clientOrgId),
+    db.companyAsset.findMany({ where: { employeeId: id }, orderBy: { createdAt: "asc" } }),
   ]);
 
   const updateWithId = updateEmployee.bind(null, employee.id);
@@ -36,6 +38,7 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
       />
       <OnboardingQuestionsManager employeeId={employee.id} questions={onboardingQuestions} />
       <DocumentManager employeeId={employee.id} documents={documents} />
+      <CompanyAssetPanel employeeId={employee.id} assets={assets} />
     </div>
   );
 }

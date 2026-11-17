@@ -734,3 +734,101 @@ export async function removeEmployeeContractLetterTemplate(employeeId: string) {
   await removeContractLetterTemplate(employee.clientOrgId);
   revalidatePath(`/ops/employees/${employeeId}/edit`);
 }
+
+export type AddCompanyAssetState = { error: string } | undefined;
+
+const NO_EQUIPMENT_ITEM_TYPE = "NO_EQUIPMENT_ISSUED";
+
+export async function addCompanyAsset(
+  employeeId: string,
+  _prevState: AddCompanyAssetState,
+  formData: FormData,
+): Promise<AddCompanyAssetState> {
+  const session = await requireRole("MASY_OPS");
+
+  const itemType = (formData.get("itemType") as string)?.trim();
+  if (!itemType) return { error: "Item type is required." };
+
+  const accessories = (formData.get("accessories") as string)
+    ?.split(",")
+    .map((a) => a.trim())
+    .filter(Boolean) ?? [];
+
+  let conditionPhotoUrl: string | undefined;
+  const photo = formData.get("conditionPhoto");
+  if (photo instanceof File && photo.size > 0) {
+    const result = await uploadEmployeeDocumentFile(photo);
+    if ("error" in result) return { error: result.error };
+    conditionPhotoUrl = result.url;
+  }
+
+  const issueDate = formData.get("issueDate") as string;
+
+  await db.companyAsset.create({
+    data: {
+      employeeId,
+      itemType,
+      brand: (formData.get("brand") as string) || null,
+      model: (formData.get("model") as string) || null,
+      serialOrImei: (formData.get("serialOrImei") as string) || null,
+      accessories,
+      conditionNotes: (formData.get("conditionNotes") as string) || null,
+      conditionPhotoUrls: conditionPhotoUrl ? [conditionPhotoUrl] : [],
+      issueDate: issueDate ? new Date(issueDate) : null,
+      createdById: session.user.id,
+    },
+  });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+// No equipment is being issued for this role -- closes the step immediately since there's
+// nothing for the employee to review, verify, or sign.
+export async function markNoEquipmentIssued(employeeId: string, formData: FormData) {
+  const session = await requireRole("MASY_OPS");
+
+  const reason = (formData.get("reason") as string)?.trim() || "No equipment required for this role";
+
+  await db.$transaction(async (tx) => {
+    await tx.companyAsset.create({
+      data: {
+        employeeId,
+        itemType: NO_EQUIPMENT_ITEM_TYPE,
+        conditionNotes: reason,
+        status: "ISSUED",
+        createdById: session.user.id,
+      },
+    });
+
+    const process = await tx.onboardingProcess.findUnique({ where: { employeeId } });
+    if (process) {
+      await tx.onboardingStep.update({
+        where: { onboardingProcessId_stepType: { onboardingProcessId: process.id, stepType: "PROPERTY_HANDOVER" } },
+        data: { status: "SUBMITTED", submittedAt: new Date() },
+      });
+    }
+  });
+
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+export async function verifyCompanyAsset(assetId: string, employeeId: string) {
+  const session = await requireRole("MASY_OPS");
+  await db.companyAsset.update({ where: { id: assetId }, data: { verifiedAt: new Date(), verifiedById: session.user.id } });
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+export async function approveCompanyAssetRelease(assetId: string, employeeId: string) {
+  const session = await requireRole("MASY_OPS");
+  await db.companyAsset.update({
+    where: { id: assetId },
+    data: { managementApprovedAt: new Date(), managementApprovedById: session.user.id },
+  });
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
+
+export async function deleteCompanyAsset(assetId: string, employeeId: string) {
+  await requireRole("MASY_OPS");
+  await db.companyAsset.delete({ where: { id: assetId } });
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
+}
