@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { buttonClass, inputClass, labelClass } from "@/lib/form-styles";
 import { SignaturePad } from "@/components/signature-pad";
 import { raiseConditionDisagreement, signPropertyHandover, type DisagreeState, type SignHandoverState } from "./actions";
@@ -23,7 +23,13 @@ function DisagreeForm({ assetId }: { assetId: string }) {
   const [state, formAction, isPending] = useActionState<DisagreeState, FormData>(action, undefined);
 
   return (
-    <form action={formAction} className="mt-2 space-y-2 rounded-btn bg-paper-2 p-3">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        formAction(new FormData(e.currentTarget));
+      }}
+      className="mt-2 space-y-2 rounded-btn bg-paper-2 p-3"
+    >
       <label className={labelClass}>Something different about this item?</label>
       <textarea name="note" rows={2} placeholder="Describe the condition difference" className={inputClass} />
       <input name="photo" type="file" accept="image/*" className={inputClass} />
@@ -57,6 +63,9 @@ function AssetCard({ asset }: { asset: Asset }) {
 
 export function PropertyHandoverFlow({ assets, allReady }: { assets: Asset[]; allReady: boolean }) {
   const [state, formAction, isPending] = useActionState<SignHandoverState, FormData>(signPropertyHandover, undefined);
+  // Controlled, not uncontrolled: React resets uncontrolled form fields when a form action
+  // completes, even on a validation error, which otherwise wipes this checkbox on a failed retry.
+  const [confirmLegal, setConfirmLegal] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -69,7 +78,16 @@ export function PropertyHandoverFlow({ assets, allReady }: { assets: Asset[]; al
           Waiting on HR to verify and approve this equipment before you can sign.
         </p>
       ) : (
-        <form action={formAction} className="space-y-4 border-t border-border pt-4">
+        <form
+          // See guarantors-form.tsx: avoids the native form.reset() React runs after any
+          // <form action={fn}> submission settles, which would otherwise wipe this signature,
+          // the typed name, and the checkbox on a failed retry.
+          onSubmit={(e) => {
+            e.preventDefault();
+            formAction(new FormData(e.currentTarget));
+          }}
+          className="space-y-4 border-t border-border pt-4"
+        >
           <h2 className="text-lg font-semibold text-ink">Sign for this equipment</h2>
           <div>
             <label className={labelClass} htmlFor="typedName">Type your full name</label>
@@ -80,7 +98,14 @@ export function PropertyHandoverFlow({ assets, allReady }: { assets: Asset[]; al
             <SignaturePad name="signatureImageDataUrl" />
           </div>
           <label className="flex items-start gap-2 text-sm text-slate">
-            <input type="checkbox" name="confirmLegal" required className="mt-0.5" />
+            <input
+              type="checkbox"
+              name="confirmLegal"
+              checked={confirmLegal}
+              onChange={(e) => setConfirmLegal(e.target.checked)}
+              required
+              className="mt-0.5"
+            />
             I agree this is my legal signature.
           </label>
           {state?.error && (

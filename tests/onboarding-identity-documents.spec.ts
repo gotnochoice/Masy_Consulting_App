@@ -28,10 +28,10 @@ test("identity documents step rejects an old bill and a malformed NIN, then succ
   await expect(page.getByText("This page couldn't load")).toHaveCount(0);
   await expect(page.getByText(/NIN must be exactly 11 digits/i)).toBeVisible();
 
-  // Re-select both files -- some browsers clear file inputs after any form submission attempt,
-  // even one blocked by validation, so they can't be assumed to persist across the retry.
-  await page.locator("#idFront").setInputFiles(TEST_PNG_PATH);
-  await page.locator("#addressFile").setInputFiles(TEST_PNG_PATH);
+  // The files already selected (and the bill date) must survive this failed submission --
+  // only the actual mistake (the NIN) needs fixing. This form dispatches manually rather than
+  // via <form action={fn}>, specifically to avoid React's native form.reset() on settle, which
+  // used to wipe everything here on every failed retry.
   await page.locator("#nin").fill("12345678901");
   const todayStr = new Date().toISOString().slice(0, 10);
   await page.locator("#billDate").fill(todayStr);

@@ -22,9 +22,21 @@ function SignPanel({
     },
     undefined,
   );
+  // Controlled, not uncontrolled: React resets uncontrolled form fields when a form action
+  // completes, even on a validation error, which otherwise wipes this checkbox on a failed retry.
+  const [confirmLegal, setConfirmLegal] = useState(false);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      // See guarantors-form.tsx: avoids the native form.reset() React runs after any
+      // <form action={fn}> submission settles, which would otherwise wipe the signature, typed
+      // name, and checkbox on a failed retry.
+      onSubmit={(e) => {
+        e.preventDefault();
+        formAction(new FormData(e.currentTarget));
+      }}
+      className="space-y-4"
+    >
       <h2 className="text-lg font-semibold text-ink">Sign: {title}</h2>
       <div>
         <label className={labelClass} htmlFor="typedName">Type your full name</label>
@@ -35,7 +47,14 @@ function SignPanel({
         <SignaturePad name="signatureImageDataUrl" />
       </div>
       <label className="flex items-start gap-2 text-sm text-slate">
-        <input type="checkbox" name="confirmLegal" required className="mt-0.5" />
+        <input
+          type="checkbox"
+          name="confirmLegal"
+          checked={confirmLegal}
+          onChange={(e) => setConfirmLegal(e.target.checked)}
+          required
+          className="mt-0.5"
+        />
         I agree this is my legal signature.
       </label>
       {state?.error && (

@@ -14,7 +14,16 @@ export function IdentityDocumentsForm() {
   );
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      // Deliberately NOT action={formAction} -- see guarantors-form.tsx for why: the native
+      // form.reset() React runs after any <form action={fn}> submission settles would otherwise
+      // clear every field here (including the re-selected files) on a failed retry.
+      onSubmit={(e) => {
+        e.preventDefault();
+        formAction(new FormData(e.currentTarget));
+      }}
+      className="space-y-6"
+    >
       <div className="space-y-3 rounded-btn border border-border p-4">
         <p className="text-xs font-medium text-slate-light">Valid ID</p>
         <div>

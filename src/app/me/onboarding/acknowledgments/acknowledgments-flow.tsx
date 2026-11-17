@@ -88,20 +88,41 @@ function KeyTermsPanel({
     },
     undefined,
   );
+  // Controlled, not uncontrolled: React resets uncontrolled form fields when a form action
+  // completes, even on a validation error, which otherwise wipes every checked box here (there
+  // are a dozen) on a failed retry.
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const toggle = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) => setChecked((prev) => ({ ...prev, [key]: e.target.checked }));
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      // See DocumentPanel/guarantors-form.tsx: avoids the native form.reset() React runs after
+      // any <form action={fn}> submission settles, which would otherwise wipe every checkbox
+      // here (there are a dozen) on a failed retry.
+      onSubmit={(e) => {
+        e.preventDefault();
+        formAction(new FormData(e.currentTarget));
+      }}
+      className="space-y-4"
+    >
       <h2 className="text-lg font-semibold text-ink">Acknowledgment of key terms</h2>
       <p className="text-sm text-slate">Confirm you understood each of the following, as described in the agreement.</p>
       <div className="space-y-2">
         {KEY_TERM_ITEMS.map((item) => (
           <label key={item.key} className="flex items-start gap-2 rounded-btn border border-border px-3 py-2 text-sm text-slate">
-            <input type="checkbox" name={item.key} required className="mt-0.5" />
+            <input type="checkbox" name={item.key} checked={checked[item.key] ?? false} onChange={toggle(item.key)} required className="mt-0.5" />
             {item.label}
           </label>
         ))}
         <label className="flex items-start gap-2 rounded-btn border border-border px-3 py-2 text-sm text-slate">
-          <input type="checkbox" name="shift_confirmation" required className="mt-0.5" />
+          <input
+            type="checkbox"
+            name="shift_confirmation"
+            checked={checked.shift_confirmation ?? false}
+            onChange={toggle("shift_confirmation")}
+            required
+            className="mt-0.5"
+          />
           I understand my assigned shift
           {shiftLabel ? `: ${shiftLabel}${shiftDescription ? ` -- ${shiftDescription}` : ""}` : " as described in the agreement"}.
         </label>
@@ -127,9 +148,19 @@ function QuizPanel({ questions, onPassed }: { questions: QuizQuestion[]; onPasse
   );
 
   const wrongIds = state && "wrongQuestionIds" in state ? new Set(state.wrongQuestionIds) : new Set<string>();
+  // Controlled, not uncontrolled: React resets uncontrolled form fields when a form action
+  // completes, even on a validation error -- which would otherwise clear every answer on a
+  // wrong-answer retry, including questions the employee already got right.
+  const [answers, setAnswers] = useState<Record<string, string>>({});
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        formAction(new FormData(e.currentTarget));
+      }}
+      className="space-y-6"
+    >
       <div>
         <h2 className="text-lg font-semibold text-ink">Quick comprehension check</h2>
         <p className="text-sm text-slate">All questions must be answered correctly. You can retry as many times as you need.</p>
@@ -142,7 +173,14 @@ function QuizPanel({ questions, onPassed }: { questions: QuizQuestion[]; onPasse
           <p className="text-sm font-medium text-ink">{i + 1}. {q.question}</p>
           {q.choices.map((choice, idx) => (
             <label key={idx} className="flex items-center gap-2 text-sm text-slate">
-              <input type="radio" name={`q_${q.id}`} value={idx} required />
+              <input
+                type="radio"
+                name={`q_${q.id}`}
+                value={idx}
+                checked={answers[q.id] === String(idx)}
+                onChange={() => setAnswers((prev) => ({ ...prev, [q.id]: String(idx) }))}
+                required
+              />
               {choice}
             </label>
           ))}

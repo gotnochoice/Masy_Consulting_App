@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { inputClass, labelClass } from "@/lib/form-styles";
-import { verifyBankAccount, type VerifyBankState } from "./actions";
+import type { VerifyBankState } from "./actions";
 import type { NigerianBank } from "@/lib/bank-verification";
 
 export function BankFields({
@@ -11,18 +11,24 @@ export function BankFields({
   initialAccountNumber,
   initialBankName,
   initialAccountHolderName,
+  state,
+  isPending,
 }: {
   banks: NigerianBank[];
   banksError: string | null;
   initialAccountNumber: string | null;
   initialBankName: string | null;
   initialAccountHolderName: string | null;
+  state: VerifyBankState;
+  isPending: boolean;
 }) {
   const [accountNumber, setAccountNumber] = useState(initialAccountNumber ?? "");
   const [bankCode, setBankCode] = useState("");
   const [confirmedName, setConfirmedName] = useState(initialAccountHolderName ?? "");
   const [confirmedBankName, setConfirmedBankName] = useState(initialBankName ?? "");
-  const [state, formAction, isPending] = useActionState<VerifyBankState, FormData>(verifyBankAccount, undefined);
+  // Controlled, not uncontrolled: React resets uncontrolled form fields when a form action
+  // completes, even on a validation error, which otherwise wipes this checkbox on a failed retry.
+  const [confirmIsMine, setConfirmIsMine] = useState(false);
 
   const [lastSeenState, setLastSeenState] = useState(state);
   if (state !== lastSeenState) {
@@ -49,6 +55,7 @@ export function BankFields({
             onChange={(e) => {
               setAccountNumber(e.target.value);
               setConfirmedName("");
+              setConfirmIsMine(false);
             }}
             required
             maxLength={10}
@@ -64,6 +71,7 @@ export function BankFields({
             onChange={(e) => {
               setBankCode(e.target.value);
               setConfirmedName("");
+              setConfirmIsMine(false);
             }}
             disabled={banks.length === 0}
             className={inputClass}
@@ -76,11 +84,11 @@ export function BankFields({
         </div>
       </div>
 
-      {/* Same form as the page's main submit -- a second button with its own formAction, not a
-          nested <form>, since forms can't be nested in HTML. */}
+      {/* Same form as the page's main submit, not a nested <form> (forms can't nest in HTML) --
+          the parent's onSubmit routes to the right action by which button was clicked. */}
       <button
         type="submit"
-        formAction={formAction}
+        data-submit="verify"
         disabled={isPending || !accountNumber || !bankCode}
         className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium text-indigo hover:bg-indigo-tint disabled:opacity-50"
       >
@@ -100,7 +108,15 @@ export function BankFields({
       <input type="hidden" name="bankAccountHolderName" value={confirmedName} />
 
       <label className="flex items-start gap-2 text-sm text-slate">
-        <input type="checkbox" name="confirmBankAccountIsMine" required disabled={!confirmedName} className="mt-0.5" />
+        <input
+          type="checkbox"
+          name="confirmBankAccountIsMine"
+          checked={confirmIsMine}
+          onChange={(e) => setConfirmIsMine(e.target.checked)}
+          required
+          disabled={!confirmedName}
+          className="mt-0.5"
+        />
         This account is mine.
       </label>
     </div>

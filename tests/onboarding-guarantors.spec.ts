@@ -36,21 +36,14 @@ test("guarantors step rejects a duplicate second guarantor, then succeeds with t
   await expect(page.getByText("This page couldn't load")).toHaveCount(0);
   await expect(page.getByText(/must be different people/i)).toBeVisible();
 
-  // Re-fill everything, including both checkboxes -- a failed submission here resets the
-  // whole form, so nothing can be assumed to persist across the retry. Tracked separately
-  // as a UX follow-up (task: investigate form-state reset on failed onboarding submissions).
-  await page.locator("#g1_name").fill("ZZTEST Guarantor One");
-  await page.locator("#g1_relationship").fill("Uncle");
-  await page.locator("#g1_phone").fill("08011111111");
-  await page.locator("#g1_email").fill("g1@example.com");
-  await page.locator("#g1_address").fill("1 Test Street, Lagos");
-  await page.locator("input[name='g1_consent']").check();
-  await page.locator("#g2_name").fill("ZZTEST Guarantor Two");
-  await page.locator("#g2_relationship").fill("Aunt");
+  // Both consent checkboxes are controlled React state, not uncontrolled defaultChecked --
+  // they must survive the failed submission rather than silently uncheck themselves (React
+  // resets uncontrolled form fields when a form action completes, error or not).
+  await expect(page.locator("input[name='g1_consent']")).toBeChecked();
+  await expect(page.locator("input[name='g2_consent']")).toBeChecked();
+
+  // Only the duplicate phone number needs fixing -- nothing else should need re-entry.
   await page.locator("#g2_phone").fill("08022222222");
-  await page.locator("#g2_email").fill("g2@example.com");
-  await page.locator("#g2_address").fill("2 Test Street, Lagos");
-  await page.locator("input[name='g2_consent']").check();
   await page.getByRole("button", { name: "Submit" }).click();
   await page.waitForTimeout(800);
 

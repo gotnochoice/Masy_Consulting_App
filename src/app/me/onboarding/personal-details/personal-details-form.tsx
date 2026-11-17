@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { BankFields } from "./bank-fields";
-import { submitPersonalDetails, saveDraft, type SubmitPersonalDetailsState, type SaveDraftState } from "./actions";
+import { submitPersonalDetails, saveDraft, verifyBankAccount, type SubmitPersonalDetailsState, type SaveDraftState, type VerifyBankState } from "./actions";
 import type { NigerianBank } from "@/lib/bank-verification";
 
 type EmployeeFields = {
@@ -39,9 +39,30 @@ export function PersonalDetailsForm({
     undefined,
   );
   const [draftState, draftAction, isSavingDraft] = useActionState<SaveDraftState, FormData>(saveDraft, undefined);
+  const [bankState, bankAction, isVerifyingBank] = useActionState<VerifyBankState, FormData>(verifyBankAccount, undefined);
+  // Controlled, not uncontrolled: React resets uncontrolled form fields when a form action
+  // completes, even on a validation error, which otherwise wipes this checkbox on a failed retry.
+  const [confirmWillUpdate, setConfirmWillUpdate] = useState(false);
 
   return (
-    <form action={submitAction} className="space-y-4">
+    <form
+      // Deliberately NOT action={submitAction}: React calls the native form.reset() once any
+      // <form action={fn}> submission settles, success or failure -- wiping every field in the
+      // whole form (not just uncontrolled ones), which silently threw away everything the user
+      // had typed on a validation error. Dispatching manually through onSubmit sidesteps that
+      // reset, and lets a single form route to three different actions (submit, save draft,
+      // verify bank) by which button was clicked, via data-submit.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLElement | null;
+        const which = submitter?.dataset.submit;
+        if (which === "draft") draftAction(formData);
+        else if (which === "verify") bankAction(formData);
+        else submitAction(formData);
+      }}
+      className="space-y-4"
+    >
       <div>
         <label className={labelClass} htmlFor="name">Full legal name (as on ID)</label>
         <input id="name" name="name" defaultValue={employee.name} required className={inputClass} />
@@ -94,10 +115,19 @@ export function PersonalDetailsForm({
         initialAccountNumber={employee.bankAccountNumber}
         initialBankName={employee.bankName}
         initialAccountHolderName={employee.bankAccountHolderName}
+        state={bankState}
+        isPending={isVerifyingBank}
       />
 
       <label className="flex items-start gap-2 text-sm text-slate">
-        <input type="checkbox" name="confirmWillUpdate" required className="mt-0.5" />
+        <input
+          type="checkbox"
+          name="confirmWillUpdate"
+          checked={confirmWillUpdate}
+          onChange={(e) => setConfirmWillUpdate(e.target.checked)}
+          required
+          className="mt-0.5"
+        />
         I will tell HR within 7 days if any of these change.
       </label>
 
@@ -107,10 +137,10 @@ export function PersonalDetailsForm({
       {draftState && <p className="text-xs text-indigo">Draft saved.</p>}
 
       <div className="flex items-center gap-3">
-        <button type="submit" disabled={isSubmitting} className={`${buttonClass} disabled:opacity-50`}>
+        <button type="submit" data-submit="submit" disabled={isSubmitting} className={`${buttonClass} disabled:opacity-50`}>
           {isSubmitting ? "Submitting…" : "Submit"}
         </button>
-        <button type="submit" formAction={draftAction} disabled={isSavingDraft} className="text-sm font-medium text-slate hover:text-indigo disabled:opacity-50">
+        <button type="submit" data-submit="draft" disabled={isSavingDraft} className="text-sm font-medium text-slate hover:text-indigo disabled:opacity-50">
           {isSavingDraft ? "Saving…" : "Save draft"}
         </button>
       </div>
