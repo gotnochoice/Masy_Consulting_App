@@ -56,6 +56,7 @@ const updateSchema = z.object({
   startDate: z.string().min(1, "Start date is required"),
   ...leaveBalanceField,
   status: z.enum(["PENDING", "ACTIVE", "ON_LEAVE", "OFFBOARDED"]),
+  nin: z.string().optional(),
 });
 
 export async function createEmployee(formData: FormData) {
@@ -176,6 +177,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     bankAccountHolderName: formData.get("bankAccountHolderName") || undefined,
     status: formData.get("status"),
     leaveBalanceDays: formData.get("leaveBalanceDays"),
+    nin: formData.get("nin") || undefined,
   });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid employee data");
@@ -195,6 +197,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
     bankAccountNumber,
     bankName,
     bankAccountHolderName,
+    nin,
     ...rest
   } = parsed.data;
 
@@ -226,6 +229,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
       bankAccountNumber: bankAccountNumber ?? null,
       bankName: bankName ?? null,
       bankAccountHolderName: bankAccountHolderName ?? null,
+      nin: nin ?? null,
       ...(photoUrl ? { photoUrl } : {}),
     },
   });

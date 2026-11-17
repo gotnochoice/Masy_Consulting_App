@@ -62,8 +62,11 @@ export default async function OpsOnboardingPage() {
             <div key={process.id} className="space-y-4 rounded-card border border-border bg-paper p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-sm font-medium text-ink">{employee.name}</p>
+                  <a href={`/ops/employees/${employee.id}/edit`} className="text-sm font-medium text-ink hover:text-indigo hover:underline">
+                    {employee.name}
+                  </a>
                   <p className="text-xs text-slate-light">{employee.clientOrg.name}</p>
+                  <p className="text-xs text-slate-light">Review their NIN and uploaded documents there before verifying identity documents.</p>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <span className={days < 0 ? "font-medium text-orange" : "text-slate-light"}>

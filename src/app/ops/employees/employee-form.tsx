@@ -244,6 +244,19 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
         </div>
       </div>
 
+      {employee && (
+        <div className="space-y-4">
+          <p className={sectionLabelClass}>Identity (HR only)</p>
+          <div className="sm:w-1/2 sm:pr-2">
+            <label className={labelClass} htmlFor="nin">NIN</label>
+            <input id="nin" name="nin" defaultValue={employee.nin ?? ""} maxLength={11} className={inputClass} />
+            <p className="mt-1 text-xs text-slate-light">
+              As submitted during onboarding. Check it against their uploaded NIN slip/card below, and correct it here if it was mistyped. Never shown to the client.
+            </p>
+          </div>
+        </div>
+      )}
+
       <button type="submit" className={buttonClass}>
         {submitLabel}
       </button>

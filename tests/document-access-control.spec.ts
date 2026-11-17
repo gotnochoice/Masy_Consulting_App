@@ -1,6 +1,48 @@
 import { test, expect } from "@playwright/test";
 import { CLIENT_LOGIN, OPS_LOGIN, pool } from "./helpers";
 
+test("ops can view and correct an employee's NIN; it's the only place in the app that shows it", async ({ page }) => {
+  const { rows: orgRows } = await pool.query<{ id: string }>(`SELECT id FROM "ClientOrg" WHERE slug = 'lagos-bites-catering'`);
+  const { rows: empRows } = await pool.query<{ id: string }>(
+    `INSERT INTO "Employee" (id, "clientOrgId", name, "roleTitle", email, "startDate", nin, "createdAt", "updatedAt")
+     VALUES (gen_random_uuid()::text, $1, 'ZZTEST NIN Visibility', 'ZZTEST Role', 'zztest-nin@example.com', now(), '12345678901', now(), now())
+     RETURNING id`,
+    [orgRows[0].id],
+  );
+  const employeeId = empRows[0].id;
+
+  try {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(OPS_LOGIN.email);
+    await page.getByLabel("Password", { exact: true }).fill(OPS_LOGIN.password);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForURL(/\/ops/);
+
+    await page.goto(`/ops/employees/${employeeId}/edit`);
+    await expect(page.locator("#nin")).toHaveValue("12345678901");
+
+    await page.locator("#nin").fill("10987654321");
+    await page.getByRole("button", { name: /save/i }).click();
+    await page.waitForTimeout(800);
+
+    const { rows } = await pool.query<{ nin: string }>(`SELECT nin FROM "Employee" WHERE id = $1`, [employeeId]);
+    expect(rows[0].nin).toBe("10987654321");
+
+    // Client role has no page that renders the NIN at all.
+    await page.context().clearCookies();
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(CLIENT_LOGIN.email);
+    await page.getByLabel("Password", { exact: true }).fill(CLIENT_LOGIN.password);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForURL(/\/client\/staff/);
+    await page.goto(`/client/staff/${employeeId}/edit`);
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByText("10987654321")).toHaveCount(0);
+  } finally {
+    await pool.query(`DELETE FROM "Employee" WHERE id = $1`, [employeeId]);
+  }
+});
+
 // The identity-verification document proxy route (/api/documents/[id]): every view is
 // authorization-checked and logged, since these categories must never reach a client, even on
 // their own employee's record, and the raw blob URL is never exposed to the browser.
