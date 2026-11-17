@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { getClientIp } from "@/lib/application-rate-limit";
 import { computeDocumentHash, generateSignedPdf } from "@/lib/esignature";
+import { notifyCountersignRequested } from "@/lib/onboarding-notify";
 import { put } from "@vercel/blob";
 
 const PATH = "/me/onboarding/signature";
@@ -97,6 +98,7 @@ async function signDocument(
         where: { onboardingProcessId_stepType: { onboardingProcessId: process.id, stepType: "SIGNATURE" } },
         data: { status: "SUBMITTED", submittedAt: new Date(), correctionReason: null },
       });
+      await notifyCountersignRequested(employeeId);
     }
   }
 

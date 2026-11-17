@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { getClientIp } from "@/lib/application-rate-limit";
 import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
+import { notifyOnboardingComplete } from "@/lib/onboarding-notify";
 
 const PATH = "/ops/onboarding";
 
@@ -142,6 +143,8 @@ export async function completeOnboarding(employeeId: string): Promise<CompleteOn
       data: [30, 60, 90].map((days) => ({ employeeId, label: `Day ${days} review` })),
     }),
   ]);
+
+  await notifyOnboardingComplete(employeeId);
 
   revalidatePath(PATH);
   revalidatePath("/me/onboarding");

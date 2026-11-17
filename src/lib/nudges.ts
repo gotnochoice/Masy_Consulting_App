@@ -14,7 +14,7 @@ export async function buildNudgesDigest(): Promise<NudgesDigest> {
   const leavePendingSince = new Date(now.getTime() - LEAVE_PENDING_HOURS_THRESHOLD * 60 * 60 * 1000);
   const reviewOverdueSince = new Date(now.getTime() - REVIEW_OVERDUE_DAYS * 24 * 60 * 60 * 1000);
 
-  const [activeEmployees, todaysAttendance, pendingLeave, reviewedRecently] = await Promise.all([
+  const [activeEmployees, todaysAttendance, pendingLeave, reviewedRecently, incompleteOnboarding] = await Promise.all([
     db.employee.findMany({
       where: { status: "ACTIVE" },
       select: { id: true, name: true, clientOrg: { select: { name: true } } },
@@ -32,6 +32,11 @@ export async function buildNudgesDigest(): Promise<NudgesDigest> {
       select: { employeeId: true },
       distinct: ["employeeId"],
     }),
+    db.onboardingProcess.findMany({
+      where: { completedAt: null },
+      include: { employee: { select: { name: true, clientOrg: { select: { name: true } } } }, steps: true },
+      orderBy: { commencementDate: "asc" },
+    }),
   ]);
 
   const clockedInToday = new Set(todaysAttendance.map((r) => r.employeeId));
@@ -40,11 +45,31 @@ export async function buildNudgesDigest(): Promise<NudgesDigest> {
   const missingClockIns = activeEmployees.filter((e) => !clockedInToday.has(e.id));
   const overdueReviews = activeEmployees.filter((e) => !reviewedRecentlyIds.has(e.id));
 
-  if (missingClockIns.length === 0 && pendingLeave.length === 0 && overdueReviews.length === 0) {
+  if (
+    missingClockIns.length === 0 &&
+    pendingLeave.length === 0 &&
+    overdueReviews.length === 0 &&
+    incompleteOnboarding.length === 0
+  ) {
     return null;
   }
 
   const sections: string[] = [];
+
+  if (incompleteOnboarding.length > 0) {
+    sections.push(
+      `ONBOARDING NOT YET COMPLETE (${incompleteOnboarding.length})\n` +
+        incompleteOnboarding
+          .map((p) => {
+            const unverified = p.steps.filter((s) => s.status !== "VERIFIED").length;
+            const flagged = p.steps.filter((s) => s.status === "NEEDS_CORRECTION").length;
+            const days = Math.ceil((p.commencementDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            const timing = days < 0 ? `${Math.abs(days)} days overdue` : `starts in ${days} days`;
+            return `- ${p.employee.name} (${p.employee.clientOrg.name}), ${timing}, ${unverified} step(s) unverified${flagged > 0 ? `, ${flagged} flagged` : ""}`;
+          })
+          .join("\n"),
+    );
+  }
 
   if (missingClockIns.length > 0) {
     sections.push(
@@ -70,7 +95,7 @@ export async function buildNudgesDigest(): Promise<NudgesDigest> {
   }
 
   return {
-    subject: `Daily nudges: ${missingClockIns.length} clock-in, ${pendingLeave.length} leave, ${overdueReviews.length} review`,
+    subject: `Daily nudges: ${missingClockIns.length} clock-in, ${pendingLeave.length} leave, ${overdueReviews.length} review, ${incompleteOnboarding.length} onboarding`,
     body: sections.join("\n\n"),
   };
 }
