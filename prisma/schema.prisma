@@ -103,6 +103,8 @@ enum EmployeeDocumentCategory {
   ONBOARDING
   IDENTIFICATION
   CONTRACT
+  PROOF_OF_ADDRESS
+  NIN_SLIP
   OTHER
 }
 
@@ -110,6 +112,71 @@ enum Gender {
   MALE
   FEMALE
   OTHER
+}
+
+enum OnboardingStepType {
+  PERSONAL_DETAILS
+  IDENTITY_DOCUMENTS
+  GUARANTORS
+  ACKNOWLEDGMENTS
+  SIGNATURE
+  PROPERTY_HANDOVER
+}
+
+enum OnboardingStepStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  NEEDS_CORRECTION
+  VERIFIED
+}
+
+enum CountersignerRole {
+  FOUNDER_OR_CLIENT_ADMIN
+  HR_MASY
+}
+
+enum IdDocumentType {
+  PASSPORT
+  DRIVERS_LICENSE
+}
+
+enum BankNameMatchStatus {
+  UNVERIFIED
+  MATCHED
+  NEEDS_REVIEW
+}
+
+enum GuarantorVerificationMethod {
+  PHONE_CALL
+  EMAIL
+  OTHER
+}
+
+enum GuarantorVerificationResult {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum AcknowledgmentDocumentType {
+  EMPLOYMENT_AGREEMENT
+  HANDBOOK
+  PRIVACY_NOTICE
+}
+
+enum SignatureDocumentType {
+  EMPLOYMENT_AGREEMENT
+  HANDBOOK
+  PROPERTY_HANDOVER
+}
+
+enum AssetStatus {
+  ISSUED
+  RETURNED
+  LOST
+  DAMAGED
+  IN_REPAIR
 }
 
 model ClientOrg {
@@ -125,6 +192,24 @@ model ClientOrg {
   monthlyReportNotes MonthlyReportNote[]
   announcements      Announcement[]
   createdAt          DateTime            @default(now())
+
+  // Letterhead + onboarding content, per client -- replaces the old single global
+  // CompanySettings template so every client's agreement/contract renders on their own letterhead.
+  letterheadLogoUrl           String?
+  companyLegalName            String?
+  companyAddress              String?
+  signatoryName                String?
+  signatoryTitle               String?
+  contractLetterTemplateText  String?
+  contractLetterTemplateName  String?
+  employmentAgreementTemplate String?
+  employmentAgreementVersion  String?   @default("1.0")
+  handbookText                 String?
+  handbookVersion               String?   @default("1.0")
+  privacyNoticeText            String?
+  privacyNoticeVersion          String?   @default("1.0")
+  onboardingCountersignerRole CountersignerRole @default(FOUNDER_OR_CLIENT_ADMIN)
+  comprehensionQuestions       ComprehensionQuestion[]
 }
 
 model User {
@@ -176,6 +261,12 @@ model Employee {
   bankAccountNumber  String?
   bankName           String?
   bankAccountHolderName String?
+  bankNameMatchStatus BankNameMatchStatus @default(UNVERIFIED)
+  preferredName      String?
+  personalEmail      String?
+  nin                String?
+  shiftLabel         String?
+  shiftDescription   String?
   salary             Decimal?            @db.Decimal(12, 2)
   leaveBalanceDays   Int                 @default(0)
   reviewTemplate     Json?
@@ -192,21 +283,30 @@ model Employee {
   documents          EmployeeDocument[]
   onboardingInvite   OnboardingInvite?
   sourceCandidate    Candidate?
+  onboardingProcess        OnboardingProcess?
+  guarantors               Guarantor[]
+  documentAcknowledgments  DocumentAcknowledgment[]
+  keyTermAcknowledgments   KeyTermAcknowledgment[]
+  comprehensionAttempts    ComprehensionAttempt[]
+  eSignatures              ESignature[]
+  companyAssets            CompanyAsset[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
 
 model EmployeeDocument {
-  id           String                   @id @default(cuid())
-  employeeId   String
-  employee     Employee                 @relation(fields: [employeeId], references: [id])
-  label        String
-  category     EmployeeDocumentCategory @default(OTHER)
-  fileUrl      String
-  fileName     String
-  uploadedById String
-  createdAt    DateTime                 @default(now())
-  acks         EmployeeDocumentAck[]
+  id             String                   @id @default(cuid())
+  employeeId     String
+  employee       Employee                 @relation(fields: [employeeId], references: [id])
+  label          String
+  category       EmployeeDocumentCategory @default(OTHER)
+  idDocumentType IdDocumentType?
+  documentDate   DateTime?                @db.Date
+  fileUrl        String
+  fileName       String
+  uploadedById   String
+  createdAt      DateTime                 @default(now())
+  acks           EmployeeDocumentAck[]
 }
 
 model EmployeeDocumentAck {
@@ -573,4 +673,163 @@ model DocumentRequest {
   responseNote String?
   requestedAt  DateTime               @default(now())
   fulfilledAt  DateTime?
+}
+
+// One row per employee -- the gate. The normal dashboard stays locked until completedAt is set,
+// which only happens once every OnboardingStep below is VERIFIED.
+model OnboardingProcess {
+  id             String          @id @default(cuid())
+  employeeId     String          @unique
+  employee       Employee        @relation(fields: [employeeId], references: [id])
+  commencementDate DateTime      @db.Date
+  completedAt    DateTime?
+  completedById  String?
+  steps          OnboardingStep[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model OnboardingStep {
+  id                  String               @id @default(cuid())
+  onboardingProcessId String
+  onboardingProcess   OnboardingProcess    @relation(fields: [onboardingProcessId], references: [id], onDelete: Cascade)
+  stepType            OnboardingStepType
+  status              OnboardingStepStatus @default(NOT_STARTED)
+  submittedAt         DateTime?
+  verifiedAt          DateTime?
+  verifiedById        String?
+  correctionReason    String?
+  correctionRequestedAt DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@unique([onboardingProcessId, stepType])
+}
+
+model Guarantor {
+  id                 String    @id @default(cuid())
+  employeeId         String
+  employee           Employee  @relation(fields: [employeeId], references: [id])
+  name               String
+  relationship       String
+  phone              String
+  email              String
+  occupation         String?
+  address            String
+  consentConfirmed   Boolean   @default(false)
+  replacedAt         DateTime?
+  replacementDeadline DateTime?
+  createdAt          DateTime  @default(now())
+  verificationLogs   GuarantorVerificationLog[]
+}
+
+model GuarantorVerificationLog {
+  id               String                      @id @default(cuid())
+  guarantorId      String
+  guarantor        Guarantor                   @relation(fields: [guarantorId], references: [id], onDelete: Cascade)
+  verifiedById     String
+  method           GuarantorVerificationMethod
+  result           GuarantorVerificationResult @default(PENDING)
+  followUpNeeded   Boolean                      @default(false)
+  notes            String?
+  verifiedAt       DateTime                     @default(now())
+}
+
+// Scroll-to-end + time-on-page acknowledgment of the agreement/handbook/privacy notice.
+// Versioned so a re-issued document (e.g. after a pay change) requires a fresh acknowledgment.
+model DocumentAcknowledgment {
+  id             String                     @id @default(cuid())
+  employeeId     String
+  employee       Employee                   @relation(fields: [employeeId], references: [id])
+  documentType   AcknowledgmentDocumentType
+  version        String
+  scrolledToEnd  Boolean                    @default(false)
+  timeSpentSeconds Int                      @default(0)
+  acknowledgedAt DateTime?
+  createdAt      DateTime                   @default(now())
+
+  @@unique([employeeId, documentType, version])
+}
+
+// One row per line of the agreement's "Acknowledgment of Key Terms" table, plus the
+// Shift B confirmation -- each ticked and timestamped independently so a dispute over
+// "it wasn't in the contract" has a specific, dated record to point to.
+model KeyTermAcknowledgment {
+  id             String    @id @default(cuid())
+  employeeId     String
+  employee       Employee  @relation(fields: [employeeId], references: [id])
+  termKey        String
+  acknowledgedAt DateTime  @default(now())
+
+  @@unique([employeeId, termKey])
+}
+
+// Per-client question bank for the comprehension check (Step 4). correctChoiceIndex indexes
+// into `choices`.
+model ComprehensionQuestion {
+  id                 String    @id @default(cuid())
+  clientOrgId        String
+  clientOrg          ClientOrg @relation(fields: [clientOrgId], references: [id])
+  question           String
+  choices            String[]
+  correctChoiceIndex Int
+  explanation        String?
+  order              Int       @default(0)
+  active             Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+}
+
+model ComprehensionAttempt {
+  id          String   @id @default(cuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  answers     Json
+  score       Int
+  passed      Boolean
+  attemptedAt DateTime @default(now())
+}
+
+// Three signing events per employee: Employment Agreement, Handbook, Property Handover.
+// `version` increments if a document is re-issued after NEEDS_CORRECTION, so old signatures
+// stay intact instead of being overwritten.
+model ESignature {
+  id                   String                @id @default(cuid())
+  employeeId           String
+  employee             Employee              @relation(fields: [employeeId], references: [id])
+  documentType         SignatureDocumentType
+  version              Int                   @default(1)
+  typedName            String
+  signatureImageData   String
+  ipAddress            String
+  userAgent            String?
+  documentHash         String
+  pdfUrl               String?
+  signedAt             DateTime              @default(now())
+  countersignedById    String?
+  countersignedAt      DateTime?
+  countersignIpAddress String?
+
+  @@unique([employeeId, documentType, version])
+}
+
+// Company property issued to an employee. `noEquipmentIssued` closes Step 6 for roles that
+// need none, with a reason, instead of leaving the step stuck.
+model CompanyAsset {
+  id              String      @id @default(cuid())
+  employeeId      String
+  employee        Employee    @relation(fields: [employeeId], references: [id])
+  itemType        String
+  brand           String?
+  model           String?
+  serialOrImei    String?
+  accessories     String[]    @default([])
+  conditionNotes  String?
+  conditionPhotoUrls String[] @default([])
+  status          AssetStatus @default(ISSUED)
+  issueDate       DateTime?   @db.Date
+  returnDeadline  DateTime?
+  returnedAt      DateTime?
+  createdById     String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }

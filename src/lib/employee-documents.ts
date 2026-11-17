@@ -8,5 +8,7 @@ export const EMPLOYEE_DOCUMENT_CATEGORY_LABELS: Record<EmployeeDocumentCategory,
   ONBOARDING: "Onboarding document",
   IDENTIFICATION: "Identification",
   CONTRACT: "Contract",
+  PROOF_OF_ADDRESS: "Proof of address",
+  NIN_SLIP: "NIN slip/card",
   OTHER: "Other",
 };
