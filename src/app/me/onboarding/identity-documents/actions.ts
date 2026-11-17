@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uploadEmployeeDocumentFile } from "@/lib/employee-documents-server";
+import { encryptSensitive } from "@/lib/encryption";
 
 const PATH = "/me/onboarding/identity-documents";
 const NIN_REGEX = /^\d{11}$/;
@@ -91,7 +92,7 @@ export async function submitIdentityDocuments(
       : `Proof of address -- other (${otherNote}) -- needs HR review`;
 
   await db.$transaction([
-    db.employee.update({ where: { id: employeeId }, data: { nin } }),
+    db.employee.update({ where: { id: employeeId }, data: { nin: encryptSensitive(nin) } }),
     db.employeeDocument.create({
       data: {
         employeeId,

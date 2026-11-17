@@ -19,6 +19,7 @@ import mammoth from "mammoth";
 import { extractOnboardingQuestionsFromDocument, draftContractLetter, transcribeDocumentText, type SuggestedOnboardingQuestion } from "@/lib/ai";
 import { getContractLetterTemplate, saveContractLetterTemplate, removeContractLetterTemplate } from "@/lib/contract-letter-template";
 import { MAX_TEMPLATE_FILE_BYTES, MAX_TEMPLATE_FILE_LABEL } from "@/lib/contract-letter-template-constants";
+import { encryptSensitive } from "@/lib/encryption";
 
 const baseFields = {
   clientOrgId: z.string().min(1, "Organization is required"),
@@ -56,7 +57,7 @@ const updateSchema = z.object({
   startDate: z.string().min(1, "Start date is required"),
   ...leaveBalanceField,
   status: z.enum(["PENDING", "ACTIVE", "ON_LEAVE", "OFFBOARDED"]),
-  nin: z.string().optional(),
+  nin: z.string().regex(/^\d{11}$/, "NIN must be exactly 11 digits").optional().or(z.literal("")),
 });
 
 export async function createEmployee(formData: FormData) {
@@ -229,7 +230,7 @@ export async function updateEmployee(employeeId: string, formData: FormData) {
       bankAccountNumber: bankAccountNumber ?? null,
       bankName: bankName ?? null,
       bankAccountHolderName: bankAccountHolderName ?? null,
-      nin: nin ?? null,
+      nin: nin ? encryptSensitive(nin) : null,
       ...(photoUrl ? { photoUrl } : {}),
     },
   });

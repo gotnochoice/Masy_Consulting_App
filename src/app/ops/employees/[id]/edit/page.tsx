@@ -8,6 +8,7 @@ import { OnboardingQuestionsManager } from "./onboarding-questions-manager";
 import { ContractLetterPanel } from "./contract-letter-panel";
 import { CompanyAssetPanel } from "./company-asset-panel";
 import { getContractLetterTemplate } from "@/lib/contract-letter-template";
+import { decryptSensitive } from "@/lib/encryption";
 
 export default async function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole("MASY_OPS");
@@ -30,7 +31,12 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
     <div className="max-w-lg space-y-6">
       <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
       <h1 className="text-2xl font-bold tracking-tight text-ink">Edit employee</h1>
-      <EmployeeForm orgs={orgs} employee={employee} action={updateWithId} submitLabel="Save changes" />
+      <EmployeeForm
+        orgs={orgs}
+        employee={{ ...employee, nin: employee.nin ? decryptSensitive(employee.nin) : employee.nin }}
+        action={updateWithId}
+        submitLabel="Save changes"
+      />
       <ContractLetterPanel
         employeeId={employee.id}
         initialDraft={employee.contractLetterDraft}

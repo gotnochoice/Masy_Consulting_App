@@ -25,8 +25,15 @@ test("ops can view and correct an employee's NIN; it's the only place in the app
     await page.getByRole("button", { name: /save/i }).click();
     await page.waitForTimeout(800);
 
+    // Stored encrypted at rest (NIN_ENCRYPTION_KEY is set in this environment) -- not the
+    // plaintext digits -- but still comes back correctly decrypted when the page reloads.
     const { rows } = await pool.query<{ nin: string }>(`SELECT nin FROM "Employee" WHERE id = $1`, [employeeId]);
-    expect(rows[0].nin).toBe("10987654321");
+    expect(rows[0].nin).toMatch(/^enc:v1:/);
+    expect(rows[0].nin).not.toContain("10987654321");
+
+    // Saving redirects to the directory; navigate back to the edit page to confirm the round trip.
+    await page.goto(`/ops/employees/${employeeId}/edit`);
+    await expect(page.locator("#nin")).toHaveValue("10987654321");
 
     // Client role has no page that renders the NIN at all.
     await page.context().clearCookies();
