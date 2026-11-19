@@ -1,10 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { BankFields } from "./bank-fields";
 import { submitPersonalDetails, saveDraft, verifyBankAccount, type SubmitPersonalDetailsState, type SaveDraftState, type VerifyBankState } from "./actions";
 import type { NigerianBank } from "@/lib/bank-verification";
+import { nextOnboardingStepPath } from "@/lib/onboarding";
 
 type EmployeeFields = {
   name: string;
@@ -34,8 +36,16 @@ export function PersonalDetailsForm({
   banks: NigerianBank[];
   banksError: string | null;
 }) {
+  const router = useRouter();
   const [submitState, submitAction, isSubmitting] = useActionState<SubmitPersonalDetailsState, FormData>(
-    submitPersonalDetails,
+    async (prev, formData) => {
+      const result = await submitPersonalDetails(prev, formData);
+      // Navigating here, right as the dispatch resolves, rather than from a separate effect
+      // watching isSubmitting -- a server action's revalidatePath can refresh this route before
+      // an effect-based check gets a chance to run.
+      if (!result) router.push(nextOnboardingStepPath("PERSONAL_DETAILS"));
+      return result;
+    },
     undefined,
   );
   const [draftState, draftAction, isSavingDraft] = useActionState<SaveDraftState, FormData>(saveDraft, undefined);

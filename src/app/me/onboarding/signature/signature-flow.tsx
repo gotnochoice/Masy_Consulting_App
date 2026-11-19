@@ -1,8 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { buttonClass, labelClass, inputClass } from "@/lib/form-styles";
 import { SignaturePad } from "@/components/signature-pad";
+import { nextOnboardingStepPath } from "@/lib/onboarding";
 import { signEmploymentAgreement, signHandbook, type SignDocumentState } from "./actions";
 
 function SignPanel({
@@ -71,6 +73,10 @@ export function SignatureFlow({ initialDone }: { initialDone: { agreement: boole
   const [section, setSection] = useState<"AGREEMENT" | "HANDBOOK" | "DONE">(
     !initialDone.agreement ? "AGREEMENT" : !initialDone.handbook ? "HANDBOOK" : "DONE",
   );
+  const router = useRouter();
+  useEffect(() => {
+    if (section === "DONE") router.push(nextOnboardingStepPath("SIGNATURE"));
+  }, [section, router]);
 
   return (
     <div className="space-y-6">

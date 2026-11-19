@@ -78,8 +78,9 @@ test("signature step: drawing and typing a name signs each document and records 
     await page.getByRole("button", { name: "Sign", exact: true }).click();
     await page.waitForTimeout(1500);
 
+    // Signing the second (and last) document completes the step and moves straight on.
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-    await expect(page.getByText(/waiting on your employer to countersign/i)).toBeVisible();
+    await page.waitForURL(/\/me\/onboarding\/property-handover/);
 
     const { rows: sigs } = await pool.query<{ documentType: string; typedName: string; documentHash: string; ipAddress: string }>(
       `SELECT "documentType", "typedName", "documentHash", "ipAddress" FROM "ESignature" WHERE "employeeId" = $1 ORDER BY "documentType"`,

@@ -5,7 +5,7 @@ export type NigerianBank = { name: string; code: string };
 export async function listNigerianBanks(): Promise<NigerianBank[] | { error: string }> {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   if (!secretKey) {
-    return { error: "Bank verification isn't set up yet. Ask your developer to add a PAYSTACK_SECRET_KEY." };
+    return { error: "We're still setting up automatic bank verification." };
   }
   try {
     const res = await fetch("https://api.paystack.co/bank?country=nigeria", {
@@ -31,7 +31,7 @@ export async function resolveBankAccountName(
 ): Promise<{ accountName: string } | { error: string }> {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   if (!secretKey) {
-    return { error: "Bank verification isn't set up yet. Ask your developer to add a PAYSTACK_SECRET_KEY." };
+    return { error: "We're still setting up automatic bank verification." };
   }
 
   try {

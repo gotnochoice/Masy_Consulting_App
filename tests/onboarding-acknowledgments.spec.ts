@@ -99,11 +99,9 @@ test("acknowledgments step: scroll-gated documents, key terms, and a quiz retry 
     await page.getByRole("button", { name: "Submit answers" }).click();
     await page.waitForTimeout(800);
 
-    // The server action's revalidatePath refreshes this same route, so by the time this
-    // assertion runs the page has already moved on to its own "Submitted" server-rendered
-    // view, past the client component's own brief "all done" message.
+    // Passing the quiz completes the step and moves straight on to the next one.
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-    await expect(page.getByText(/waiting on HR to verify/i)).toBeVisible();
+    await page.waitForURL(/\/me\/onboarding\/signature/);
 
     const { rows: stepRows } = await pool.query<{ status: string }>(
       `SELECT status FROM "OnboardingStep" WHERE "stepType" = 'ACKNOWLEDGMENTS' AND "onboardingProcessId" = (SELECT id FROM "OnboardingProcess" WHERE "employeeId" = $1)`,

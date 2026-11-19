@@ -1,8 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
 import { buttonClass, inputClass, labelClass } from "@/lib/form-styles";
 import { SignaturePad } from "@/components/signature-pad";
+import { nextOnboardingStepPath } from "@/lib/onboarding";
 import { raiseConditionDisagreement, signPropertyHandover, type DisagreeState, type SignHandoverState } from "./actions";
 
 type Asset = {
@@ -62,7 +64,19 @@ function AssetCard({ asset }: { asset: Asset }) {
 }
 
 export function PropertyHandoverFlow({ assets, allReady }: { assets: Asset[]; allReady: boolean }) {
-  const [state, formAction, isPending] = useActionState<SignHandoverState, FormData>(signPropertyHandover, undefined);
+  const router = useRouter();
+  const [state, formAction, isPending] = useActionState<SignHandoverState, FormData>(
+    async (prev, formData) => {
+      const result = await signPropertyHandover(prev, formData);
+      // Navigating here, right as the dispatch resolves, rather than from a separate effect
+      // watching isPending -- a server action's revalidatePath can refresh this route (and
+      // swap this form out once the step shows SUBMITTED) before an effect-based check gets
+      // a chance to run.
+      if (!result) router.push(nextOnboardingStepPath("PROPERTY_HANDOVER"));
+      return result;
+    },
+    undefined,
+  );
   // Controlled, not uncontrolled: React resets uncontrolled form fields when a form action
   // completes, even on a validation error, which otherwise wipes this checkbox on a failed retry.
   const [confirmLegal, setConfirmLegal] = useState(false);

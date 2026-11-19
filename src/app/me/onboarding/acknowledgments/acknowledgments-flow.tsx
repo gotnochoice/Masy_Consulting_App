@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { buttonClass } from "@/lib/form-styles";
-import { KEY_TERM_ITEMS } from "@/lib/onboarding";
+import { KEY_TERM_ITEMS, nextOnboardingStepPath } from "@/lib/onboarding";
 import {
   acknowledgeDocument,
   saveKeyTerms,
@@ -215,6 +216,10 @@ export function AcknowledgmentsFlow({
     !initialDone.privacy ? "PRIVACY_NOTICE" :
     !initialDone.keyTerms ? "KEY_TERMS" : "QUIZ";
   const [section, setSection] = useState<Section>(firstIncomplete);
+  const router = useRouter();
+  useEffect(() => {
+    if (section === "DONE") router.push(nextOnboardingStepPath("ACKNOWLEDGMENTS"));
+  }, [section, router]);
 
   const docIndex = DOC_ORDER.indexOf(section as DocKey);
   const steps = ["Agreement", "Handbook", "Privacy notice", "Key terms", "Quiz"];

@@ -61,3 +61,12 @@ export const ONBOARDING_STEP_ROUTES: Record<(typeof ONBOARDING_STEP_ORDER)[numbe
   SIGNATURE: "signature",
   PROPERTY_HANDOVER: "property-handover",
 };
+
+// Where to send the employee right after a step is submitted, so they don't have to go back to
+// the overview and pick the next one themselves -- the next step's route, or the overview page
+// once the last step (property handover) is done.
+export function nextOnboardingStepPath(current: (typeof ONBOARDING_STEP_ORDER)[number]): string {
+  const index = ONBOARDING_STEP_ORDER.indexOf(current);
+  const next = ONBOARDING_STEP_ORDER[index + 1];
+  return next ? `/me/onboarding/${ONBOARDING_STEP_ROUTES[next]}` : "/me/onboarding";
+}

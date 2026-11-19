@@ -1,8 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { submitGuarantors, type SubmitGuarantorsState } from "./actions";
+import { nextOnboardingStepPath } from "@/lib/onboarding";
 
 type GuarantorValues = {
   name: string;
@@ -79,7 +81,19 @@ export function GuarantorsForm({
   guarantor1: GuarantorValues | null;
   guarantor2: GuarantorValues | null;
 }) {
-  const [state, formAction, isPending] = useActionState<SubmitGuarantorsState, FormData>(submitGuarantors, undefined);
+  const router = useRouter();
+  const [state, formAction, isPending] = useActionState<SubmitGuarantorsState, FormData>(
+    async (prev, formData) => {
+      const result = await submitGuarantors(prev, formData);
+      // Navigating here, right as the dispatch resolves, rather than from a separate effect
+      // watching isPending -- a server action's revalidatePath can refresh this route (and
+      // swap this form out once the step shows SUBMITTED) before an effect-based check gets
+      // a chance to run.
+      if (!result) router.push(nextOnboardingStepPath("GUARANTORS"));
+      return result;
+    },
+    undefined,
+  );
   // Controlled, not uncontrolled defaultChecked, because the form below is submitted via
   // onSubmit + a manual dispatch rather than the native <form action={fn}> wiring -- see the
   // comment on the form element for why.

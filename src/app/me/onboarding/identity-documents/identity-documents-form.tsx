@@ -1,15 +1,25 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { MAX_DOCUMENT_FILE_LABEL } from "@/lib/employee-documents";
 import { submitIdentityDocuments, type SubmitIdentityDocumentsState } from "./actions";
+import { nextOnboardingStepPath } from "@/lib/onboarding";
 
 export function IdentityDocumentsForm() {
-  const [idType, setIdType] = useState<"PASSPORT" | "DRIVERS_LICENSE">("PASSPORT");
+  const router = useRouter();
+  const [idType, setIdType] = useState<"PASSPORT" | "DRIVERS_LICENSE" | "NONE">("PASSPORT");
   const [addressMode, setAddressMode] = useState<"BILL" | "OTHER">("BILL");
   const [state, formAction, isPending] = useActionState<SubmitIdentityDocumentsState, FormData>(
-    submitIdentityDocuments,
+    async (prev, formData) => {
+      const result = await submitIdentityDocuments(prev, formData);
+      // Navigating here, right as the dispatch resolves, rather than from a separate effect
+      // watching isPending -- a server action's revalidatePath can refresh this route before
+      // an effect-based check gets a chance to run.
+      if (!result) router.push(nextOnboardingStepPath("IDENTITY_DOCUMENTS"));
+      return result;
+    },
     undefined,
   );
 
@@ -27,29 +37,34 @@ export function IdentityDocumentsForm() {
       <div className="space-y-3 rounded-btn border border-border p-4">
         <p className="text-xs font-medium text-slate-light">Valid ID</p>
         <div>
-          <label className={labelClass} htmlFor="idDocumentType">Which ID are you uploading?</label>
+          <label className={labelClass} htmlFor="idDocumentType">Which ID are you uploading? (optional)</label>
           <select
             id="idDocumentType"
             name="idDocumentType"
             value={idType}
-            onChange={(e) => setIdType(e.target.value as "PASSPORT" | "DRIVERS_LICENSE")}
+            onChange={(e) => setIdType(e.target.value as "PASSPORT" | "DRIVERS_LICENSE" | "NONE")}
             className={inputClass}
           >
             <option value="PASSPORT">International passport</option>
             <option value="DRIVERS_LICENSE">Driver&rsquo;s licence</option>
+            <option value="NONE">I don&rsquo;t have one of these right now</option>
           </select>
         </div>
-        <div>
-          <label className={labelClass} htmlFor="idFront">{idType === "DRIVERS_LICENSE" ? "Front" : "Photo page"}</label>
-          <input id="idFront" name="idFront" type="file" accept=".jpg,.jpeg,.png,.pdf" required className={inputClass} />
-        </div>
-        {idType === "DRIVERS_LICENSE" && (
-          <div>
-            <label className={labelClass} htmlFor="idBack">Back</label>
-            <input id="idBack" name="idBack" type="file" accept=".jpg,.jpeg,.png,.pdf" required className={inputClass} />
-          </div>
+        {idType !== "NONE" && (
+          <>
+            <div>
+              <label className={labelClass} htmlFor="idFront">{idType === "DRIVERS_LICENSE" ? "Front" : "Photo page"}</label>
+              <input id="idFront" name="idFront" type="file" accept=".jpg,.jpeg,.png,.pdf" required className={inputClass} />
+            </div>
+            {idType === "DRIVERS_LICENSE" && (
+              <div>
+                <label className={labelClass} htmlFor="idBack">Back</label>
+                <input id="idBack" name="idBack" type="file" accept=".jpg,.jpeg,.png,.pdf" required className={inputClass} />
+              </div>
+            )}
+          </>
         )}
-        <p className="text-xs text-slate-light">JPG, PNG, or PDF, up to {MAX_DOCUMENT_FILE_LABEL}. Only HR can see these.</p>
+        <p className="text-xs text-slate-light">JPG, PNG, or PDF, up to {MAX_DOCUMENT_FILE_LABEL}. Only HR can see these. Your NIN below is what&rsquo;s required.</p>
       </div>
 
       <div className="space-y-3 rounded-btn border border-border p-4">

@@ -47,8 +47,10 @@ test("guarantors step rejects a duplicate second guarantor, then succeeds with t
   await page.getByRole("button", { name: "Submit" }).click();
   await page.waitForTimeout(800);
 
+  // A successful submit moves straight on to the next step, rather than leaving the employee
+  // to find their own way back to the overview.
   await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-  await expect(page.getByText(/waiting on HR to verify/i)).toBeVisible();
+  await page.waitForURL(/\/me\/onboarding\/acknowledgments/);
 
   const { rows: guarantors } = await pool.query<{ name: string }>(
     `SELECT name FROM "Guarantor" WHERE "employeeId" = $1 ORDER BY "createdAt"`,

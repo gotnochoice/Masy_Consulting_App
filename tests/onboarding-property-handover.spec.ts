@@ -83,8 +83,10 @@ test("property handover: ops records equipment, verifies and approves it, then t
   await page.getByRole("button", { name: "Sign", exact: true }).click();
   await page.waitForTimeout(1500);
 
+  // This is the last step -- a successful sign sends the employee back to the overview rather
+  // than to a "next step" that doesn't exist.
   await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-  await expect(page.getByText(/waiting on HR to verify/i)).toBeVisible();
+  await page.waitForURL(/\/me\/onboarding$/);
 
   const { rows: assetRows } = await pool.query<{ status: string }>(`SELECT status FROM "CompanyAsset" WHERE "employeeId" = $1`, [employeeId]);
   expect(assetRows[0].status).toBe("ISSUED");

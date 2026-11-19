@@ -67,3 +67,34 @@ test("identity documents step rejects an old bill and a malformed NIN, then succ
   const { rows: docs } = await pool.query(`SELECT category FROM "EmployeeDocument" WHERE "employeeId" = $1`, [employeeId]);
   expect(docs.map((d) => d.category).sort()).toEqual(["IDENTIFICATION", "PROOF_OF_ADDRESS"]);
 });
+
+test("a valid ID is optional (most people reliably have a NIN, not everyone has a passport/licence to hand)", async ({ page }) => {
+  const email = "zztest.iddocs.noid@example.com";
+  const employeeId = await createOnboardingTestEmployee(email, { PERSONAL_DETAILS: "SUBMITTED" });
+
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(ZZTEST_ONBOARDING_PASSWORD);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL(/\/me\/onboarding/);
+
+  await page.goto("/me/onboarding/identity-documents");
+  await page.locator("select#idDocumentType").selectOption("NONE");
+  // No file picker for the ID should even be on the page once "I don't have one" is chosen.
+  await expect(page.locator("#idFront")).toHaveCount(0);
+
+  await page.locator("#nin").fill("12345678901");
+  const todayStr = new Date().toISOString().slice(0, 10);
+  await page.locator("#billDate").fill(todayStr);
+  await page.locator("#addressFile").setInputFiles(TEST_PNG_PATH);
+  await page.getByRole("button", { name: "Submit" }).click();
+  await page.waitForTimeout(1000);
+
+  // Reaching the blob-upload failure (not configured in this sandbox) confirms the missing ID
+  // itself was never the blocker -- NIN and proof of address were enough to pass validation.
+  await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+  await expect(page.getByText(/couldn.t upload/i)).toBeVisible();
+
+  const { rows: emptyDocs } = await pool.query(`SELECT 1 FROM "EmployeeDocument" WHERE "employeeId" = $1`, [employeeId]);
+  expect(emptyDocs).toHaveLength(0);
+});

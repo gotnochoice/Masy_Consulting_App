@@ -29,15 +29,19 @@ export async function submitIdentityDocuments(
   const nin = (formData.get("nin") as string)?.trim();
   if (!NIN_REGEX.test(nin || "")) return { error: "NIN must be exactly 11 digits." };
 
+  // A valid ID (passport/driver's licence) is optional -- most people reliably have a NIN,
+  // which is what's actually required. "NONE" is a deliberate choice, not just a missing field.
   const idDocumentType = formData.get("idDocumentType") as string;
-  if (idDocumentType !== "PASSPORT" && idDocumentType !== "DRIVERS_LICENSE") {
-    return { error: "Choose which ID you're uploading." };
+  if (idDocumentType !== "PASSPORT" && idDocumentType !== "DRIVERS_LICENSE" && idDocumentType !== "NONE") {
+    return { error: "Choose whether you're uploading an ID, or that you don't have one right now." };
   }
+  const hasId = idDocumentType !== "NONE";
+  const idDocType = idDocumentType === "PASSPORT" ? "PASSPORT" : "DRIVERS_LICENSE";
 
-  const idFront = formData.get("idFront");
-  if (!(idFront instanceof File) || idFront.size === 0) return { error: "Upload the front of your ID." };
-  const idBack = formData.get("idBack");
-  if (idDocumentType === "DRIVERS_LICENSE" && (!(idBack instanceof File) || idBack.size === 0)) {
+  const idFront = hasId ? formData.get("idFront") : null;
+  if (hasId && (!(idFront instanceof File) || idFront.size === 0)) return { error: "Upload the front of your ID." };
+  const idBack = hasId ? formData.get("idBack") : null;
+  if (hasId && idDocumentType === "DRIVERS_LICENSE" && (!(idBack instanceof File) || idBack.size === 0)) {
     return { error: "A driver's licence needs both front and back." };
   }
 
@@ -66,13 +70,17 @@ export async function submitIdentityDocuments(
 
   const process = await requireProcessAndStep(employeeId);
 
-  const idResult = await uploadEmployeeDocumentFile(idFront);
-  if ("error" in idResult) return { error: idResult.error };
+  let idResult: { url: string } | null = null;
   let idBackResult: { url: string } | null = null;
-  if (idBack instanceof File && idBack.size > 0) {
-    const r = await uploadEmployeeDocumentFile(idBack);
+  if (hasId && idFront instanceof File) {
+    const r = await uploadEmployeeDocumentFile(idFront);
     if ("error" in r) return { error: r.error };
-    idBackResult = r;
+    idResult = r;
+    if (idBack instanceof File && idBack.size > 0) {
+      const r2 = await uploadEmployeeDocumentFile(idBack);
+      if ("error" in r2) return { error: r2.error };
+      idBackResult = r2;
+    }
   }
   const addressResult = await uploadEmployeeDocumentFile(addressFile);
   if ("error" in addressResult) return { error: addressResult.error };
@@ -93,17 +101,21 @@ export async function submitIdentityDocuments(
 
   await db.$transaction([
     db.employee.update({ where: { id: employeeId }, data: { nin: encryptSensitive(nin) } }),
-    db.employeeDocument.create({
-      data: {
-        employeeId,
-        label: idDocumentType === "PASSPORT" ? "International passport" : "Driver's licence (front)",
-        category: "IDENTIFICATION",
-        idDocumentType,
-        fileUrl: idResult.url,
-        fileName: idFront.name,
-        uploadedById: session.user.id,
-      },
-    }),
+    ...(idResult && idFront instanceof File
+      ? [
+          db.employeeDocument.create({
+            data: {
+              employeeId,
+              label: idDocType === "PASSPORT" ? "International passport" : "Driver's licence (front)",
+              category: "IDENTIFICATION",
+              idDocumentType: idDocType,
+              fileUrl: idResult.url,
+              fileName: idFront.name,
+              uploadedById: session.user.id,
+            },
+          }),
+        ]
+      : []),
     ...(idBackResult
       ? [
           db.employeeDocument.create({
@@ -111,7 +123,7 @@ export async function submitIdentityDocuments(
               employeeId,
               label: "Driver's licence (back)",
               category: "IDENTIFICATION",
-              idDocumentType,
+              idDocumentType: idDocType,
               fileUrl: idBackResult.url,
               fileName: (idBack as File).name,
               uploadedById: session.user.id,
