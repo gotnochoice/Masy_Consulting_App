@@ -241,6 +241,21 @@ export function EmployeeForm({ orgs, employee, defaultOrgId, action, submitLabel
             className={inputClass}
           />
           <p className="mt-1 text-xs text-slate-light">The employee can also add or correct this from their own profile.</p>
+          {employee && (
+            <p className="mt-1 text-xs">
+              {employee.bankNameMatchStatus === "MATCHED" && (
+                <span className="text-indigo">✓ Name matched automatically against the bank account.</span>
+              )}
+              {employee.bankNameMatchStatus === "NEEDS_REVIEW" && (
+                <span className="font-medium text-orange">
+                  ⚠ Not machine-verified -- either entered manually (no bank-verification key configured) or the name didn&rsquo;t match. Confirm with the employee before paying this account.
+                </span>
+              )}
+              {employee.bankNameMatchStatus === "UNVERIFIED" && (
+                <span className="text-slate-light">Not yet submitted by the employee.</span>
+              )}
+            </p>
+          )}
         </div>
       </div>
 

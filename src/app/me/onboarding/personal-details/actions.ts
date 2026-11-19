@@ -54,7 +54,11 @@ export async function submitPersonalDetails(
     return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
   }
 
-  const matches = namesReasonablyMatch(parsed.data.name, parsed.data.bankAccountHolderName);
+  // A manually-typed account holder name (bank verification not configured) is never treated
+  // as a name match, however close it looks -- it hasn't actually been confirmed by anyone,
+  // and HR needs to see that distinction rather than a false "MATCHED".
+  const machineVerified = formData.get("bankMachineVerified") === "on";
+  const matches = machineVerified && namesReasonablyMatch(parsed.data.name, parsed.data.bankAccountHolderName);
 
   const process = await db.onboardingProcess.findUnique({ where: { employeeId } });
   if (!process) return { error: "No onboarding record found for this employee." };
