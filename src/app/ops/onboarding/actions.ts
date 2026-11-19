@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/rbac";
 import { getClientIp } from "@/lib/application-rate-limit";
 import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
 import { notifyOnboardingComplete } from "@/lib/onboarding-notify";
+import { requiredGuarantorCount } from "@/lib/onboarding-process";
 
 const PATH = "/ops/onboarding";
 
@@ -16,13 +17,18 @@ export async function verifyOnboardingStep(stepId: string) {
   if (!step) throw new Error("Step not found");
 
   if (step.stepType === "GUARANTORS") {
-    const guarantors = await db.guarantor.findMany({
-      where: { employeeId: step.onboardingProcess.employeeId, replacedAt: null },
-      include: { verificationLogs: true },
-    });
-    const allVerified = guarantors.length === 2 && guarantors.every((g) => g.verificationLogs.some((l) => l.result === "VERIFIED"));
+    const employeeId = step.onboardingProcess.employeeId;
+    const [guarantors, required] = await Promise.all([
+      db.guarantor.findMany({ where: { employeeId, replacedAt: null }, include: { verificationLogs: true } }),
+      requiredGuarantorCount(employeeId),
+    ]);
+    const allVerified = guarantors.length === required && guarantors.every((g) => g.verificationLogs.some((l) => l.result === "VERIFIED"));
     if (!allVerified) {
-      throw new Error("Both guarantors need a verification log entry marked VERIFIED first.");
+      throw new Error(
+        required === 1
+          ? "The next-of-kin contact needs a verification log entry marked VERIFIED first."
+          : "Both guarantors need a verification log entry marked VERIFIED first.",
+      );
     }
   }
 

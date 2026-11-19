@@ -17,6 +17,7 @@ import { LetterheadForm } from "./letterhead-form";
 import { DocumentEditor } from "./document-editor";
 import { QuizManager } from "./quiz-manager";
 import { ReviewGate } from "./review-gate";
+import { AdditionalDocumentsManager } from "./additional-documents-manager";
 
 const DEFAULT_PRIVACY_NOTICE = `Privacy Notice
 
@@ -40,9 +41,10 @@ export default async function ClientOnboardingSettingsPage() {
   const session = await requireRole("CLIENT");
   const clientOrgId = session.user.clientOrgId!;
 
-  const [org, questions] = await Promise.all([
+  const [org, questions, additionalDocuments] = await Promise.all([
     db.clientOrg.findUnique({ where: { id: clientOrgId } }),
     db.comprehensionQuestion.findMany({ where: { clientOrgId }, orderBy: { order: "asc" } }),
+    db.clientOnboardingDocument.findMany({ where: { clientOrgId }, orderBy: { createdAt: "asc" } }),
   ]);
   if (!org) return null;
 
@@ -116,6 +118,8 @@ export default async function ClientOnboardingSettingsPage() {
         updateAction={updateQuizQuestion}
         deleteAction={deleteQuizQuestion}
       />
+
+      <AdditionalDocumentsManager documents={additionalDocuments} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { createOnboardingTestEmployee, cleanupOnboardingTestEmployees, ZZTEST_ONBOARDING_PASSWORD, pool } from "./helpers";
+import { createOnboardingTestEmployee, cleanupOnboardingTestEmployees, ZZTEST_ONBOARDING_PASSWORD, OPS_LOGIN, pool } from "./helpers";
 
 test.afterEach(cleanupOnboardingTestEmployees);
 
@@ -57,4 +57,42 @@ test("guarantors step rejects a duplicate second guarantor, then succeeds with t
     [employeeId],
   );
   expect(guarantors.map((g) => g.name)).toEqual(["ZZTEST Guarantor One", "ZZTEST Guarantor Two"]);
+});
+
+test("only one next-of-kin contact is required when no equipment is being issued", async ({ page }) => {
+  const email = "zztest.guarantors.noequip@example.com";
+  const employeeId = await createOnboardingTestEmployee(email);
+  await pool.query(
+    `INSERT INTO "CompanyAsset" (id, "employeeId", "itemType", status, "createdById", "createdAt", "updatedAt")
+     VALUES (gen_random_uuid()::text, $1, 'NO_EQUIPMENT_ISSUED', 'ISSUED', (SELECT id FROM "User" WHERE email = $2), now(), now())`,
+    [employeeId, OPS_LOGIN.email],
+  );
+
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(ZZTEST_ONBOARDING_PASSWORD);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL(/\/me\/onboarding/);
+
+  await page.goto("/me/onboarding/guarantors");
+  await expect(page.getByRole("heading", { name: "Next of kin" })).toBeVisible();
+  await expect(page.locator("#g2_name")).toHaveCount(0);
+
+  await page.locator("#g1_name").fill("ZZTEST Next Of Kin");
+  await page.locator("#g1_relationship").fill("Sister");
+  await page.locator("#g1_phone").fill("08099999999");
+  await page.locator("#g1_email").fill("nok@example.com");
+  await page.locator("#g1_address").fill("9 Test Street, Lagos");
+  await page.locator("input[name='g1_consent']").check();
+  await page.getByRole("button", { name: "Submit" }).click();
+  await page.waitForTimeout(800);
+
+  await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+  await page.waitForURL(/\/me\/onboarding\/acknowledgments/);
+
+  const { rows: guarantors } = await pool.query<{ name: string }>(
+    `SELECT name FROM "Guarantor" WHERE "employeeId" = $1`,
+    [employeeId],
+  );
+  expect(guarantors.map((g) => g.name)).toEqual(["ZZTEST Next Of Kin"]);
 });

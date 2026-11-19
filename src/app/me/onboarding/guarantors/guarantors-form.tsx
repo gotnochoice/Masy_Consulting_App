@@ -19,18 +19,22 @@ const EMPTY: GuarantorValues = { name: "", relationship: "", phone: "", email: "
 
 function GuarantorFields({
   prefix,
+  label,
   defaults,
   consent,
   onConsentChange,
+  consentLabel,
 }: {
   prefix: "g1" | "g2";
+  label: string;
   defaults: GuarantorValues;
   consent: boolean;
   onConsentChange: (checked: boolean) => void;
+  consentLabel: string;
 }) {
   return (
     <div className="space-y-3 rounded-btn border border-border p-4">
-      <p className="text-xs font-medium text-slate-light">{prefix === "g1" ? "First guarantor" : "Second guarantor"}</p>
+      <p className="text-xs font-medium text-slate-light">{label}</p>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={labelClass} htmlFor={`${prefix}_name`}>Full name</label>
@@ -68,7 +72,7 @@ function GuarantorFields({
           required
           className="mt-0.5"
         />
-        This person knows I am giving their details and has agreed to be contacted.
+        {consentLabel}
       </label>
     </div>
   );
@@ -77,9 +81,11 @@ function GuarantorFields({
 export function GuarantorsForm({
   guarantor1,
   guarantor2,
+  required,
 }: {
   guarantor1: GuarantorValues | null;
   guarantor2: GuarantorValues | null;
+  required: 1 | 2;
 }) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState<SubmitGuarantorsState, FormData>(
@@ -114,10 +120,32 @@ export function GuarantorsForm({
       className="space-y-4"
     >
       <p className="rounded-btn border border-border bg-paper-2 px-4 py-3 text-xs text-slate">
-        Guarantors are verification contacts only -- they take no financial liability.
+        {required === 1
+          ? "Your next of kin is a verification contact only -- they take no financial liability."
+          : "Guarantors are verification contacts only -- they take no financial liability."}
       </p>
-      <GuarantorFields prefix="g1" defaults={guarantor1 ?? EMPTY} consent={g1Consent} onConsentChange={setG1Consent} />
-      <GuarantorFields prefix="g2" defaults={guarantor2 ?? EMPTY} consent={g2Consent} onConsentChange={setG2Consent} />
+      <GuarantorFields
+        prefix="g1"
+        label={required === 1 ? "Next of kin" : "First guarantor"}
+        defaults={guarantor1 ?? EMPTY}
+        consent={g1Consent}
+        onConsentChange={setG1Consent}
+        consentLabel={
+          required === 1
+            ? "This person knows I've listed them as my next of kin and has agreed to be contacted."
+            : "This person knows I am giving their details and has agreed to be contacted."
+        }
+      />
+      {required === 2 && (
+        <GuarantorFields
+          prefix="g2"
+          label="Second guarantor"
+          defaults={guarantor2 ?? EMPTY}
+          consent={g2Consent}
+          onConsentChange={setG2Consent}
+          consentLabel="This person knows I am giving their details and has agreed to be contacted."
+        />
+      )}
       {state?.error && (
         <p className="rounded-btn border border-orange/30 bg-orange/5 px-3.5 py-2.5 text-sm text-orange">{state.error}</p>
       )}

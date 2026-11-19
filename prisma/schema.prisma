@@ -216,6 +216,21 @@ model ClientOrg {
   onboardingContentReviewedAt   DateTime?
   onboardingContentReviewedById String?
   comprehensionQuestions       ComprehensionQuestion[]
+  additionalOnboardingDocuments ClientOnboardingDocument[]
+}
+
+// Extra reference material a client can optionally add to onboarding -- their own name/label,
+// pasted text or an uploaded file, shown to every new hire alongside the core documents but
+// without the scroll-gated acknowledgment + quiz the agreement/handbook/privacy notice get.
+model ClientOnboardingDocument {
+  id          String    @id @default(cuid())
+  clientOrgId String
+  clientOrg   ClientOrg @relation(fields: [clientOrgId], references: [id])
+  name        String
+  text        String?
+  fileUrl     String?
+  fileName    String?
+  createdAt   DateTime  @default(now())
 }
 
 model User {

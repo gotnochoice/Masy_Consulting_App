@@ -38,10 +38,11 @@ export default async function AcknowledgmentsStepPage() {
     }
   }
 
-  const [acks, keyTermCount, questions] = await Promise.all([
+  const [acks, keyTermCount, questions, additionalDocuments] = await Promise.all([
     db.documentAcknowledgment.findMany({ where: { employeeId } }),
     db.keyTermAcknowledgment.count({ where: { employeeId } }),
     db.comprehensionQuestion.findMany({ where: { clientOrgId: clientOrg.id, active: true }, orderBy: { order: "asc" } }),
+    db.clientOnboardingDocument.findMany({ where: { clientOrgId: clientOrg.id }, orderBy: { createdAt: "asc" } }),
   ]);
 
   const findAck = (type: string, version: string | null) =>
@@ -57,6 +58,32 @@ export default async function AcknowledgmentsStepPage() {
         </div>
         <OnboardingStepStatusBadge status={step.status} />
       </div>
+
+      {additionalDocuments.length > 0 && (
+        <div className="space-y-2 rounded-card border border-border bg-paper-2 p-4">
+          <p className="text-xs font-medium text-slate-light">Additional documents from {clientOrg.name}</p>
+          <ul className="space-y-1">
+            {additionalDocuments.map((doc) =>
+              doc.fileUrl ? (
+                <li key={doc.id} className="text-sm">
+                  <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="text-indigo hover:underline">
+                    {doc.name}
+                  </a>
+                </li>
+              ) : (
+                <li key={doc.id} className="text-sm">
+                  <details>
+                    <summary className="cursor-pointer text-indigo hover:underline">{doc.name}</summary>
+                    <p className="mt-2 whitespace-pre-wrap rounded-btn border border-border bg-paper p-3 text-xs leading-relaxed text-slate">
+                      {doc.text}
+                    </p>
+                  </details>
+                </li>
+              ),
+            )}
+          </ul>
+        </div>
+      )}
 
       {step.status === "NEEDS_CORRECTION" && step.correctionReason && (
         <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">

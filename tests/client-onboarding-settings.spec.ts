@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { CLIENT_LOGIN, pool } from "./helpers";
+import { CLIENT_LOGIN, createOnboardingTestEmployee, cleanupOnboardingTestEmployees, ZZTEST_ONBOARDING_PASSWORD, pool } from "./helpers";
 
 test.afterEach(async () => {
   await pool.query(
@@ -11,6 +11,9 @@ test.afterEach(async () => {
   );
   await pool.query(
     `DELETE FROM "ComprehensionQuestion" WHERE "clientOrgId" = (SELECT id FROM "ClientOrg" WHERE slug = 'lagos-bites-catering')`,
+  );
+  await pool.query(
+    `DELETE FROM "ClientOnboardingDocument" WHERE "clientOrgId" = (SELECT id FROM "ClientOrg" WHERE slug = 'lagos-bites-catering')`,
   );
 });
 
@@ -92,4 +95,54 @@ test("marking content reviewed is blocked until agreement, handbook, and quiz al
     `SELECT "onboardingContentReviewedAt" FROM "ClientOrg" WHERE slug = 'lagos-bites-catering'`,
   );
   expect(rows[0].onboardingContentReviewedAt).toBeNull();
+});
+
+test("client can add an optional additional document, and the employee sees it on the acknowledgments step", async ({ page }) => {
+  await loginAsClient(page);
+  await page.goto("/client/settings/onboarding");
+  await page.waitForLoadState("networkidle");
+
+  await expect(page.getByRole("heading", { name: "Additional documents (optional)" })).toBeVisible();
+  await page.locator("#additionalDocName").fill("ZZTEST Code of Conduct");
+  await page.locator("#additionalDocText").fill("ZZTEST: be excellent to each other.");
+  await page.getByRole("button", { name: "Add document" }).click();
+  await page.waitForTimeout(800);
+
+  await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+  await expect(page.getByText("ZZTEST Code of Conduct")).toBeVisible();
+  // The add form clears after a successful add, since this form deliberately avoids the
+  // native reset that every other onboarding form here works around.
+  await expect(page.locator("#additionalDocName")).toHaveValue("");
+
+  const { rows } = await pool.query<{ id: string }>(
+    `SELECT id FROM "ClientOnboardingDocument" WHERE "clientOrgId" = (SELECT id FROM "ClientOrg" WHERE slug = 'lagos-bites-catering') AND name = 'ZZTEST Code of Conduct'`,
+  );
+  expect(rows).toHaveLength(1);
+
+  // It shows up for an employee on the acknowledgments step too, readable inline (it's
+  // reference material, not part of the gated read-and-quiz flow). That step only renders at
+  // all once the client has reviewed their onboarding content -- set that up directly, since
+  // the review-gate flow itself is covered by the first test in this file.
+  await pool.query(
+    `UPDATE "ClientOrg" SET "employmentAgreementTemplate" = 'ZZTEST agreement', "handbookText" = 'ZZTEST handbook',
+     "onboardingContentReviewedAt" = now() WHERE slug = 'lagos-bites-catering'`,
+  );
+
+  await page.context().clearCookies();
+  const email = `zztest.additionaldoc.${Date.now()}@example.com`;
+  await createOnboardingTestEmployee(email, { PERSONAL_DETAILS: "SUBMITTED", IDENTITY_DOCUMENTS: "SUBMITTED", GUARANTORS: "SUBMITTED" });
+  try {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(ZZTEST_ONBOARDING_PASSWORD);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForURL(/\/me\/onboarding/);
+
+    await page.goto("/me/onboarding/acknowledgments");
+    await expect(page.getByText("Additional documents from Lagos Bites Catering")).toBeVisible();
+    await page.getByText("ZZTEST Code of Conduct").click();
+    await expect(page.getByText("ZZTEST: be excellent to each other.")).toBeVisible();
+  } finally {
+    await cleanupOnboardingTestEmployees();
+  }
 });

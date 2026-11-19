@@ -3,10 +3,12 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import mammoth from "mammoth";
+import { put } from "@vercel/blob";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
 import { uploadClientLogo, MAX_LOGO_FILE_BYTES, MAX_LOGO_FILE_LABEL } from "@/lib/logo";
 import { MAX_TEMPLATE_FILE_BYTES, MAX_TEMPLATE_FILE_LABEL } from "@/lib/contract-letter-template-constants";
+import { MAX_DOCUMENT_FILE_BYTES, MAX_DOCUMENT_FILE_LABEL } from "@/lib/employee-documents";
 import {
   transcribeDocumentText,
   draftEmploymentAgreement,
@@ -326,5 +328,59 @@ export async function markOnboardingContentReviewed(
     where: { id: clientOrgId },
     data: { onboardingContentReviewedAt: new Date(), onboardingContentReviewedById: session.user.id },
   });
+  revalidatePath(PATH);
+}
+
+// Extra, entirely optional reference material -- a client names it themselves and either
+// pastes text or uploads a file. Shown to every new hire alongside the core documents, but
+// without the scroll-gated acknowledgment + quiz those get (see acknowledgments-flow.tsx).
+export type AddAdditionalDocumentState = { error: string } | undefined;
+
+export async function addAdditionalDocument(
+  _prevState: AddAdditionalDocumentState,
+  formData: FormData,
+): Promise<AddAdditionalDocumentState> {
+  const session = await requireRole("CLIENT");
+  const clientOrgId = session.user.clientOrgId!;
+
+  const name = (formData.get("name") as string)?.trim();
+  if (!name) return { error: "Give this document a name." };
+
+  const text = (formData.get("text") as string)?.trim();
+  const file = formData.get("file");
+  const hasFile = file instanceof File && file.size > 0;
+  if (!text && !hasFile) return { error: "Paste some text or upload a file." };
+
+  let fileUrl: string | null = null;
+  let fileName: string | null = null;
+  if (hasFile) {
+    if (file.size > MAX_DOCUMENT_FILE_BYTES) {
+      return { error: `That file is too large. Please keep it under ${MAX_DOCUMENT_FILE_LABEL}.` };
+    }
+    try {
+      const blob = await put(`client-onboarding-docs/${clientOrgId}-${Date.now()}-${file.name}`, file, { access: "public" });
+      fileUrl = blob.url;
+      fileName = file.name;
+    } catch (err) {
+      console.error("[client-onboarding] failed to upload additional document:", err);
+      return { error: "We couldn't upload that file right now. Please try again in a moment." };
+    }
+  }
+
+  await db.clientOnboardingDocument.create({
+    data: { clientOrgId, name, text: text || null, fileUrl, fileName },
+  });
+
+  revalidatePath(PATH);
+}
+
+export async function deleteAdditionalDocument(documentId: string) {
+  const session = await requireRole("CLIENT");
+  const clientOrgId = session.user.clientOrgId!;
+
+  const doc = await db.clientOnboardingDocument.findUnique({ where: { id: documentId } });
+  if (!doc || doc.clientOrgId !== clientOrgId) return;
+
+  await db.clientOnboardingDocument.delete({ where: { id: documentId } });
   revalidatePath(PATH);
 }

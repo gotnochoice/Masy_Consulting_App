@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
 import { requirePrivacyConsent } from "@/lib/onboarding-gate";
+import { requiredGuarantorCount } from "@/lib/onboarding-process";
 import { db } from "@/lib/db";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
 import { GuarantorsForm } from "./guarantors-form";
@@ -11,9 +12,10 @@ export default async function GuarantorsStepPage() {
   if (!employeeId) redirect("/me/profile");
   await requirePrivacyConsent(employeeId);
 
-  const [process, guarantors] = await Promise.all([
+  const [process, guarantors, required] = await Promise.all([
     db.onboardingProcess.findUnique({ where: { employeeId }, include: { steps: true } }),
     db.guarantor.findMany({ where: { employeeId, replacedAt: null }, orderBy: { createdAt: "asc" } }),
+    requiredGuarantorCount(employeeId),
   ]);
   if (!process) redirect("/me/profile");
 
@@ -30,8 +32,12 @@ export default async function GuarantorsStepPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
-          <h1 className="text-2xl font-bold tracking-tight text-ink">Guarantors</h1>
-          <p className="text-sm text-slate">Two people HR can contact to verify who you are.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">{required === 1 ? "Next of kin" : "Guarantors"}</h1>
+          <p className="text-sm text-slate">
+            {required === 1
+              ? "Someone HR can contact to verify who you are -- no company equipment is being issued for this role, so one contact is enough."
+              : "Two people HR can contact to verify who you are."}
+          </p>
         </div>
         <OnboardingStepStatusBadge status={step.status} />
       </div>
@@ -51,7 +57,7 @@ export default async function GuarantorsStepPage() {
           <p className="font-medium">Submitted -- waiting on HR to verify.</p>
         </div>
       ) : (
-        <GuarantorsForm guarantor1={toValues(guarantors[0])} guarantor2={toValues(guarantors[1])} />
+        <GuarantorsForm guarantor1={toValues(guarantors[0])} guarantor2={toValues(guarantors[1])} required={required} />
       )}
     </div>
   );

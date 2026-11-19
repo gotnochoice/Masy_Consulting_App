@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
+import { requiredGuarantorCount } from "@/lib/onboarding-process";
 
 const PATH = "/me/onboarding/guarantors";
 
@@ -14,12 +15,7 @@ const guarantorSchema = z.object({
   email: z.string().email("A valid email is required"),
   occupation: z.string().optional(),
   address: z.string().min(1, "Contact address is required"),
-  consent: z.literal("on", { message: "The guarantor must know they're being listed and have agreed to be contacted" }),
-});
-
-const submitSchema = z.object({
-  guarantor1: guarantorSchema,
-  guarantor2: guarantorSchema,
+  consent: z.literal("on", { message: "They must know they're listed and have agreed to be contacted" }),
 });
 
 export type SubmitGuarantorsState = { error: string } | undefined;
@@ -32,49 +28,51 @@ export async function submitGuarantors(
   const employeeId = session.user.employeeId;
   if (!employeeId) return { error: "No employee record found for this login." };
 
-  const raw = Object.fromEntries(formData) as Record<string, string>;
-  const parsed = submitSchema.safeParse({
-    guarantor1: {
-      name: raw.g1_name,
-      relationship: raw.g1_relationship,
-      phone: raw.g1_phone,
-      email: raw.g1_email,
-      occupation: raw.g1_occupation,
-      address: raw.g1_address,
-      consent: raw.g1_consent,
-    },
-    guarantor2: {
-      name: raw.g2_name,
-      relationship: raw.g2_relationship,
-      phone: raw.g2_phone,
-      email: raw.g2_email,
-      occupation: raw.g2_occupation,
-      address: raw.g2_address,
-      consent: raw.g2_consent,
-    },
-  });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Please check both guarantors' details." };
-  }
+  // Decided independently of anything the client sent -- never trust the form for how many
+  // are actually required (equipment status, which drives this, can only be known server-side).
+  const required = await requiredGuarantorCount(employeeId);
 
-  const { guarantor1, guarantor2 } = parsed.data;
-  const samePerson =
-    guarantor1.phone.trim() === guarantor2.phone.trim() ||
-    guarantor1.email.trim().toLowerCase() === guarantor2.email.trim().toLowerCase() ||
-    guarantor1.name.trim().toLowerCase() === guarantor2.name.trim().toLowerCase();
-  if (samePerson) {
-    return { error: "Your two guarantors must be different people -- they can't share a name, phone number, or email." };
+  const raw = Object.fromEntries(formData) as Record<string, string>;
+  const toGuarantor = (prefix: "g1" | "g2") => ({
+    name: raw[`${prefix}_name`],
+    relationship: raw[`${prefix}_relationship`],
+    phone: raw[`${prefix}_phone`],
+    email: raw[`${prefix}_email`],
+    occupation: raw[`${prefix}_occupation`],
+    address: raw[`${prefix}_address`],
+    consent: raw[`${prefix}_consent`],
+  });
+
+  const parsed1 = guarantorSchema.safeParse(toGuarantor("g1"));
+  if (!parsed1.success) {
+    return { error: parsed1.error.issues[0]?.message ?? "Please check those details." };
+  }
+  const guarantors = [parsed1.data];
+
+  if (required === 2) {
+    const parsed2 = guarantorSchema.safeParse(toGuarantor("g2"));
+    if (!parsed2.success) {
+      return { error: parsed2.error.issues[0]?.message ?? "Please check both guarantors' details." };
+    }
+    const samePerson =
+      parsed1.data.phone.trim() === parsed2.data.phone.trim() ||
+      parsed1.data.email.trim().toLowerCase() === parsed2.data.email.trim().toLowerCase() ||
+      parsed1.data.name.trim().toLowerCase() === parsed2.data.name.trim().toLowerCase();
+    if (samePerson) {
+      return { error: "Your two guarantors must be different people -- they can't share a name, phone number, or email." };
+    }
+    guarantors.push(parsed2.data);
   }
 
   const process = await db.onboardingProcess.findUnique({ where: { employeeId } });
   if (!process) return { error: "No onboarding record found for this employee." };
 
   // Replace any prior attempt (e.g. after a "replace guarantor" request) rather than
-  // accumulating rows -- this step only ever has exactly two current guarantors.
+  // accumulating rows -- this step only ever has exactly `required` current guarantors.
   await db.$transaction([
     db.guarantor.deleteMany({ where: { employeeId, replacedAt: null } }),
     db.guarantor.createMany({
-      data: [guarantor1, guarantor2].map((g) => ({
+      data: guarantors.map((g) => ({
         employeeId,
         name: g.name,
         relationship: g.relationship,
