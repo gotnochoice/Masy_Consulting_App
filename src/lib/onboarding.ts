@@ -46,17 +46,12 @@ export const KEY_TERM_ITEMS: { key: string; label: string }[] = [
 
 // Shown once, before Step 1, ahead of any personal data collection -- a brief, generic notice
 // (not the client's own detailed Privacy Notice, which is read in full later at Step 4).
-export const EARLY_PRIVACY_CONSENT_NOTICE = `Before you start, here's what happens with your information.
-
-Over the next few steps you'll be asked for personal details, identity documents, your National
-Identification Number (NIN), guarantor contacts, and bank details. This is collected to verify
-who you are, pay you correctly, and meet your employer's obligations as an employer.
-
-Your identity documents and NIN are visible only to HR staff handling verification -- never to
-your employer's other staff. You'll read a full privacy notice, written by your employer, later
-in this process.
-
-By continuing, you agree to this information being collected for onboarding.`;
+export const EARLY_PRIVACY_CONSENT_NOTICE = [
+  "Before you start, here's what happens with your information.",
+  "Over the next few steps you'll be asked for personal details, identity documents, your National Identification Number (NIN), guarantor contacts, and bank details. This is collected to verify who you are, pay you correctly, and meet your employer's legal obligations.",
+  "Your identity documents and NIN are visible only to HR staff handling verification -- never to your employer's other staff. You'll read a full privacy notice, written by your employer, later in this process.",
+  "By continuing, you agree to this information being collected for onboarding.",
+].join("\n\n");
 
 export const ONBOARDING_STEP_ROUTES: Record<(typeof ONBOARDING_STEP_ORDER)[number], string> = {
   PERSONAL_DETAILS: "personal-details",
