@@ -53,13 +53,13 @@ export function IdentityDocumentsForm() {
         {idType !== "NONE" && (
           <>
             <div>
-              <label className={labelClass} htmlFor="idFront">{idType === "DRIVERS_LICENSE" ? "Front" : "Photo page"}</label>
-              <input id="idFront" name="idFront" type="file" accept=".jpg,.jpeg,.png,.pdf" required className={inputClass} />
+              <label className={labelClass} htmlFor="idFront">{idType === "DRIVERS_LICENSE" ? "Front (optional)" : "Photo page (optional)"}</label>
+              <input id="idFront" name="idFront" type="file" accept=".jpg,.jpeg,.png,.pdf" className={inputClass} />
             </div>
             {idType === "DRIVERS_LICENSE" && (
               <div>
-                <label className={labelClass} htmlFor="idBack">Back</label>
-                <input id="idBack" name="idBack" type="file" accept=".jpg,.jpeg,.png,.pdf" required className={inputClass} />
+                <label className={labelClass} htmlFor="idBack">Back (optional)</label>
+                <input id="idBack" name="idBack" type="file" accept=".jpg,.jpeg,.png,.pdf" className={inputClass} />
               </div>
             )}
           </>

@@ -38,12 +38,13 @@ export async function submitIdentityDocuments(
   const hasId = idDocumentType !== "NONE";
   const idDocType = idDocumentType === "PASSPORT" ? "PASSPORT" : "DRIVERS_LICENSE";
 
-  const idFront = hasId ? formData.get("idFront") : null;
-  if (hasId && (!(idFront instanceof File) || idFront.size === 0)) return { error: "Upload the front of your ID." };
-  const idBack = hasId ? formData.get("idBack") : null;
-  if (hasId && idDocumentType === "DRIVERS_LICENSE" && (!(idBack instanceof File) || idBack.size === 0)) {
-    return { error: "A driver's licence needs both front and back." };
-  }
+  // The ID photo itself is optional even when a type is chosen above -- the NIN is what's
+  // actually required. Picking a type without uploading anything just records which ID they
+  // hold, in case they add the file later.
+  const idFrontRaw = hasId ? formData.get("idFront") : null;
+  const idFront = idFrontRaw instanceof File && idFrontRaw.size > 0 ? idFrontRaw : null;
+  const idBackRaw = hasId ? formData.get("idBack") : null;
+  const idBack = idBackRaw instanceof File && idBackRaw.size > 0 ? idBackRaw : null;
 
   const addressProofMode = formData.get("addressProofMode") as string;
   const addressFile = formData.get("addressFile");
