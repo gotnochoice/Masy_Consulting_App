@@ -811,8 +811,14 @@ export async function markNoEquipmentIssued(employeeId: string, formData: FormDa
       },
     });
 
-    const process = await tx.onboardingProcess.findUnique({ where: { employeeId } });
-    if (process) {
+    // Property handover is currently out of the active onboarding sequence (see
+    // ONBOARDING_STEP_ORDER), so a process created since then has no such step row to update --
+    // only update one if it actually exists (an older process from before that change).
+    const process = await tx.onboardingProcess.findUnique({
+      where: { employeeId },
+      include: { steps: { where: { stepType: "PROPERTY_HANDOVER" } } },
+    });
+    if (process && process.steps[0]) {
       await tx.onboardingStep.update({
         where: { onboardingProcessId_stepType: { onboardingProcessId: process.id, stepType: "PROPERTY_HANDOVER" } },
         data: { status: "SUBMITTED", submittedAt: new Date() },

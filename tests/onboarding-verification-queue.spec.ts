@@ -47,8 +47,9 @@ test("verification queue: HR verifies simple steps, logs guarantor checks, count
   await page.waitForLoadState("networkidle");
   await expect(page.getByText("ZZTEST Onboarding Hire")).toBeVisible();
 
-  // Simple steps: verify them one at a time.
-  for (const stepType of ["PERSONAL_DETAILS", "IDENTITY_DOCUMENTS", "ACKNOWLEDGMENTS", "PROPERTY_HANDOVER"]) {
+  // Simple steps: verify them one at a time. Property handover is currently out of the active
+  // sequence (see ONBOARDING_STEP_ORDER) while it's being redesigned, so Ops never sees it here.
+  for (const stepType of ["PERSONAL_DETAILS", "IDENTITY_DOCUMENTS", "ACKNOWLEDGMENTS"]) {
     const row = page.locator(`div[data-step="${stepType}"]`);
     await row.getByRole("button", { name: "Mark verified" }).click();
     await page.waitForTimeout(500);

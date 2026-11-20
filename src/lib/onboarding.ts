@@ -8,13 +8,18 @@ export const DEFAULT_ONBOARDING_TASKS = [
 
 export const MAX_ONBOARDING_QUESTION_FILE_LABEL = "8MB";
 
+// Property handover is deliberately left out of this sequence for now -- it's being redesigned
+// (the client will upload their own handover document rather than Ops typing in each item) and
+// shouldn't be part of compulsory onboarding until that's rebuilt. The underlying code
+// (src/app/me/onboarding/property-handover/, CompanyAsset) is untouched; a process created
+// while this was active still has its PROPERTY_HANDOVER step row, it's just never shown or
+// required since nothing here iterates past this list.
 export const ONBOARDING_STEP_ORDER = [
   "PERSONAL_DETAILS",
   "IDENTITY_DOCUMENTS",
   "GUARANTORS",
   "ACKNOWLEDGMENTS",
   "SIGNATURE",
-  "PROPERTY_HANDOVER",
 ] as const;
 
 export const ONBOARDING_STEP_LABELS: Record<(typeof ONBOARDING_STEP_ORDER)[number], string> = {
@@ -23,7 +28,6 @@ export const ONBOARDING_STEP_LABELS: Record<(typeof ONBOARDING_STEP_ORDER)[numbe
   GUARANTORS: "Guarantors",
   ACKNOWLEDGMENTS: "Agreement, handbook & quiz",
   SIGNATURE: "Signature",
-  PROPERTY_HANDOVER: "Company property handover",
 };
 
 // The "Acknowledgment of Key Terms" checklist -- generic across any client's agreement, since
@@ -59,12 +63,11 @@ export const ONBOARDING_STEP_ROUTES: Record<(typeof ONBOARDING_STEP_ORDER)[numbe
   GUARANTORS: "guarantors",
   ACKNOWLEDGMENTS: "acknowledgments",
   SIGNATURE: "signature",
-  PROPERTY_HANDOVER: "property-handover",
 };
 
 // Where to send the employee right after a step is submitted, so they don't have to go back to
 // the overview and pick the next one themselves -- the next step's route, or the overview page
-// once the last step (property handover) is done.
+// once the last step (signature) is done.
 export function nextOnboardingStepPath(current: (typeof ONBOARDING_STEP_ORDER)[number]): string {
   const index = ONBOARDING_STEP_ORDER.indexOf(current);
   const next = ONBOARDING_STEP_ORDER[index + 1];

@@ -3,7 +3,6 @@ import { requireRole } from "@/lib/rbac";
 import { requirePrivacyConsent } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
-import { OnboardingStepNav } from "@/components/onboarding-step-nav";
 import { PropertyHandoverFlow } from "./property-handover-flow";
 
 export default async function PropertyHandoverStepPage() {
@@ -25,7 +24,10 @@ export default async function PropertyHandoverStepPage() {
 
   return (
     <div className="max-w-lg space-y-6">
-      <OnboardingStepNav current="PROPERTY_HANDOVER" />
+      {/* No OnboardingStepNav here -- property handover is currently out of the compulsory
+          onboarding sequence (see ONBOARDING_STEP_ORDER), so there's no prior/next step to
+          navigate between. This page stays reachable directly for any process that still has a
+          PROPERTY_HANDOVER row from before that change. */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />

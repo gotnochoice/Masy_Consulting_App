@@ -52,7 +52,13 @@ export default async function OpsOnboardingPage() {
         <h2 className="text-sm font-semibold text-ink">Verification queue</h2>
         {processes.map((process) => {
           const { employee } = process;
-          const orderedSteps = ONBOARDING_STEP_ORDER.map((t) => process.steps.find((s) => s.stepType === t)).filter((s) => !!s);
+          // Overriding stepType with the loop variable narrows it to ONBOARDING_STEP_ORDER's
+          // 5-step union instead of the full 6-value Prisma enum (which still includes
+          // PROPERTY_HANDOVER, currently out of this sequence -- see onboarding.ts).
+          const orderedSteps = ONBOARDING_STEP_ORDER.flatMap((t) => {
+            const step = process.steps.find((s) => s.stepType === t);
+            return step ? [{ ...step, stepType: t }] : [];
+          });
           const flags = orderedSteps.filter((s) => s.status === "NEEDS_CORRECTION").length;
           const signatureStep = orderedSteps.find((s) => s.stepType === "SIGNATURE");
           const needsCountersign = signatureStep?.status === "SUBMITTED";

@@ -4,7 +4,6 @@ import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClass, inputClass, labelClass } from "@/lib/form-styles";
 import { SignaturePad } from "@/components/signature-pad";
-import { nextOnboardingStepPath } from "@/lib/onboarding";
 import { raiseConditionDisagreement, signPropertyHandover, type DisagreeState, type SignHandoverState } from "./actions";
 
 type Asset = {
@@ -68,11 +67,13 @@ export function PropertyHandoverFlow({ assets, allReady }: { assets: Asset[]; al
   const [state, formAction, isPending] = useActionState<SignHandoverState, FormData>(
     async (prev, formData) => {
       const result = await signPropertyHandover(prev, formData);
+      // Property handover is currently out of the compulsory onboarding sequence (see
+      // ONBOARDING_STEP_ORDER), so there's no "next step" to route to -- back to the overview.
       // Navigating here, right as the dispatch resolves, rather than from a separate effect
       // watching isPending -- a server action's revalidatePath can refresh this route (and
       // swap this form out once the step shows SUBMITTED) before an effect-based check gets
       // a chance to run.
-      if (!result) router.push(nextOnboardingStepPath("PROPERTY_HANDOVER"));
+      if (!result) router.push("/me/onboarding");
       return result;
     },
     undefined,

@@ -39,7 +39,13 @@ export default async function MyOnboardingPage() {
   }
 
   const stepsByType = new Map(process.steps.map((s) => [s.stepType, s]));
-  const orderedSteps = ONBOARDING_STEP_ORDER.map((stepType) => stepsByType.get(stepType)).filter((s) => !!s);
+  // Overriding stepType with the loop variable narrows it to ONBOARDING_STEP_ORDER's 5-step
+  // union instead of the full 6-value Prisma enum (which still includes PROPERTY_HANDOVER,
+  // currently out of this sequence -- see onboarding.ts).
+  const orderedSteps = ONBOARDING_STEP_ORDER.flatMap((stepType) => {
+    const step = stepsByType.get(stepType);
+    return step ? [{ ...step, stepType }] : [];
+  });
   const verifiedCount = orderedSteps.filter((s) => s.status === "VERIFIED").length;
   const total = orderedSteps.length;
   const needsCorrection = orderedSteps.filter((s) => s.status === "NEEDS_CORRECTION");
