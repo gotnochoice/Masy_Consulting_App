@@ -134,9 +134,19 @@ export async function completeOnboarding(employeeId: string): Promise<CompleteOn
   const process = await db.onboardingProcess.findUnique({ where: { employeeId }, include: { steps: true } });
   if (!process) return { error: "No onboarding record found." };
 
-  const missing = ONBOARDING_STEP_ORDER.filter(
-    (stepType) => process.steps.find((s) => s.stepType === stepType)?.status !== "VERIFIED",
-  );
+  // Property handover only matters for roles that actually get equipment -- most don't. With
+  // no real equipment on file, this step doesn't apply at all and shouldn't force Ops to visit
+  // the employee's record and explicitly click "no equipment" before every single hire can
+  // finish onboarding. Equipment added later still has to go through the real verify/approve
+  // cycle, same as before.
+  const hasRealEquipment = (await db.companyAsset.count({ where: { employeeId, itemType: { not: "NO_EQUIPMENT_ISSUED" } } })) > 0;
+
+  const missing = ONBOARDING_STEP_ORDER.filter((stepType) => {
+    const status = process.steps.find((s) => s.stepType === stepType)?.status;
+    if (status === "VERIFIED") return false;
+    if (stepType === "PROPERTY_HANDOVER" && !hasRealEquipment) return false;
+    return true;
+  });
   if (missing.length > 0) {
     return { error: `Every step must be verified first. Still pending: ${missing.join(", ")}` };
   }

@@ -101,3 +101,37 @@ test("verification queue: HR verifies simple steps, logs guarantor checks, count
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/me\/profile/);
 });
+
+test("onboarding completes without ever touching property handover, when no equipment was ever recorded", async ({ page }) => {
+  const email = "zztest.queue.noequip@example.com";
+  const employeeId = await createOnboardingTestEmployee(email, {
+    PERSONAL_DETAILS: "VERIFIED",
+    IDENTITY_DOCUMENTS: "VERIFIED",
+    GUARANTORS: "VERIFIED",
+    ACKNOWLEDGMENTS: "VERIFIED",
+    SIGNATURE: "VERIFIED",
+    // PROPERTY_HANDOVER left at its default NOT_STARTED -- no CompanyAsset row of any kind
+    // (not even the "no equipment" sentinel) exists for this employee, matching a role no one
+    // at Ops has ever touched the equipment question for.
+  });
+
+  await loginAsOps(page);
+  await page.goto("/ops/onboarding");
+  const card = page.locator("div.rounded-card").filter({ has: page.locator(`a[href="/ops/employees/${employeeId}/edit"]`) });
+  await card.getByRole("button", { name: "Mark onboarding complete" }).click();
+  await page.waitForTimeout(800);
+  await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+  await expect(page.getByText(/every step must be verified first/i)).toHaveCount(0);
+
+  const { rows: processRows } = await pool.query<{ completedAt: Date | null }>(
+    `SELECT "completedAt" FROM "OnboardingProcess" WHERE "employeeId" = $1`,
+    [employeeId],
+  );
+  expect(processRows[0].completedAt).not.toBeNull();
+
+  const { rows: stepRows } = await pool.query<{ status: string }>(
+    `SELECT status FROM "OnboardingStep" WHERE "stepType" = 'PROPERTY_HANDOVER' AND "onboardingProcessId" = (SELECT id FROM "OnboardingProcess" WHERE "employeeId" = $1)`,
+    [employeeId],
+  );
+  expect(stepRows[0].status).toBe("NOT_STARTED");
+});

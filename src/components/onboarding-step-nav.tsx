@@ -26,10 +26,18 @@ export function OnboardingStepNav({ current, currentStatus }: { current: StepTyp
         </Link>
       )}
       <span className="text-slate-light">Step {idx + 1} of {ONBOARDING_STEP_ORDER.length}</span>
-      {canContinue && next ? (
-        <Link href={`/me/onboarding/${ONBOARDING_STEP_ROUTES[next]}`} className="font-medium text-indigo hover:text-indigo-light">
-          {ONBOARDING_STEP_LABELS[next]} →
-        </Link>
+      {next ? (
+        canContinue ? (
+          <Link href={`/me/onboarding/${ONBOARDING_STEP_ROUTES[next]}`} className="font-medium text-indigo hover:text-indigo-light">
+            {ONBOARDING_STEP_LABELS[next]} →
+          </Link>
+        ) : (
+          // Shown but not a link yet -- so it's clear what's next, without implying you can
+          // skip ahead before finishing this step.
+          <span className="text-slate-light/60" title="Finish this step first">
+            {ONBOARDING_STEP_LABELS[next]} →
+          </span>
+        )
       ) : (
         <span />
       )}
