@@ -40,7 +40,7 @@ test("property handover: ops records equipment, verifies and approves it, then t
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/me\/onboarding/);
   await page.goto("/me/onboarding/property-handover");
-  await expect(page.getByText(/hasn.t been verified and approved/i).or(page.getByText(/waiting on HR to verify and approve/i))).toBeVisible();
+  await expect(page.getByText(/hasn.t been verified and approved/i).or(page.getByText(/waiting on our team to verify and approve/i))).toBeVisible();
 
   // --- Back to ops: verify + approve ---
   await page.context().clearCookies();

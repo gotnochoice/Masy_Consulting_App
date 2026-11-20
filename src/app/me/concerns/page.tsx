@@ -12,7 +12,7 @@ export default async function MyConcernsPage() {
   await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
-    return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;
+    return <p className="text-sm text-slate">No profile found yet. Contact your Masy team.</p>;
   }
 
   const concerns = await db.concern.findMany({
@@ -26,7 +26,7 @@ export default async function MyConcernsPage() {
         <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
         <h1 className="text-2xl font-bold tracking-tight text-ink">Concerns</h1>
         <p className="text-sm text-slate">
-          This goes to your Masy HR contact only, never directly to your employer. Masy decides what, if
+          This goes to Masy only, never directly to your employer. Masy decides what, if
           anything, gets shared, and never with your name attached unless it&apos;s necessary.
         </p>
       </div>

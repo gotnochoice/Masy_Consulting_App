@@ -37,19 +37,19 @@ export default async function PropertyHandoverStepPage() {
 
       {step.status === "NEEDS_CORRECTION" && step.correctionReason && (
         <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">
-          HR asked for a correction: {step.correctionReason}
+          Our team asked for a correction: {step.correctionReason}
         </div>
       )}
 
       {step.status === "VERIFIED" || step.status === "SUBMITTED" ? (
         <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
           <p className="font-medium">
-            {hasNoEquipmentSentinel ? "No equipment is being issued to you for this role." : step.status === "VERIFIED" ? "Verified -- this step is complete." : "Signed -- waiting on HR to verify."}
+            {hasNoEquipmentSentinel ? "No equipment is being issued to you for this role." : step.status === "VERIFIED" ? "Verified -- this step is complete." : "Signed -- waiting on our team to verify."}
           </p>
         </div>
       ) : realAssets.length === 0 ? (
         <p className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
-          Waiting on HR to record your equipment, or confirm none is needed. Check back shortly.
+          Waiting on our team to record your equipment, or confirm none is needed. Check back shortly.
         </p>
       ) : (
         <PropertyHandoverFlow

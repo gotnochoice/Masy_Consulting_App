@@ -131,7 +131,7 @@ export async function submitQuizAttempt(_prevState: QuizAttemptState, formData: 
     where: { clientOrgId: employee.clientOrgId, active: true },
     orderBy: { order: "asc" },
   });
-  if (questions.length === 0) return { error: "No quiz questions are set up yet. Contact HR." };
+  if (questions.length === 0) return { error: "No quiz questions are set up yet. Contact your employer." };
 
   const answers: Record<string, number> = {};
   const wrongQuestionIds: string[] = [];

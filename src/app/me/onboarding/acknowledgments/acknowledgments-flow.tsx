@@ -277,7 +277,7 @@ export function AcknowledgmentsFlow({
       {section === "QUIZ" && <QuizPanel questions={questions} onPassed={() => setSection("DONE")} />}
       {section === "DONE" && (
         <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
-          <p className="font-medium">All done -- submitted for HR to verify.</p>
+          <p className="font-medium">All done -- submitted for our team to verify.</p>
         </div>
       )}
     </div>

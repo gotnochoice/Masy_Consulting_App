@@ -26,14 +26,14 @@ export default async function IdentityDocumentsStepPage() {
         <div>
           <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
           <h1 className="text-2xl font-bold tracking-tight text-ink">Identity & address documents</h1>
-          <p className="text-sm text-slate">These stay private to HR -- your employer never sees the files themselves.</p>
+          <p className="text-sm text-slate">These stay private to our team -- your employer never sees the files themselves.</p>
         </div>
         <OnboardingStepStatusBadge status={step.status} />
       </div>
 
       {step.status === "NEEDS_CORRECTION" && step.correctionReason && (
         <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">
-          HR asked for a correction: {step.correctionReason}
+          Our team asked for a correction: {step.correctionReason}
         </div>
       )}
 
@@ -43,7 +43,7 @@ export default async function IdentityDocumentsStepPage() {
         </div>
       ) : step.status === "SUBMITTED" ? (
         <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
-          <p className="font-medium">Submitted -- waiting on HR to verify.</p>
+          <p className="font-medium">Submitted -- waiting on our team to verify.</p>
         </div>
       ) : (
         <IdentityDocumentsForm />

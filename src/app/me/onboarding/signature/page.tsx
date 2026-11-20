@@ -40,7 +40,7 @@ export default async function SignatureStepPage() {
 
       {step.status === "NEEDS_CORRECTION" && step.correctionReason && (
         <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">
-          HR asked for a correction: {step.correctionReason}
+          Our team asked for a correction: {step.correctionReason}
         </div>
       )}
 

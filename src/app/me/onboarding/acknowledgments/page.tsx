@@ -34,7 +34,7 @@ export default async function AcknowledgmentsStepPage() {
             <h1 className="text-2xl font-bold tracking-tight text-ink">Agreement, handbook & quiz</h1>
           </div>
           <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">
-            Your employer hasn&rsquo;t finished setting up onboarding content yet. Check back shortly, or contact HR.
+            Your employer hasn&rsquo;t finished setting up onboarding content yet. Check back shortly, or ask them directly.
           </div>
         </div>
       );
@@ -91,7 +91,7 @@ export default async function AcknowledgmentsStepPage() {
 
       {step.status === "NEEDS_CORRECTION" && step.correctionReason && (
         <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">
-          HR asked for a correction: {step.correctionReason}
+          Our team asked for a correction: {step.correctionReason}
         </div>
       )}
 
@@ -101,7 +101,7 @@ export default async function AcknowledgmentsStepPage() {
         </div>
       ) : step.status === "SUBMITTED" ? (
         <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
-          <p className="font-medium">Submitted -- waiting on HR to verify.</p>
+          <p className="font-medium">Submitted -- waiting on our team to verify.</p>
         </div>
       ) : (
         <AcknowledgmentsFlow

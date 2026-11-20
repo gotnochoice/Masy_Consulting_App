@@ -34,7 +34,7 @@ export async function sendCommencementReminders(): Promise<number> {
       "Finish your onboarding before your start date",
       `Hi ${process.employee.name},\n\nYour start date is ${when}, and your onboarding checklist isn't finished yet.\n\n` +
         `Please complete it as soon as you can: ${origin}/me/onboarding\n\n` +
-        "If you've already submitted everything, this is likely just waiting on HR to verify it -- no action needed from you.",
+        "If you've already submitted everything, this is likely just waiting on our team to verify it -- no action needed from you.",
     );
     await db.employee.update({
       where: { id: process.employee.id },

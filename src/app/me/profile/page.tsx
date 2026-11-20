@@ -28,7 +28,7 @@ export default async function MyProfilePage() {
   if (!employee) {
     return (
       <p className="text-sm text-slate">
-        No profile found yet. Contact your Masy HR contact.
+        No profile found yet. Contact your Masy team.
       </p>
     );
   }

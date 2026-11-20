@@ -68,7 +68,7 @@ export default async function MyOnboardingPage() {
 
       {needsCorrection.length > 0 && (
         <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4">
-          <p className="text-sm font-medium text-orange">Some steps need a correction before HR can verify them:</p>
+          <p className="text-sm font-medium text-orange">Some steps need a correction before our team can verify them:</p>
           <ul className="mt-2 space-y-2">
             {needsCorrection.map((s) => (
               <li key={s.id} className="text-sm text-slate">

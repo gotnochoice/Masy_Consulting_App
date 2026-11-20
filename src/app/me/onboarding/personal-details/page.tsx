@@ -41,7 +41,7 @@ export default async function PersonalDetailsStepPage() {
 
       {step.status === "NEEDS_CORRECTION" && step.correctionReason && (
         <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">
-          HR asked for a correction: {step.correctionReason}
+          Our team asked for a correction: {step.correctionReason}
         </div>
       )}
 
@@ -52,7 +52,7 @@ export default async function PersonalDetailsStepPage() {
         </div>
       ) : step.status === "SUBMITTED" ? (
         <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
-          <p className="font-medium">Submitted -- waiting on HR to verify.</p>
+          <p className="font-medium">Submitted -- waiting on our team to verify.</p>
         </div>
       ) : (
         <PersonalDetailsForm

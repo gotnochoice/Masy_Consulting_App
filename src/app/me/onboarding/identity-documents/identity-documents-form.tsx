@@ -64,7 +64,7 @@ export function IdentityDocumentsForm() {
             )}
           </>
         )}
-        <p className="text-xs text-slate-light">JPG, PNG, or PDF, up to {MAX_DOCUMENT_FILE_LABEL}. Only HR can see these. Your NIN below is what&rsquo;s required.</p>
+        <p className="text-xs text-slate-light">JPG, PNG, or PDF, up to {MAX_DOCUMENT_FILE_LABEL}. Only our team can see these. Your NIN below is what&rsquo;s required.</p>
       </div>
 
       <div className="space-y-3 rounded-btn border border-border p-4">
@@ -101,7 +101,7 @@ export function IdentityDocumentsForm() {
           <div>
             <label className={labelClass} htmlFor="otherProofNote">What is this document?</label>
             <input id="otherProofNote" name="otherProofNote" placeholder="e.g. tenancy agreement, bank statement" required className={inputClass} />
-            <p className="mt-1 text-xs text-slate-light">HR will review this manually.</p>
+            <p className="mt-1 text-xs text-slate-light">Our team will review this manually.</p>
           </div>
         )}
         <div>

@@ -89,7 +89,7 @@ export function PropertyHandoverFlow({ assets, allReady }: { assets: Asset[]; al
 
       {!allReady ? (
         <p className="rounded-btn border border-border bg-paper-2 px-4 py-3 text-sm text-slate-light">
-          Waiting on HR to verify and approve this equipment before you can sign.
+          Waiting on our team to verify and approve this equipment before you can sign.
         </p>
       ) : (
         <form

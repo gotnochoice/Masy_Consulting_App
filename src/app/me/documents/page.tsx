@@ -14,7 +14,7 @@ export default async function MyDocumentsPage() {
   await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
-    return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;
+    return <p className="text-sm text-slate">No profile found yet. Contact your Masy team.</p>;
   }
 
   const [requests, documents] = await Promise.all([
@@ -33,7 +33,7 @@ export default async function MyDocumentsPage() {
       <div>
         <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
         <h1 className="text-2xl font-bold tracking-tight text-ink">Documents & letters</h1>
-        <p className="text-sm text-slate">Files Masy HR has shared with you, and a place to request a letter.</p>
+        <p className="text-sm text-slate">Files Masy has shared with you, and a place to request a letter.</p>
       </div>
 
       <div className="space-y-4">
@@ -105,7 +105,7 @@ export default async function MyDocumentsPage() {
             {r.responseNote && (
               <div className="mt-3 rounded-btn bg-paper-2 px-3 py-2 text-sm text-ink">
                 <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-light">
-                  From Masy HR
+                  From Masy
                 </p>
                 {r.responseNote}
               </div>

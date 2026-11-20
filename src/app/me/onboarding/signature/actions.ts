@@ -34,7 +34,7 @@ async function signDocument(
 
   const text = documentType === "EMPLOYMENT_AGREEMENT" ? employee.clientOrg.employmentAgreementTemplate : employee.clientOrg.handbookText;
   const version = (documentType === "EMPLOYMENT_AGREEMENT" ? employee.clientOrg.employmentAgreementVersion : employee.clientOrg.handbookVersion) || "1.0";
-  if (!text) return { error: "That document isn't set up yet. Contact HR." };
+  if (!text) return { error: "That document isn't set up yet. Contact your employer." };
 
   const existing = await db.eSignature.findFirst({
     where: { employeeId, documentType },

@@ -116,7 +116,7 @@ export function PersonalDetailsForm({
 
       <div className="rounded-btn border border-border bg-paper-2 p-4 text-sm text-slate">
         <p><span className="text-slate-light">Job title:</span> {employee.roleTitle} at {employee.clientOrgName}</p>
-        <p><span className="text-slate-light">Shift:</span> {employee.shiftLabel ? `${employee.shiftLabel}${employee.shiftDescription ? ` -- ${employee.shiftDescription}` : ""}` : "Not yet assigned -- contact HR"}</p>
+        <p><span className="text-slate-light">Shift:</span> {employee.shiftLabel ? `${employee.shiftLabel}${employee.shiftDescription ? ` -- ${employee.shiftDescription}` : ""}` : "Not yet assigned -- contact our team"}</p>
       </div>
 
       <BankFields
@@ -138,7 +138,7 @@ export function PersonalDetailsForm({
           required
           className="mt-0.5"
         />
-        I will tell HR within 7 days if any of these change.
+        I will tell our team within 7 days if any of these change.
       </label>
 
       {submitState?.error && (

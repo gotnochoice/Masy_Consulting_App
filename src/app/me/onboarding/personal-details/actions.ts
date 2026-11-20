@@ -36,7 +36,7 @@ const personalDetailsSchema = z.object({
   bankName: z.string().min(1, "Bank name is required"),
   bankAccountHolderName: z.string().min(1, "Verify the account to get the account name"),
   confirmBankAccountIsMine: z.literal("on", { message: "Please confirm this bank account is yours" }),
-  confirmWillUpdate: z.literal("on", { message: "Please confirm you'll keep HR updated" }),
+  confirmWillUpdate: z.literal("on", { message: "Please confirm you'll keep our team updated" }),
 });
 
 export type SubmitPersonalDetailsState = { error: string } | undefined;

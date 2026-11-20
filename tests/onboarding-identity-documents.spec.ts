@@ -62,7 +62,7 @@ test("identity documents step rejects an old bill and a malformed NIN, then succ
   );
 
   await page.reload();
-  await expect(page.getByText(/waiting on HR to verify/i)).toBeVisible();
+  await expect(page.getByText(/waiting on our team to verify/i)).toBeVisible();
 
   const { rows: docs } = await pool.query(`SELECT category FROM "EmployeeDocument" WHERE "employeeId" = $1`, [employeeId]);
   expect(docs.map((d) => d.category).sort()).toEqual(["IDENTIFICATION", "PROOF_OF_ADDRESS"]);

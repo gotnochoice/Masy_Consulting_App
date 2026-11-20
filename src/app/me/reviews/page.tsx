@@ -17,7 +17,7 @@ export default async function MyReviewsPage() {
   await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
-    return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;
+    return <p className="text-sm text-slate">No profile found yet. Contact your Masy team.</p>;
   }
 
   const [employee, reviews] = await Promise.all([
@@ -25,7 +25,7 @@ export default async function MyReviewsPage() {
     db.performanceReview.findMany({ where: { employeeId }, orderBy: { createdAt: "desc" } }),
   ]);
   if (!employee) {
-    return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;
+    return <p className="text-sm text-slate">No profile found yet. Contact your Masy team.</p>;
   }
 
   const template = await getReviewTemplate(employeeId, employee.roleTitle, employee.reviewTemplate);

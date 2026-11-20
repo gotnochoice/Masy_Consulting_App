@@ -29,7 +29,7 @@ export async function StubStepPage({ stepType }: { stepType: OnboardingStepType 
         <OnboardingStepStatusBadge status={step.status} />
       </div>
       <div className="rounded-card border border-border bg-paper px-5 py-8 text-center text-sm text-slate-light">
-        This step is being built. Check back shortly, or contact HR if your start date is close.
+        This step is being built. Check back shortly, or contact our team if your start date is close.
       </div>
       <Link href="/me/onboarding" className="text-sm font-medium text-indigo hover:text-indigo-light">&larr; Back to onboarding</Link>
     </div>

@@ -38,8 +38,8 @@ export default async function GuarantorsStepPage() {
           <h1 className="text-2xl font-bold tracking-tight text-ink">{required === 1 ? "Next of kin" : "Guarantors"}</h1>
           <p className="text-sm text-slate">
             {required === 1
-              ? "Someone HR can contact to verify who you are -- no company equipment is being issued for this role, so one contact is enough."
-              : "Two people HR can contact to verify who you are."}
+              ? "Someone our team can contact to verify who you are -- no company equipment is being issued for this role, so one contact is enough."
+              : "Two people our team can contact to verify who you are."}
           </p>
         </div>
         <OnboardingStepStatusBadge status={step.status} />
@@ -47,7 +47,7 @@ export default async function GuarantorsStepPage() {
 
       {step.status === "NEEDS_CORRECTION" && step.correctionReason && (
         <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">
-          HR asked for a correction: {step.correctionReason}
+          Our team asked for a correction: {step.correctionReason}
         </div>
       )}
 
@@ -57,7 +57,7 @@ export default async function GuarantorsStepPage() {
         </div>
       ) : step.status === "SUBMITTED" ? (
         <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
-          <p className="font-medium">Submitted -- waiting on HR to verify.</p>
+          <p className="font-medium">Submitted -- waiting on our team to verify.</p>
         </div>
       ) : (
         <GuarantorsForm guarantor1={toValues(guarantors[0])} guarantor2={toValues(guarantors[1])} required={required} />

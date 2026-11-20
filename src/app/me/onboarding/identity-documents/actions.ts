@@ -63,7 +63,7 @@ export async function submitIdentityDocuments(
     if (ageDays < 0) return { error: "That bill date is in the future -- please check it." };
   } else if (addressProofMode === "OTHER") {
     const note = (formData.get("otherProofNote") as string)?.trim();
-    if (!note) return { error: "Briefly describe what this document is, so HR can review it." };
+    if (!note) return { error: "Briefly describe what this document is, so our team can review it." };
   } else {
     return { error: "Choose how you're proving your address." };
   }
@@ -97,7 +97,7 @@ export async function submitIdentityDocuments(
   const addressLabel =
     addressProofMode === "BILL"
       ? "Proof of address (utility/phone bill)"
-      : `Proof of address -- other (${otherNote}) -- needs HR review`;
+      : `Proof of address -- other (${otherNote}) -- needs review`;
 
   await db.$transaction([
     db.employee.update({ where: { id: employeeId }, data: { nin: encryptSensitive(nin) } }),

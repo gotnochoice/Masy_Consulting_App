@@ -67,7 +67,7 @@ export async function signPropertyHandover(_prevState: SignHandoverState, formDa
   if (assets.length === 0) return { error: "No equipment has been recorded yet." };
   const unverified = assets.filter((a) => !a.verifiedAt || !a.managementApprovedAt);
   if (unverified.length > 0) {
-    return { error: "Your equipment hasn't been verified and approved by HR yet. Check back shortly." };
+    return { error: "Your equipment hasn't been verified and approved by our team yet. Check back shortly." };
   }
 
   const existing = await db.eSignature.findFirst({ where: { employeeId, documentType: "PROPERTY_HANDOVER" } });
