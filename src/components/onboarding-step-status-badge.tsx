@@ -18,7 +18,7 @@ const LABELS: Record<OnboardingStepStatus, string> = {
 
 export function OnboardingStepStatusBadge({ status }: { status: OnboardingStepStatus }) {
   return (
-    <span className={`inline-flex items-center rounded-btn px-2.5 py-0.5 text-xs font-medium ${STYLES[status]}`}>
+    <span className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-btn px-2.5 py-1 text-xs font-medium ${STYLES[status]}`}>
       {LABELS[status]}
     </span>
   );
