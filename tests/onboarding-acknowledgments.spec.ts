@@ -129,9 +129,11 @@ test("acknowledgments step: scroll-gated documents, key terms, and a quiz retry 
     await page.getByRole("button", { name: "Submit answers" }).click();
     await page.waitForTimeout(800);
 
-    // Passing the quiz completes the step and moves straight on to the next one.
+    // Acknowledgments is currently the last step in the compulsory sequence (see
+    // ONBOARDING_STEP_ORDER), so passing the quiz completes it and goes straight back to the
+    // overview rather than on to another step.
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-    await page.waitForURL(/\/me\/onboarding\/signature/);
+    await page.waitForURL(/\/me\/onboarding$/);
 
     const { rows: stepRows } = await pool.query<{ status: string }>(
       `SELECT status FROM "OnboardingStep" WHERE "stepType" = 'ACKNOWLEDGMENTS' AND "onboardingProcessId" = (SELECT id FROM "OnboardingProcess" WHERE "employeeId" = $1)`,
@@ -181,9 +183,9 @@ test("acknowledgments step skips the agreement, handbook, and quiz entirely when
     await page.waitForTimeout(800);
 
     // Completing key terms alone finishes the step and moves on -- no dead-end "no quiz set up"
-    // error, and no requirement to have an agreement or handbook either. This client has no
-    // agreement/handbook configured either, so the signature step (also skippable when nothing's
-    // set up) auto-completes in turn and lands straight back on the overview.
+    // error, and no requirement to have an agreement or handbook either. Acknowledgments is
+    // currently the last step in the compulsory sequence (see ONBOARDING_STEP_ORDER), so this
+    // lands straight back on the overview.
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
     await page.waitForURL(/\/me\/onboarding$/);
 

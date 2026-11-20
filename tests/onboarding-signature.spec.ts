@@ -79,8 +79,8 @@ test("signature step: drawing and typing a name signs each document and records 
     await page.waitForTimeout(1500);
 
     // Signing the second (and last) document completes the step and moves straight on. Signature
-    // is currently the last step in the active sequence (property handover is out while it's
-    // being redesigned -- see ONBOARDING_STEP_ORDER), so this lands back on the overview.
+    // is currently out of the compulsory onboarding sequence entirely (see
+    // ONBOARDING_STEP_ORDER), so this always lands back on the overview rather than a "next step".
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
     await page.waitForURL(/\/me\/onboarding$/);
 

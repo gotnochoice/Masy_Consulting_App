@@ -8,27 +8,29 @@ export const DEFAULT_ONBOARDING_TASKS = [
 
 export const MAX_ONBOARDING_QUESTION_FILE_LABEL = "8MB";
 
-// Property handover and guarantors are both deliberately left out of this sequence for now.
-// Property handover is being redesigned (the client will upload their own handover document
-// rather than Ops typing in each item). Guarantors is redundant with the emergency contact
-// already collected in personal details -- a second, much heavier round of contact-gathering
-// (two people, each with relationship/occupation/address/phone/email plus a consent checkbox)
-// wasn't worth the extra friction for what the emergency contact already covers. The underlying
-// code (src/app/me/onboarding/property-handover/, src/app/me/onboarding/guarantors/,
-// CompanyAsset, Guarantor) is untouched; a process created while either was active still has
-// that step row, it's just never shown or required since nothing here iterates past this list.
+// Property handover, guarantors, and signature are all deliberately left out of this sequence
+// for now. Property handover is being redesigned (the client will upload their own handover
+// document rather than Ops typing in each item). Guarantors is redundant with the emergency
+// contact already collected in personal details -- a second, much heavier round of
+// contact-gathering (two people, each with relationship/occupation/address/phone/email plus a
+// consent checkbox) wasn't worth the extra friction for what the emergency contact already
+// covers. Signature was ending up a no-op for most employees anyway -- when a client hasn't set
+// up an agreement/handbook, there's nothing to sign, and the step just read "Nothing to sign for
+// this step -- moving on", adding a confusing extra screen for no benefit. The underlying code
+// (src/app/me/onboarding/property-handover/, src/app/me/onboarding/guarantors/,
+// src/app/me/onboarding/signature/, CompanyAsset, Guarantor, ESignature) is untouched; a process
+// created while any of these was active still has that step row, it's just never shown or
+// required since nothing here iterates past this list.
 export const ONBOARDING_STEP_ORDER = [
   "PERSONAL_DETAILS",
   "IDENTITY_DOCUMENTS",
   "ACKNOWLEDGMENTS",
-  "SIGNATURE",
 ] as const;
 
 export const ONBOARDING_STEP_LABELS: Record<(typeof ONBOARDING_STEP_ORDER)[number], string> = {
   PERSONAL_DETAILS: "Personal details",
   IDENTITY_DOCUMENTS: "Identity & address documents",
   ACKNOWLEDGMENTS: "Agreement, handbook & quiz",
-  SIGNATURE: "Signature",
 };
 
 // The "Acknowledgment of Key Terms" checklist -- generic across any client's agreement, since
@@ -61,12 +63,11 @@ export const ONBOARDING_STEP_ROUTES: Record<(typeof ONBOARDING_STEP_ORDER)[numbe
   PERSONAL_DETAILS: "personal-details",
   IDENTITY_DOCUMENTS: "identity-documents",
   ACKNOWLEDGMENTS: "acknowledgments",
-  SIGNATURE: "signature",
 };
 
 // Where to send the employee right after a step is submitted, so they don't have to go back to
 // the overview and pick the next one themselves -- the next step's route, or the overview page
-// once the last step (signature) is done.
+// once the last step (acknowledgments) is done.
 export function nextOnboardingStepPath(current: (typeof ONBOARDING_STEP_ORDER)[number]): string {
   const index = ONBOARDING_STEP_ORDER.indexOf(current);
   const next = ONBOARDING_STEP_ORDER[index + 1];

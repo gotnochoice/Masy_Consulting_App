@@ -11,24 +11,15 @@ async function loginAsOps(page: import("@playwright/test").Page) {
   await page.waitForURL(/\/ops/);
 }
 
-test("verification queue: HR verifies simple steps, countersigns, and completes onboarding", async ({ page }) => {
+test("verification queue: HR verifies simple steps and completes onboarding", async ({ page }) => {
   const email = "zztest.queue@example.com";
   const employeeId = await createOnboardingTestEmployee(email, {
     PERSONAL_DETAILS: "SUBMITTED",
     IDENTITY_DOCUMENTS: "SUBMITTED",
     ACKNOWLEDGMENTS: "SUBMITTED",
-    SIGNATURE: "SUBMITTED",
     PROPERTY_HANDOVER: "SUBMITTED",
   });
 
-  // Seed two signed-but-not-countersigned ESignature rows directly, since those come from a
-  // step already covered by its own dedicated test.
-  await pool.query(
-    `INSERT INTO "ESignature" (id, "employeeId", "documentType", "typedName", "signatureImageData", "ipAddress", "documentHash", "signedAt")
-     VALUES (gen_random_uuid()::text, $1, 'EMPLOYMENT_AGREEMENT', 'ZZTEST Signer', 'data:image/png;base64,x', '127.0.0.1', 'hash1', now()),
-            (gen_random_uuid()::text, $1, 'HANDBOOK', 'ZZTEST Signer', 'data:image/png;base64,x', '127.0.0.1', 'hash2', now())`,
-    [employeeId],
-  );
   await pool.query(
     `INSERT INTO "CompanyAsset" (id, "employeeId", "itemType", status, "createdById", "createdAt", "updatedAt")
      VALUES (gen_random_uuid()::text, $1, 'ZZTEST Laptop', 'ISSUED', $1, now(), now())`,
@@ -40,19 +31,14 @@ test("verification queue: HR verifies simple steps, countersigns, and completes 
   await page.waitForLoadState("networkidle");
   await expect(page.getByText("ZZTEST Onboarding Hire")).toBeVisible();
 
-  // Simple steps: verify them one at a time. Property handover and guarantors are currently
-  // out of the active sequence (see ONBOARDING_STEP_ORDER), so Ops never sees either here.
+  // Simple steps: verify them one at a time. Property handover, guarantors, and signature are
+  // currently out of the active sequence (see ONBOARDING_STEP_ORDER), so Ops never sees any of
+  // them here.
   for (const stepType of ["PERSONAL_DETAILS", "IDENTITY_DOCUMENTS", "ACKNOWLEDGMENTS"]) {
     const row = page.locator(`div[data-step="${stepType}"]`);
     await row.getByRole("button", { name: "Mark verified" }).click();
     await page.waitForTimeout(500);
   }
-
-  // Signature: countersign.
-  await page.locator('input[name="typedName"]').fill("ZZTEST Founder");
-  await page.getByRole("button", { name: "Countersign" }).click();
-  await page.waitForTimeout(500);
-  await expect(page.getByText("This page couldn't load")).toHaveCount(0);
 
   // All steps verified -- complete onboarding.
   await page.getByRole("button", { name: "Mark onboarding complete" }).click();
@@ -67,9 +53,6 @@ test("verification queue: HR verifies simple steps, countersigns, and completes 
 
   const { rows: taskRows } = await pool.query<{ label: string }>(`SELECT label FROM "OnboardingTask" WHERE "employeeId" = $1 ORDER BY label`, [employeeId]);
   expect(taskRows.map((t) => t.label).sort()).toEqual(["Day 30 review", "Day 60 review", "Day 90 review"]);
-
-  const { rows: sigRows } = await pool.query<{ countersignedAt: Date | null }>(`SELECT "countersignedAt" FROM "ESignature" WHERE "employeeId" = $1`, [employeeId]);
-  expect(sigRows.every((s) => s.countersignedAt !== null)).toBe(true);
 
   // The employee's dashboard is now unlocked.
   await page.context().clearCookies();

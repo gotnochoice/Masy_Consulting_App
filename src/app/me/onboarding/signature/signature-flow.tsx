@@ -4,7 +4,6 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClass, labelClass, inputClass } from "@/lib/form-styles";
 import { SignaturePad } from "@/components/signature-pad";
-import { nextOnboardingStepPath } from "@/lib/onboarding";
 import { signEmploymentAgreement, signHandbook, completeSignatureWithoutDocuments, type SignDocumentState } from "./actions";
 
 function SignPanel({
@@ -87,7 +86,9 @@ export function SignatureFlow({
   const [section, setSection] = useState<"AGREEMENT" | "HANDBOOK" | "DONE">(firstIncomplete);
   const router = useRouter();
   useEffect(() => {
-    if (section === "DONE") router.push(nextOnboardingStepPath("SIGNATURE"));
+    // Signature is currently out of the compulsory onboarding sequence (see
+    // ONBOARDING_STEP_ORDER), so there's no "next step" to route to -- back to the overview.
+    if (section === "DONE") router.push("/me/onboarding");
   }, [section, router]);
 
   async function advance(current: "AGREEMENT" | "HANDBOOK") {

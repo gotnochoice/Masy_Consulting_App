@@ -4,7 +4,6 @@ import { ONBOARDING_STEP_ORDER, ONBOARDING_STEP_LABELS } from "@/lib/onboarding"
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
 import { verifyOnboardingStep, toggleOnboardingTask } from "./actions";
 import { CorrectionForm } from "./correction-form";
-import { CountersignForm } from "./countersign-form";
 import { CompleteButton } from "./complete-button";
 
 function daysUntil(date: Date): number {
@@ -20,7 +19,6 @@ export default async function OpsOnboardingPage() {
       employee: {
         include: {
           clientOrg: true,
-          eSignatures: true,
         },
       },
       steps: true,
@@ -47,15 +45,14 @@ export default async function OpsOnboardingPage() {
         {processes.map((process) => {
           const { employee } = process;
           // Overriding stepType with the loop variable narrows it to ONBOARDING_STEP_ORDER's
-          // 5-step union instead of the full 6-value Prisma enum (which still includes
-          // PROPERTY_HANDOVER, currently out of this sequence -- see onboarding.ts).
+          // 3-step union instead of the full Prisma enum (which still includes
+          // PROPERTY_HANDOVER, GUARANTORS, and SIGNATURE, all currently out of this sequence --
+          // see onboarding.ts).
           const orderedSteps = ONBOARDING_STEP_ORDER.flatMap((t) => {
             const step = process.steps.find((s) => s.stepType === t);
             return step ? [{ ...step, stepType: t }] : [];
           });
           const flags = orderedSteps.filter((s) => s.status === "NEEDS_CORRECTION").length;
-          const signatureStep = orderedSteps.find((s) => s.stepType === "SIGNATURE");
-          const needsCountersign = signatureStep?.status === "SUBMITTED";
           const days = daysUntil(process.commencementDate);
 
           return (
@@ -88,19 +85,14 @@ export default async function OpsOnboardingPage() {
                         <OnboardingStepStatusBadge status={step.status} />
                       </div>
 
-                      {step.stepType === "SIGNATURE" && needsCountersign && (
-                        <CountersignForm employeeId={employee.id} />
+                      {(step.status === "SUBMITTED" || step.status === "NEEDS_CORRECTION") && (
+                        <div className="flex items-center gap-3">
+                          <form action={verifyWithId}>
+                            <button type="submit" className="text-xs font-medium text-indigo hover:text-indigo-light">Mark verified</button>
+                          </form>
+                          <CorrectionForm stepId={step.id} />
+                        </div>
                       )}
-
-                      {(step.status === "SUBMITTED" || step.status === "NEEDS_CORRECTION") &&
-                        !(step.stepType === "SIGNATURE" && needsCountersign) && (
-                          <div className="flex items-center gap-3">
-                            <form action={verifyWithId}>
-                              <button type="submit" className="text-xs font-medium text-indigo hover:text-indigo-light">Mark verified</button>
-                            </form>
-                            <CorrectionForm stepId={step.id} />
-                          </div>
-                        )}
                     </div>
                   );
                 })}

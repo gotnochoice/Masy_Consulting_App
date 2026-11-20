@@ -45,9 +45,9 @@ test("a brand-new employee is gated to /me/onboarding until steps are verified; 
     `SELECT "stepType", status FROM "OnboardingStep" os JOIN "OnboardingProcess" op ON op.id = os."onboardingProcessId" WHERE op."employeeId" = $1`,
     [employeeId],
   );
-  // Property handover and guarantors are currently out of the active onboarding sequence
-  // (see ONBOARDING_STEP_ORDER).
-  expect(steps).toHaveLength(4);
+  // Property handover, guarantors, and signature are currently out of the active onboarding
+  // sequence (see ONBOARDING_STEP_ORDER).
+  expect(steps).toHaveLength(3);
   expect(steps.every((s) => s.status === "NOT_STARTED")).toBe(true);
 
   const passwordHash = await bcrypt.hash(ZZTEST_PASSWORD, 10);
@@ -68,7 +68,7 @@ test("a brand-new employee is gated to /me/onboarding until steps are verified; 
   await expect(page.getByRole("heading", { name: "Before we begin" })).toBeVisible();
   await page.getByRole("button", { name: "I understand, continue" }).click();
   await page.waitForTimeout(500);
-  await expect(page.getByText("0 of 4 verified")).toBeVisible();
+  await expect(page.getByText("0 of 3 verified")).toBeVisible();
 
   // Direct navigation to a normal page should also bounce back to onboarding, not render it.
   await page.goto("/me/attendance");
