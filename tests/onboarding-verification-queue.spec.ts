@@ -11,25 +11,18 @@ async function loginAsOps(page: import("@playwright/test").Page) {
   await page.waitForURL(/\/ops/);
 }
 
-test("verification queue: HR verifies simple steps, logs guarantor checks, countersigns, and completes onboarding", async ({ page }) => {
+test("verification queue: HR verifies simple steps, countersigns, and completes onboarding", async ({ page }) => {
   const email = "zztest.queue@example.com";
   const employeeId = await createOnboardingTestEmployee(email, {
     PERSONAL_DETAILS: "SUBMITTED",
     IDENTITY_DOCUMENTS: "SUBMITTED",
-    GUARANTORS: "SUBMITTED",
     ACKNOWLEDGMENTS: "SUBMITTED",
     SIGNATURE: "SUBMITTED",
     PROPERTY_HANDOVER: "SUBMITTED",
   });
 
-  // Seed two guarantors and two signed-but-not-countersigned ESignature rows directly, since
-  // those come from steps already covered by their own dedicated tests.
-  await pool.query(
-    `INSERT INTO "Guarantor" (id, "employeeId", name, relationship, phone, email, address, "consentConfirmed", "createdAt")
-     VALUES (gen_random_uuid()::text, $1, 'ZZTEST G1', 'Uncle', '08011110000', 'g1@example.com', 'Addr 1', true, now()),
-            (gen_random_uuid()::text, $1, 'ZZTEST G2', 'Aunt', '08022220000', 'g2@example.com', 'Addr 2', true, now())`,
-    [employeeId],
-  );
+  // Seed two signed-but-not-countersigned ESignature rows directly, since those come from a
+  // step already covered by its own dedicated test.
   await pool.query(
     `INSERT INTO "ESignature" (id, "employeeId", "documentType", "typedName", "signatureImageData", "ipAddress", "documentHash", "signedAt")
      VALUES (gen_random_uuid()::text, $1, 'EMPLOYMENT_AGREEMENT', 'ZZTEST Signer', 'data:image/png;base64,x', '127.0.0.1', 'hash1', now()),
@@ -47,29 +40,13 @@ test("verification queue: HR verifies simple steps, logs guarantor checks, count
   await page.waitForLoadState("networkidle");
   await expect(page.getByText("ZZTEST Onboarding Hire")).toBeVisible();
 
-  // Simple steps: verify them one at a time. Property handover is currently out of the active
-  // sequence (see ONBOARDING_STEP_ORDER) while it's being redesigned, so Ops never sees it here.
+  // Simple steps: verify them one at a time. Property handover and guarantors are currently
+  // out of the active sequence (see ONBOARDING_STEP_ORDER), so Ops never sees either here.
   for (const stepType of ["PERSONAL_DETAILS", "IDENTITY_DOCUMENTS", "ACKNOWLEDGMENTS"]) {
     const row = page.locator(`div[data-step="${stepType}"]`);
     await row.getByRole("button", { name: "Mark verified" }).click();
     await page.waitForTimeout(500);
   }
-
-  // Guarantors: log both -- each has its own form, so target them by index, not .first()
-  // twice (which would just resubmit the same guarantor's form).
-  await page.locator("select[name='method']").nth(0).selectOption("PHONE_CALL");
-  await page.locator("select[name='result']").nth(0).selectOption("VERIFIED");
-  await page.getByRole("button", { name: "Log" }).nth(0).click();
-  await page.waitForTimeout(500);
-  await page.locator("select[name='method']").nth(1).selectOption("PHONE_CALL");
-  await page.locator("select[name='result']").nth(1).selectOption("VERIFIED");
-  await page.getByRole("button", { name: "Log" }).nth(1).click();
-  await page.waitForTimeout(500);
-
-  const guarantorsRow = page.locator('div[data-step="GUARANTORS"]');
-  await guarantorsRow.getByRole("button", { name: "Mark verified" }).click();
-  await page.waitForTimeout(500);
-  await expect(page.getByText("This page couldn't load")).toHaveCount(0);
 
   // Signature: countersign.
   await page.locator('input[name="typedName"]').fill("ZZTEST Founder");
@@ -108,7 +85,6 @@ test("onboarding completes without ever touching property handover, when no equi
   const employeeId = await createOnboardingTestEmployee(email, {
     PERSONAL_DETAILS: "VERIFIED",
     IDENTITY_DOCUMENTS: "VERIFIED",
-    GUARANTORS: "VERIFIED",
     ACKNOWLEDGMENTS: "VERIFIED",
     SIGNATURE: "VERIFIED",
     // PROPERTY_HANDOVER left at its default NOT_STARTED -- no CompanyAsset row of any kind

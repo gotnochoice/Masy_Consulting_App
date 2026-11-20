@@ -47,10 +47,11 @@ test("guarantors step rejects a duplicate second guarantor, then succeeds with t
   await page.getByRole("button", { name: "Submit" }).click();
   await page.waitForTimeout(800);
 
-  // A successful submit moves straight on to the next step, rather than leaving the employee
-  // to find their own way back to the overview.
+  // Guarantors is currently out of the compulsory onboarding sequence (see
+  // ONBOARDING_STEP_ORDER), so a successful submit goes back to the overview rather than to a
+  // "next step" within this sequence.
   await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-  await page.waitForURL(/\/me\/onboarding\/acknowledgments/);
+  await page.waitForURL(/\/me\/onboarding$/);
 
   const { rows: guarantors } = await pool.query<{ name: string }>(
     `SELECT name FROM "Guarantor" WHERE "employeeId" = $1 ORDER BY "createdAt"`,
@@ -88,7 +89,7 @@ test("only one next-of-kin contact is required when no equipment is being issued
   await page.waitForTimeout(800);
 
   await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-  await page.waitForURL(/\/me\/onboarding\/acknowledgments/);
+  await page.waitForURL(/\/me\/onboarding$/);
 
   const { rows: guarantors } = await pool.query<{ name: string }>(
     `SELECT name FROM "Guarantor" WHERE "employeeId" = $1`,

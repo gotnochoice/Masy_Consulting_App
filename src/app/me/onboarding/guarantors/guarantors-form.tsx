@@ -4,7 +4,6 @@ import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { submitGuarantors, type SubmitGuarantorsState } from "./actions";
-import { nextOnboardingStepPath } from "@/lib/onboarding";
 
 type GuarantorValues = {
   name: string;
@@ -95,7 +94,9 @@ export function GuarantorsForm({
       // watching isPending -- a server action's revalidatePath can refresh this route (and
       // swap this form out once the step shows SUBMITTED) before an effect-based check gets
       // a chance to run.
-      if (!result) router.push(nextOnboardingStepPath("GUARANTORS"));
+      // Guarantors is currently out of the compulsory onboarding sequence (see
+      // ONBOARDING_STEP_ORDER), so there's no "next step" to route to -- back to the overview.
+      if (!result) router.push("/me/onboarding");
       return result;
     },
     undefined,

@@ -8,16 +8,18 @@ export const DEFAULT_ONBOARDING_TASKS = [
 
 export const MAX_ONBOARDING_QUESTION_FILE_LABEL = "8MB";
 
-// Property handover is deliberately left out of this sequence for now -- it's being redesigned
-// (the client will upload their own handover document rather than Ops typing in each item) and
-// shouldn't be part of compulsory onboarding until that's rebuilt. The underlying code
-// (src/app/me/onboarding/property-handover/, CompanyAsset) is untouched; a process created
-// while this was active still has its PROPERTY_HANDOVER step row, it's just never shown or
-// required since nothing here iterates past this list.
+// Property handover and guarantors are both deliberately left out of this sequence for now.
+// Property handover is being redesigned (the client will upload their own handover document
+// rather than Ops typing in each item). Guarantors is redundant with the emergency contact
+// already collected in personal details -- a second, much heavier round of contact-gathering
+// (two people, each with relationship/occupation/address/phone/email plus a consent checkbox)
+// wasn't worth the extra friction for what the emergency contact already covers. The underlying
+// code (src/app/me/onboarding/property-handover/, src/app/me/onboarding/guarantors/,
+// CompanyAsset, Guarantor) is untouched; a process created while either was active still has
+// that step row, it's just never shown or required since nothing here iterates past this list.
 export const ONBOARDING_STEP_ORDER = [
   "PERSONAL_DETAILS",
   "IDENTITY_DOCUMENTS",
-  "GUARANTORS",
   "ACKNOWLEDGMENTS",
   "SIGNATURE",
 ] as const;
@@ -25,7 +27,6 @@ export const ONBOARDING_STEP_ORDER = [
 export const ONBOARDING_STEP_LABELS: Record<(typeof ONBOARDING_STEP_ORDER)[number], string> = {
   PERSONAL_DETAILS: "Personal details",
   IDENTITY_DOCUMENTS: "Identity & address documents",
-  GUARANTORS: "Guarantors",
   ACKNOWLEDGMENTS: "Agreement, handbook & quiz",
   SIGNATURE: "Signature",
 };
@@ -42,7 +43,6 @@ export const KEY_TERM_ITEMS: { key: string; label: string }[] = [
   { key: "pay_and_bonus", label: "My gross pay, and that any bonus is discretionary, not guaranteed" },
   { key: "review_no_raise", label: "That a performance review does not guarantee a pay raise" },
   { key: "leave", label: "My leave entitlements" },
-  { key: "verification_and_guarantors", label: "That my guarantors are verification contacts only, not financially liable" },
   { key: "company_property", label: "Company property rules, if equipment is issued to me" },
   { key: "probation_and_notice", label: "My probation period and notice requirements" },
   { key: "confidentiality_and_ip", label: "Confidentiality and intellectual property terms" },
@@ -52,7 +52,7 @@ export const KEY_TERM_ITEMS: { key: string; label: string }[] = [
 // (not the client's own detailed Privacy Notice, which is read in full later at Step 4).
 export const EARLY_PRIVACY_CONSENT_NOTICE = [
   "Before you start, here's what happens with your information.",
-  "Over the next few steps you'll be asked for personal details, identity documents, your National Identification Number (NIN), guarantor contacts, and bank details. This is collected to verify who you are, pay you correctly, and meet your employer's legal obligations.",
+  "Over the next few steps you'll be asked for personal details, identity documents, your National Identification Number (NIN), and bank details. This is collected to verify who you are, pay you correctly, and meet your employer's legal obligations.",
   "Your identity documents and NIN are visible only to the team handling verification -- never to your employer's other staff. You'll read a full privacy notice, written by your employer, later in this process.",
   "By continuing, you agree to this information being collected for onboarding.",
 ].join("\n\n");
@@ -60,7 +60,6 @@ export const EARLY_PRIVACY_CONSENT_NOTICE = [
 export const ONBOARDING_STEP_ROUTES: Record<(typeof ONBOARDING_STEP_ORDER)[number], string> = {
   PERSONAL_DETAILS: "personal-details",
   IDENTITY_DOCUMENTS: "identity-documents",
-  GUARANTORS: "guarantors",
   ACKNOWLEDGMENTS: "acknowledgments",
   SIGNATURE: "signature",
 };

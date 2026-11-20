@@ -4,7 +4,6 @@ import { ONBOARDING_STEP_ORDER, ONBOARDING_STEP_LABELS } from "@/lib/onboarding"
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
 import { verifyOnboardingStep, toggleOnboardingTask } from "./actions";
 import { CorrectionForm } from "./correction-form";
-import { GuarantorVerification } from "./guarantor-verification";
 import { CountersignForm } from "./countersign-form";
 import { CompleteButton } from "./complete-button";
 
@@ -21,11 +20,6 @@ export default async function OpsOnboardingPage() {
       employee: {
         include: {
           clientOrg: true,
-          guarantors: {
-            where: { replacedAt: null },
-            orderBy: { createdAt: "asc" },
-            include: { verificationLogs: { orderBy: { verifiedAt: "asc" } } },
-          },
           eSignatures: true,
         },
       },
@@ -94,16 +88,11 @@ export default async function OpsOnboardingPage() {
                         <OnboardingStepStatusBadge status={step.status} />
                       </div>
 
-                      {step.stepType === "GUARANTORS" && step.status !== "VERIFIED" && employee.guarantors.length > 0 && (
-                        <GuarantorVerification guarantors={employee.guarantors} />
-                      )}
-
                       {step.stepType === "SIGNATURE" && needsCountersign && (
                         <CountersignForm employeeId={employee.id} />
                       )}
 
                       {(step.status === "SUBMITTED" || step.status === "NEEDS_CORRECTION") &&
-                        !(step.stepType === "GUARANTORS" && employee.guarantors.some((g) => g.verificationLogs.length === 0)) &&
                         !(step.stepType === "SIGNATURE" && needsCountersign) && (
                           <div className="flex items-center gap-3">
                             <form action={verifyWithId}>

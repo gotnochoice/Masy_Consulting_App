@@ -4,6 +4,7 @@ import { requirePrivacyConsent } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
 import { OnboardingStepNav } from "@/components/onboarding-step-nav";
+import { KEY_TERM_ITEMS } from "@/lib/onboarding";
 import { AcknowledgmentsFlow } from "./acknowledgments-flow";
 
 export default async function AcknowledgmentsStepPage() {
@@ -96,7 +97,7 @@ export default async function AcknowledgmentsStepPage() {
             agreement: findAck("EMPLOYMENT_AGREEMENT", clientOrg.employmentAgreementVersion),
             handbook: findAck("HANDBOOK", clientOrg.handbookVersion),
             privacy: findAck("PRIVACY_NOTICE", clientOrg.privacyNoticeVersion),
-            keyTerms: keyTermCount >= 12,
+            keyTerms: keyTermCount >= KEY_TERM_ITEMS.length + 1,
           }}
           documents={{
             EMPLOYMENT_AGREEMENT: {

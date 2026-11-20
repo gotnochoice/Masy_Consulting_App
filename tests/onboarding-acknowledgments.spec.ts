@@ -143,7 +143,7 @@ test("acknowledgments step: scroll-gated documents, key terms, and a quiz retry 
     expect(attempts.map((a) => a.passed)).toEqual([false, true]);
 
     const { rows: termCount } = await pool.query(`SELECT count(*) FROM "KeyTermAcknowledgment" WHERE "employeeId" = $1`, [employeeId]);
-    expect(Number(termCount[0].count)).toBe(12);
+    expect(Number(termCount[0].count)).toBe(11);
   } finally {
     await tearDownOrgContent(clientOrgId);
   }
