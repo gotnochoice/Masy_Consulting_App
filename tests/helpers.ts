@@ -102,6 +102,7 @@ export async function cleanupOnboardingTestEmployees() {
     await pool.query(`DELETE FROM "ComprehensionAttempt" WHERE "employeeId" = $1`, [id]);
     await pool.query(`DELETE FROM "ESignature" WHERE "employeeId" = $1`, [id]);
     await pool.query(`DELETE FROM "CompanyAsset" WHERE "employeeId" = $1`, [id]);
+    await pool.query(`DELETE FROM "OnboardingRecord" WHERE "employeeId" = $1`, [id]);
     await pool.query(`DELETE FROM "OnboardingStep" WHERE "onboardingProcessId" IN (SELECT id FROM "OnboardingProcess" WHERE "employeeId" = $1)`, [id]);
     await pool.query(`DELETE FROM "OnboardingProcess" WHERE "employeeId" = $1`, [id]);
     await pool.query(`DELETE FROM "OnboardingTask" WHERE "employeeId" = $1`, [id]);

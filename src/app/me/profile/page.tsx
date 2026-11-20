@@ -33,7 +33,7 @@ export default async function MyProfilePage() {
     );
   }
 
-  const [todayRecord, recentLeave, teammates] = await Promise.all([
+  const [todayRecord, recentLeave, teammates, latestOnboardingRecord] = await Promise.all([
     db.attendanceRecord.findUnique({
       where: { employeeId_date: { employeeId: employee.id, date: todayDateOnly() } },
     }),
@@ -46,6 +46,7 @@ export default async function MyProfilePage() {
       where: { clientOrgId: employee.clientOrgId, status: "ACTIVE" },
       include: { clientOrg: true },
     }),
+    db.onboardingRecord.findFirst({ where: { employeeId: employee.id }, orderBy: { version: "desc" } }),
   ]);
 
   const milestones = upcomingMilestones(teammates);
@@ -78,9 +79,21 @@ export default async function MyProfilePage() {
         <div className="rounded-card border border-border bg-paper p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-ink">Your details</h2>
-            <Link href="/me/profile/edit" className="text-xs font-medium text-indigo hover:text-indigo-light">
-              Edit
-            </Link>
+            <div className="flex items-center gap-3">
+              {latestOnboardingRecord?.fileUrl && (
+                <a
+                  href={`/api/onboarding-records/${latestOnboardingRecord.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-medium text-indigo hover:text-indigo-light"
+                >
+                  Onboarding record
+                </a>
+              )}
+              <Link href="/me/profile/edit" className="text-xs font-medium text-indigo hover:text-indigo-light">
+                Edit
+              </Link>
+            </div>
           </div>
           <dl className="space-y-3 text-sm">
             <div className="flex items-start justify-between gap-4">

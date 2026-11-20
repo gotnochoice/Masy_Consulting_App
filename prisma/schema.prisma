@@ -317,6 +317,7 @@ model Employee {
   comprehensionAttempts    ComprehensionAttempt[]
   eSignatures              ESignature[]
   companyAssets            CompanyAsset[]
+  onboardingRecords        OnboardingRecord[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -726,6 +727,28 @@ model OnboardingStep {
   updatedAt           DateTime             @updatedAt
 
   @@unique([onboardingProcessId, stepType])
+}
+
+// The single downloadable summary of a completed onboarding -- personal details, document
+// checklist, guarantor/verification status, declarations, HR's verification outcome. Generated
+// once, when every step is VERIFIED (see completeOnboarding), never before -- partial progress
+// has nothing worth a PDF yet. recordNumber stays constant across re-generations; version
+// increments so a correction after completion creates a new row rather than overwriting one
+// someone may have already downloaded.
+model OnboardingRecord {
+  id            String   @id @default(cuid())
+  employeeId    String
+  employee      Employee @relation(fields: [employeeId], references: [id])
+  recordNumber  String
+  version       Int
+  // Null when the PDF itself couldn't be generated/stored (e.g. blob storage momentarily
+  // unavailable) -- the record row still exists so HR can see generation was attempted and
+  // retry, rather than onboarding completion silently producing no record at all.
+  fileUrl       String?
+  generatedAt   DateTime @default(now())
+  generatedById String
+
+  @@unique([employeeId, version])
 }
 
 model Guarantor {

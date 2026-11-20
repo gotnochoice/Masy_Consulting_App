@@ -18,12 +18,13 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
   const employee = await db.employee.findUnique({ where: { id } });
   if (!employee) notFound();
 
-  const [orgs, documents, onboardingQuestions, template, assets] = await Promise.all([
+  const [orgs, documents, onboardingQuestions, template, assets, latestOnboardingRecord] = await Promise.all([
     db.clientOrg.findMany({ orderBy: { name: "asc" } }),
     db.employeeDocument.findMany({ where: { employeeId: id }, orderBy: { createdAt: "desc" } }),
     db.onboardingQuestion.findMany({ where: { employeeId: id }, orderBy: { order: "asc" } }),
     getContractLetterTemplate(employee.clientOrgId),
     db.companyAsset.findMany({ where: { employeeId: id }, orderBy: { createdAt: "asc" } }),
+    db.onboardingRecord.findFirst({ where: { employeeId: id }, orderBy: { version: "desc" } }),
   ]);
 
   const updateWithId = updateEmployee.bind(null, employee.id);
@@ -46,7 +47,7 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
       <OnboardingQuestionsManager employeeId={employee.id} questions={onboardingQuestions} />
       <DocumentManager employeeId={employee.id} documents={documents} />
       <CompanyAssetPanel employeeId={employee.id} assets={assets} />
-      <DataPrivacyPanel employeeId={employee.id} />
+      <DataPrivacyPanel employeeId={employee.id} latestOnboardingRecord={latestOnboardingRecord} />
     </div>
   );
 }

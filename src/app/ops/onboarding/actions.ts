@@ -7,6 +7,7 @@ import { getClientIp } from "@/lib/application-rate-limit";
 import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
 import { notifyOnboardingComplete } from "@/lib/onboarding-notify";
 import { requiredGuarantorCount } from "@/lib/onboarding-process";
+import { generateOnboardingRecordPdf } from "@/lib/onboarding-record-pdf";
 
 const PATH = "/ops/onboarding";
 
@@ -152,8 +153,27 @@ export async function completeOnboarding(employeeId: string): Promise<CompleteOn
 
   await notifyOnboardingComplete(employeeId);
 
+  try {
+    await generateOnboardingRecordPdf(employeeId, session.user.id);
+  } catch (err) {
+    // The completion itself already succeeded (steps verified, tasks created) -- a PDF
+    // generation hiccup (e.g. no blob token configured) shouldn't block that or get retried
+    // automatically, since re-running this action would just fail the same "already complete"
+    // way. HR can still see everything the record would show from the onboarding queue itself.
+    console.error("[completeOnboarding] failed to generate onboarding record PDF:", err);
+  }
+
   revalidatePath(PATH);
   revalidatePath("/me/onboarding");
+}
+
+// For when the record row exists but generation/upload failed (fileUrl null) -- or HR just
+// wants a fresh copy after a correction to the employee's data. Always creates the next
+// version rather than touching the existing row, same as any other correction here.
+export async function regenerateOnboardingRecord(employeeId: string) {
+  const session = await requireRole("MASY_OPS");
+  await generateOnboardingRecordPdf(employeeId, session.user.id);
+  revalidatePath(`/ops/employees/${employeeId}/edit`);
 }
 
 export async function toggleOnboardingTask(taskId: string) {
