@@ -78,9 +78,11 @@ test("signature step: drawing and typing a name signs each document and records 
     await page.getByRole("button", { name: "Sign", exact: true }).click();
     await page.waitForTimeout(1500);
 
-    // Signing the second (and last) document completes the step and moves straight on.
+    // Signing the second (and last) document completes the step and moves straight on. Signature
+    // is currently the last step in the active sequence (property handover is out while it's
+    // being redesigned -- see ONBOARDING_STEP_ORDER), so this lands back on the overview.
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-    await page.waitForURL(/\/me\/onboarding\/property-handover/);
+    await page.waitForURL(/\/me\/onboarding$/);
 
     const { rows: sigs } = await pool.query<{ documentType: string; typedName: string; documentHash: string; ipAddress: string }>(
       `SELECT "documentType", "typedName", "documentHash", "ipAddress" FROM "ESignature" WHERE "employeeId" = $1 ORDER BY "documentType"`,

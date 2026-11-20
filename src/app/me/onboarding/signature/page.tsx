@@ -12,11 +12,17 @@ export default async function SignatureStepPage() {
   if (!employeeId) redirect("/me/profile");
   await requirePrivacyConsent(employeeId);
 
-  const process = await db.onboardingProcess.findUnique({ where: { employeeId }, include: { steps: true } });
-  if (!process) redirect("/me/profile");
+  const [process, employee] = await Promise.all([
+    db.onboardingProcess.findUnique({ where: { employeeId }, include: { steps: true } }),
+    db.employee.findUnique({ where: { id: employeeId }, select: { clientOrg: { select: { employmentAgreementTemplate: true, handbookText: true } } } }),
+  ]);
+  if (!process || !employee) redirect("/me/profile");
 
   const step = process.steps.find((s) => s.stepType === "SIGNATURE");
   if (!step) redirect("/me/onboarding");
+
+  const hasAgreement = !!employee.clientOrg.employmentAgreementTemplate?.trim();
+  const hasHandbook = !!employee.clientOrg.handbookText?.trim();
 
   const signatures = await db.eSignature.findMany({
     where: { employeeId, documentType: { in: ["EMPLOYMENT_AGREEMENT", "HANDBOOK"] } },
@@ -56,7 +62,7 @@ export default async function SignatureStepPage() {
           <p className="font-medium">Signed -- waiting on your employer to countersign.</p>
         </div>
       ) : (
-        <SignatureFlow initialDone={{ agreement: !!agreementSig, handbook: !!handbookSig }} />
+        <SignatureFlow initialDone={{ agreement: !!agreementSig, handbook: !!handbookSig }} hasAgreement={hasAgreement} hasHandbook={hasHandbook} />
       )}
     </div>
   );

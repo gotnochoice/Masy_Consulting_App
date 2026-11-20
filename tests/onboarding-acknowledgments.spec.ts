@@ -162,9 +162,11 @@ test("acknowledgments step skips the agreement, handbook, and quiz entirely when
     await page.waitForTimeout(800);
 
     // Completing key terms alone finishes the step and moves on -- no dead-end "no quiz set up"
-    // error, and no requirement to have an agreement or handbook either.
+    // error, and no requirement to have an agreement or handbook either. This client has no
+    // agreement/handbook configured either, so the signature step (also skippable when nothing's
+    // set up) auto-completes in turn and lands straight back on the overview.
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-    await page.waitForURL(/\/me\/onboarding\/signature/);
+    await page.waitForURL(/\/me\/onboarding$/);
 
     const { rows: stepRows } = await pool.query<{ status: string }>(
       `SELECT status FROM "OnboardingStep" WHERE "stepType" = 'ACKNOWLEDGMENTS' AND "onboardingProcessId" = (SELECT id FROM "OnboardingProcess" WHERE "employeeId" = $1)`,

@@ -88,10 +88,13 @@ async function signDocument(
     },
   });
 
-  const bothSigned = await db.eSignature.count({
+  // Required count depends on what the client actually set up -- a client with only an
+  // agreement and no handbook only ever needs one signature, not a hardcoded two.
+  const requiredCount = [employee.clientOrg.employmentAgreementTemplate, employee.clientOrg.handbookText].filter((t) => t?.trim()).length;
+  const signedCount = await db.eSignature.count({
     where: { employeeId, documentType: { in: ["EMPLOYMENT_AGREEMENT", "HANDBOOK"] } },
   });
-  if (bothSigned >= 2) {
+  if (signedCount >= requiredCount) {
     const process = await db.onboardingProcess.findUnique({ where: { employeeId } });
     if (process) {
       await db.onboardingStep.update({
@@ -112,4 +115,31 @@ export async function signEmploymentAgreement(_prevState: SignDocumentState, for
 
 export async function signHandbook(_prevState: SignDocumentState, formData: FormData): Promise<SignDocumentState> {
   return signDocument("HANDBOOK", formData);
+}
+
+export type CompleteSignatureState = { error: string } | undefined;
+
+// Neither the agreement nor the handbook is set up -- nothing for the employee to sign, so this
+// takes the place of signDocument in marking the step SUBMITTED, the same pattern as
+// completeAcknowledgmentsWithoutQuiz. Re-checks server-side rather than trusting the client.
+export async function completeSignatureWithoutDocuments(): Promise<CompleteSignatureState> {
+  const session = await requireRole("EMPLOYEE");
+  const employeeId = session.user.employeeId;
+  if (!employeeId) return { error: "No employee record found for this login." };
+
+  const employee = await db.employee.findUnique({ where: { id: employeeId }, include: { clientOrg: true } });
+  if (!employee) return { error: "Employee not found." };
+  if (employee.clientOrg.employmentAgreementTemplate?.trim() || employee.clientOrg.handbookText?.trim()) {
+    return { error: "A document is set up for this step -- go back and sign it." };
+  }
+
+  const process = await db.onboardingProcess.findUnique({ where: { employeeId } });
+  if (!process) return { error: "No onboarding record found." };
+  await db.onboardingStep.update({
+    where: { onboardingProcessId_stepType: { onboardingProcessId: process.id, stepType: "SIGNATURE" } },
+    data: { status: "SUBMITTED", submittedAt: new Date(), correctionReason: null },
+  });
+
+  revalidatePath(PATH);
+  revalidatePath("/me/onboarding");
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { buttonClass, labelClass, inputClass } from "@/lib/form-styles";
 import { SignaturePad } from "@/components/signature-pad";
 import { nextOnboardingStepPath } from "@/lib/onboarding";
-import { signEmploymentAgreement, signHandbook, type SignDocumentState } from "./actions";
+import { signEmploymentAgreement, signHandbook, completeSignatureWithoutDocuments, type SignDocumentState } from "./actions";
 
 function SignPanel({
   title,
@@ -69,26 +69,67 @@ function SignPanel({
   );
 }
 
-export function SignatureFlow({ initialDone }: { initialDone: { agreement: boolean; handbook: boolean } }) {
-  const [section, setSection] = useState<"AGREEMENT" | "HANDBOOK" | "DONE">(
-    !initialDone.agreement ? "AGREEMENT" : !initialDone.handbook ? "HANDBOOK" : "DONE",
-  );
+export function SignatureFlow({
+  initialDone,
+  hasAgreement,
+  hasHandbook,
+}: {
+  initialDone: { agreement: boolean; handbook: boolean };
+  hasAgreement: boolean;
+  hasHandbook: boolean;
+}) {
+  // Skip whichever document the client never set up, same as the acknowledgments step -- an
+  // employer with only an agreement and no handbook shouldn't block their hires on signing a
+  // document that doesn't exist.
+  const sections: ("AGREEMENT" | "HANDBOOK")[] = [...(hasAgreement ? (["AGREEMENT"] as const) : []), ...(hasHandbook ? (["HANDBOOK"] as const) : [])];
+  const doneMap = { AGREEMENT: initialDone.agreement, HANDBOOK: initialDone.handbook };
+  const firstIncomplete = sections.find((s) => !doneMap[s]) ?? "DONE";
+  const [section, setSection] = useState<"AGREEMENT" | "HANDBOOK" | "DONE">(firstIncomplete);
   const router = useRouter();
   useEffect(() => {
     if (section === "DONE") router.push(nextOnboardingStepPath("SIGNATURE"));
   }, [section, router]);
 
+  async function advance(current: "AGREEMENT" | "HANDBOOK") {
+    const idx = sections.indexOf(current);
+    const next = sections[idx + 1];
+    setSection(next ?? "DONE");
+  }
+
+  // Neither document exists -- nothing to sign at all. Finalize immediately rather than
+  // leaving the step stuck with no panel to show and no action to trigger it.
+  useEffect(() => {
+    if (sections.length === 0 && section !== "DONE") {
+      completeSignatureWithoutDocuments().then((result) => {
+        if (result?.error) console.error("[signature] failed to finalize with no documents:", result.error);
+        setSection("DONE");
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (sections.length === 0) {
+    return (
+      <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
+        <p className="font-medium">Nothing to sign for this step -- moving on.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex gap-2 text-xs text-slate-light">
-        <span className={section !== "DONE" || initialDone.agreement ? "font-medium text-indigo" : ""}>Agreement ·</span>
-        <span className={section === "HANDBOOK" || section === "DONE" ? "font-medium text-indigo" : ""}>Handbook</span>
+        {sections.map((s, i) => (
+          <span key={s} className={i <= sections.indexOf(section as "AGREEMENT" | "HANDBOOK") || section === "DONE" ? "font-medium text-indigo" : ""}>
+            {s === "AGREEMENT" ? "Agreement" : "Handbook"}{i < sections.length - 1 ? " ·" : ""}
+          </span>
+        ))}
       </div>
-      {section === "AGREEMENT" && <SignPanel title="Employment Agreement" action={signEmploymentAgreement} onSigned={() => setSection("HANDBOOK")} />}
-      {section === "HANDBOOK" && <SignPanel title="Employee Handbook" action={signHandbook} onSigned={() => setSection("DONE")} />}
+      {section === "AGREEMENT" && <SignPanel title="Employment Agreement" action={signEmploymentAgreement} onSigned={() => advance("AGREEMENT")} />}
+      {section === "HANDBOOK" && <SignPanel title="Employee Handbook" action={signHandbook} onSigned={() => advance("HANDBOOK")} />}
       {section === "DONE" && (
         <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
-          <p className="font-medium">Both documents signed -- submitted for countersignature.</p>
+          <p className="font-medium">Signed -- submitted for countersignature.</p>
         </div>
       )}
     </div>
