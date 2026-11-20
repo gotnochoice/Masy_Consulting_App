@@ -23,6 +23,25 @@ async function setUpReviewedOrgContent() {
   return clientOrgId;
 }
 
+// Content is fully set up, but the client never clicked "I've reviewed this, mark it ready" on
+// their settings page. That flag is a reminder for the client, not a gate on the employee --
+// this is the exact scenario a real client hit in production.
+async function setUpUnreviewedOrgContent() {
+  const { rows } = await pool.query<{ id: string }>(`SELECT id FROM "ClientOrg" WHERE slug = 'lagos-bites-catering'`);
+  const clientOrgId = rows[0].id;
+  await pool.query(
+    `UPDATE "ClientOrg" SET "employmentAgreementTemplate" = $1, "handbookText" = $2, "privacyNoticeText" = $3,
+     "onboardingContentReviewedAt" = NULL, "onboardingContentReviewedById" = NULL WHERE id = $4`,
+    [AGREEMENT_TEXT, HANDBOOK_TEXT, PRIVACY_TEXT, clientOrgId],
+  );
+  await pool.query(
+    `INSERT INTO "ComprehensionQuestion" (id, "clientOrgId", question, choices, "correctChoiceIndex", explanation, "order", "createdAt")
+     VALUES (gen_random_uuid()::text, $1, 'ZZTEST: what is this agreement for', ARRAY['Testing','Nothing','A game','Unknown'], 0, 'It is a test agreement.', 0, now())`,
+    [clientOrgId],
+  );
+  return clientOrgId;
+}
+
 async function setUpReviewedOrgWithNothing() {
   const { rows } = await pool.query<{ id: string }>(`SELECT id FROM "ClientOrg" WHERE slug = 'lagos-bites-catering'`);
   const clientOrgId = rows[0].id;
@@ -176,6 +195,33 @@ test("acknowledgments step skips the agreement, handbook, and quiz entirely when
 
     const { rows: attempts } = await pool.query(`SELECT count(*) FROM "ComprehensionAttempt" WHERE "employeeId" = $1`, [employeeId]);
     expect(Number(attempts[0].count)).toBe(0);
+  } finally {
+    await tearDownOrgContent(clientOrgId);
+  }
+});
+
+test("acknowledgments step shows the actual content even when the client hasn't clicked \"mark it ready\" yet", async ({ page }) => {
+  const clientOrgId = await setUpUnreviewedOrgContent();
+  try {
+    const email = "zztest.acks.unreviewed@example.com";
+    await createOnboardingTestEmployee(email, {
+      PERSONAL_DETAILS: "SUBMITTED",
+      IDENTITY_DOCUMENTS: "SUBMITTED",
+      GUARANTORS: "SUBMITTED",
+    });
+
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(ZZTEST_ONBOARDING_PASSWORD);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForURL(/\/me\/onboarding/);
+
+    await page.goto("/me/onboarding/acknowledgments");
+    // "onboardingContentReviewedAt" is a reminder on the client's own settings page, not a gate
+    // on the employee -- this must show the real agreement text, not the "employer hasn't
+    // finished setting up onboarding content yet" placeholder.
+    await expect(page.getByText(/employer hasn.t finished setting up/i)).toHaveCount(0);
+    await expect(page.getByText("ZZTEST Employment Agreement")).toBeVisible();
   } finally {
     await tearDownOrgContent(clientOrgId);
   }

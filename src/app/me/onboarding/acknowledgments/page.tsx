@@ -23,22 +23,10 @@ export default async function AcknowledgmentsStepPage() {
 
   const { clientOrg } = employee;
 
-  if (step.status === "NOT_STARTED" || step.status === "IN_PROGRESS" || step.status === "NEEDS_CORRECTION") {
-    if (!clientOrg.onboardingContentReviewedAt) {
-      return (
-        <div className="max-w-lg space-y-6">
-          <OnboardingStepNav current="ACKNOWLEDGMENTS" />
-          <div>
-            <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
-            <h1 className="text-2xl font-bold tracking-tight text-ink">Agreement, handbook & quiz</h1>
-          </div>
-          <div className="rounded-card border border-orange/30 bg-orange/5 px-5 py-4 text-sm text-orange">
-            Your employer hasn&rsquo;t finished setting up onboarding content yet. Check back shortly, or ask them directly.
-          </div>
-        </div>
-      );
-    }
-  }
+  // Whether the client has clicked "mark it ready" on their own settings page doesn't block
+  // this step anymore -- it never told the employee anything about what's actually there, just
+  // whether the client remembered to flick a switch. AcknowledgmentsFlow already skips whichever
+  // of agreement/handbook/privacy-notice/quiz the client never set up; that's the real signal.
 
   const [acks, keyTermCount, questions, additionalDocuments] = await Promise.all([
     db.documentAcknowledgment.findMany({ where: { employeeId } }),
