@@ -16,7 +16,37 @@ test("personal details: save draft, verify bank, and submit all route correctly 
   await page.goto("/me/onboarding/personal-details");
   await expect(page.getByRole("heading", { name: "Personal details" })).toBeVisible();
 
+  // A draft is for partial progress -- filling in just one field and saving must work, not get
+  // silently blocked by every other required field in the form (the browser's native validation
+  // doesn't know "Save draft" means partial is fine; the form opts out of it with noValidate and
+  // leaves required-ness enforcement to the server, which only applies it to the real Submit).
   await page.locator("#name").fill("ZZTEST Personal Details");
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await page.waitForTimeout(800);
+  await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+  await expect(page.getByText("Draft saved")).toBeVisible();
+  await expect(page.locator("#name")).toHaveValue("ZZTEST Personal Details");
+
+  const { rows: afterPartialDraft } = await pool.query<{ name: string; phone: string | null }>(
+    `SELECT name, phone FROM "Employee" WHERE id = $1`,
+    [employeeId],
+  );
+  expect(afterPartialDraft[0].name).toBe("ZZTEST Personal Details");
+  expect(afterPartialDraft[0].phone).toBeNull();
+
+  // Submit still enforces every required field -- just server-side now instead of via the
+  // browser's native validation, since that's disabled for the whole form (see above). Still
+  // incomplete at this point, so this must surface an error and not mark the step submitted.
+  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await page.waitForTimeout(800);
+  await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+  await expect(page.getByText(/date of birth is required/i)).toBeVisible();
+  const { rows: stillNotSubmitted } = await pool.query<{ status: string }>(
+    `SELECT status FROM "OnboardingStep" os JOIN "OnboardingProcess" op ON op.id = os."onboardingProcessId" WHERE op."employeeId" = $1 AND os."stepType" = 'PERSONAL_DETAILS'`,
+    [employeeId],
+  );
+  expect(stillNotSubmitted[0].status).not.toBe("SUBMITTED");
+
   await page.locator("#dateOfBirth").fill("1995-05-01");
   await page.locator("#phone").fill("08033333333");
   await page.locator("#personalEmail").fill("zztest.pd@example.com");
@@ -27,18 +57,14 @@ test("personal details: save draft, verify bank, and submit all route correctly 
 
   // No Paystack key is configured in this environment, so the bank list fails to load --
   // onboarding must not be blocked on that: the form falls back to manual bank-name and
-  // account-holder-name entry instead of Paystack's verify flow. Native HTML validation blocks
-  // ANY submission (including "Save draft") while these required fields are empty.
+  // account-holder-name entry instead of Paystack's verify flow.
   await expect(page.getByText(/we.ll confirm the account before your first payment/i)).toBeVisible();
   await page.locator("#bankNameManual").fill("ZZTEST Bank");
   await page.locator("#accountHolderNameManual").fill("ZZTEST Personal Details");
   await page.locator("input[name='confirmWillUpdate']").check();
-  // Native HTML validation blocks ANY submission (including "Save draft") while a required
-  // checkbox is unchecked, so this has to be checked up front too.
   await page.locator("input[name='confirmBankAccountIsMine']").check();
 
-  // "Save draft" must route to the draft action, not the main submit, and must not clear the
-  // form.
+  // Saving a draft again with everything filled in must still work and not clear the form.
   await page.getByRole("button", { name: "Save draft" }).click();
   await page.waitForTimeout(800);
   await expect(page.getByText("Draft saved")).toBeVisible();

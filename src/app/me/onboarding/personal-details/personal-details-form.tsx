@@ -71,6 +71,13 @@ export function PersonalDetailsForm({
         else if (which === "verify") bankAction(formData);
         else submitAction(formData);
       }}
+      // The browser checks every `required` field before the submit event even fires -- for
+      // ANY submit button in the form, Save draft included, since HTML doesn't know one button
+      // means "partial is fine". saveDraft() already accepts partial data server-side; this
+      // just stops the browser from blocking it before that code ever runs. Submit's own
+      // required-field check still happens -- just server-side (see submitState.error below)
+      // instead of the browser's native validation bubble.
+      noValidate
       className="space-y-4"
     >
       <div>
