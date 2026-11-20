@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/rbac";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { PULSE_SCORE_LABELS } from "@/lib/pulse";
@@ -9,9 +10,10 @@ import { submitPulseCheckIn } from "./actions";
 export default async function MyPulsePage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
+  await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
-    return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;
+    return <p className="text-sm text-slate">No profile found yet. Contact your Masy team.</p>;
   }
 
   const checkIns = await db.pulseCheckIn.findMany({

@@ -7,6 +7,10 @@ import type { Role } from "@/generated/prisma/client";
  * in the Node.js runtime — importing them here would break Edge middleware.
  */
 export const authConfig: NextAuthConfig = {
+  // Vercel deployments auto-trust via the platform's own env detection, but anything
+  // that runs `next start` outside Vercel (CI, this test suite, self-hosting) needs this
+  // explicitly, or Auth.js rejects every request with an "UntrustedHost" error.
+  trustHost: true,
   pages: { signIn: "/login" },
   session: { strategy: "jwt" },
   providers: [],

@@ -3,6 +3,8 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { updateEmployeeDetails } from "../../actions";
 import { ClientEmployeeForm } from "../../employee-form";
+import { DocumentList } from "./document-list";
+import { HR_ONLY_DOCUMENT_CATEGORIES } from "@/lib/employee-documents";
 
 export default async function EditStaffPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireRole("CLIENT");
@@ -10,6 +12,13 @@ export default async function EditStaffPage({ params }: { params: Promise<{ id: 
 
   const employee = await db.employee.findUnique({ where: { id } });
   if (!employee || employee.clientOrgId !== session.user.clientOrgId) notFound();
+
+  // Identity-verification documents (ID, NIN slip, proof of address) stay HR-only -- never
+  // shown to a client, even on their own employee's record.
+  const documents = await db.employeeDocument.findMany({
+    where: { employeeId: id, category: { notIn: HR_ONLY_DOCUMENT_CATEGORIES } },
+    orderBy: { createdAt: "desc" },
+  });
 
   const updateWithId = updateEmployeeDetails.bind(null, employee.id);
 
@@ -21,6 +30,7 @@ export default async function EditStaffPage({ params }: { params: Promise<{ id: 
         Correct anything that&rsquo;s out of date. Status, leave balance, and pay are managed by your Masy HR contact.
       </p>
       <ClientEmployeeForm employee={employee} action={updateWithId} />
+      <DocumentList employeeId={employee.id} documents={documents} />
     </div>
   );
 }

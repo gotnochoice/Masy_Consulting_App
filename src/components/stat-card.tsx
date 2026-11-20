@@ -22,13 +22,13 @@ export function StatCard({
   return (
     <div className="relative overflow-hidden rounded-card border border-border bg-paper">
       <div className={`absolute inset-x-0 top-0 h-1 ${accentClasses}`} />
-      <div className="flex items-center gap-4 p-5 pt-6">
+      <div className="flex items-center gap-4 p-4 pt-5">
         <div className={`flex ${iconSize} shrink-0 items-center justify-center rounded-lg ${iconClasses}`}>
           <Icon className={iconGlyph} strokeWidth={2} />
         </div>
-        <div>
-          <p className="text-sm text-slate">{label}</p>
-          <p className={`${valueSize} font-bold tracking-tight text-ink`}>{value}</p>
+        <div className="min-w-0">
+          <p className="text-xs leading-snug text-slate">{label}</p>
+          <p className={`${valueSize} truncate font-bold tracking-tight text-ink`}>{value}</p>
         </div>
       </div>
     </div>

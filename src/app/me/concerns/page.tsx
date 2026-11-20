@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/rbac";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { formatDateShort } from "@/lib/leave";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
@@ -8,9 +9,10 @@ import { submitConcern } from "./actions";
 export default async function MyConcernsPage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
+  await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
-    return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;
+    return <p className="text-sm text-slate">No profile found yet. Contact your Masy team.</p>;
   }
 
   const concerns = await db.concern.findMany({
@@ -24,7 +26,7 @@ export default async function MyConcernsPage() {
         <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
         <h1 className="text-2xl font-bold tracking-tight text-ink">Concerns</h1>
         <p className="text-sm text-slate">
-          This goes to your Masy HR contact only, never directly to your employer. Masy decides what, if
+          This goes to Masy only, never directly to your employer. Masy decides what, if
           anything, gets shared, and never with your name attached unless it&apos;s necessary.
         </p>
       </div>
@@ -45,8 +47,8 @@ export default async function MyConcernsPage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Submitted</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Details</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Submitted</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Details</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -55,7 +57,7 @@ export default async function MyConcernsPage() {
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-slate">
                   {formatDateShort(concern.createdAt)}
                 </td>
-                <td className="px-4 py-3 text-ink">{concern.content}</td>
+                <td className="px-3 py-2.5 text-ink">{concern.content}</td>
               </tr>
             ))}
             {concerns.length === 0 && (

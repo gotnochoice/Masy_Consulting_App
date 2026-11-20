@@ -7,6 +7,8 @@ import { requireRole } from "@/lib/rbac";
 import { getOrigin } from "@/lib/url";
 import { sendNotification } from "@/lib/email";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/documents";
+import { uploadEmployeeDocumentFile } from "@/lib/employee-documents-server";
+import { notifyEmployeeDocumentsShared } from "@/lib/notify-document";
 
 export async function markInProgress(requestId: string) {
   const session = await requireRole("MASY_OPS");
@@ -72,4 +74,61 @@ export async function respondToDocumentRequest(requestId: string, formData: Form
   );
 
   revalidatePath("/ops/documents");
+}
+
+const sendDocumentSchema = z.object({
+  label: z.string().min(1, "Give the document a label"),
+  category: z.enum(["EMPLOYMENT_LETTER", "ONBOARDING", "IDENTIFICATION", "CONTRACT", "OTHER"]),
+  employeeIds: z.array(z.string().min(1)).min(1, "Select at least one staff member"),
+});
+
+export async function sendDocumentToEmployees(formData: FormData) {
+  const session = await requireRole("MASY_OPS");
+
+  const parsed = sendDocumentSchema.safeParse({
+    label: formData.get("label"),
+    category: formData.get("category"),
+    employeeIds: formData.getAll("employeeIds"),
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid document details");
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Choose a file to upload");
+  }
+
+  const result = await uploadEmployeeDocumentFile(file);
+  if ("error" in result) throw new Error(result.error);
+
+  const documents = await db.$transaction(
+    parsed.data.employeeIds.map((employeeId) =>
+      db.employeeDocument.create({
+        data: {
+          employeeId,
+          label: parsed.data.label,
+          category: parsed.data.category,
+          fileUrl: result.url,
+          fileName: file.name,
+          uploadedById: session.user.id,
+        },
+      }),
+    ),
+  );
+
+  await db.auditLog.createMany({
+    data: documents.map((document) => ({
+      actorId: session.user.id,
+      action: "employee_document.upload",
+      targetType: "EmployeeDocument",
+      targetId: document.id,
+    })),
+  });
+
+  await notifyEmployeeDocumentsShared(parsed.data.employeeIds, parsed.data.label);
+
+  revalidatePath("/ops/documents");
+  revalidatePath("/ops/employees");
+  revalidatePath("/me/documents");
 }

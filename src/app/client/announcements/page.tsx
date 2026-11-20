@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { inputClass, labelClass, buttonClass } from "@/lib/form-styles";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { acknowledgeAnnouncement } from "@/lib/actions/announcements";
+import { NigeriaHolidaysWidget } from "@/components/nigeria-holidays-widget";
 import { createAnnouncement, deleteAnnouncement } from "./actions";
 
 export default async function ClientAnnouncementsPage() {
@@ -22,6 +23,8 @@ export default async function ClientAnnouncementsPage() {
         <h1 className="text-2xl font-bold tracking-tight text-ink">Announcements</h1>
         <p className="text-sm text-slate">Updates from Masy, plus anything you post for your own team.</p>
       </div>
+
+      <NigeriaHolidaysWidget />
 
       <div className="rounded-card border border-border bg-paper p-6">
         <h2 className="mb-4 text-sm font-semibold text-ink">New announcement</h2>

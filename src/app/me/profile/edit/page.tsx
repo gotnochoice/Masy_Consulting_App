@@ -3,10 +3,12 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { updateMyDetails } from "../actions";
 import { MyDetailsForm } from "../employee-form";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 
 export default async function EditMyDetailsPage() {
   const session = await requireRole("EMPLOYEE");
   if (!session.user.employeeId) notFound();
+  await requireOnboardingComplete(session.user.employeeId);
 
   const employee = await db.employee.findUnique({ where: { id: session.user.employeeId } });
   if (!employee) notFound();

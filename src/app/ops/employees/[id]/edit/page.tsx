@@ -3,17 +3,29 @@ import { requireRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { updateEmployee } from "../../actions";
 import { EmployeeForm } from "../../employee-form";
+import { DocumentManager } from "./document-manager";
+import { OnboardingQuestionsManager } from "./onboarding-questions-manager";
+import { ContractLetterPanel } from "./contract-letter-panel";
+import { CompanyAssetPanel } from "./company-asset-panel";
+import { DataPrivacyPanel } from "./data-privacy-panel";
+import { getContractLetterTemplate } from "@/lib/contract-letter-template";
+import { decryptSensitive } from "@/lib/encryption";
 
 export default async function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole("MASY_OPS");
   const { id } = await params;
 
-  const [employee, orgs] = await Promise.all([
-    db.employee.findUnique({ where: { id } }),
-    db.clientOrg.findMany({ orderBy: { name: "asc" } }),
-  ]);
-
+  const employee = await db.employee.findUnique({ where: { id } });
   if (!employee) notFound();
+
+  const [orgs, documents, onboardingQuestions, template, assets, latestOnboardingRecord] = await Promise.all([
+    db.clientOrg.findMany({ orderBy: { name: "asc" } }),
+    db.employeeDocument.findMany({ where: { employeeId: id }, orderBy: { createdAt: "desc" } }),
+    db.onboardingQuestion.findMany({ where: { employeeId: id }, orderBy: { order: "asc" } }),
+    getContractLetterTemplate(employee.clientOrgId),
+    db.companyAsset.findMany({ where: { employeeId: id }, orderBy: { createdAt: "asc" } }),
+    db.onboardingRecord.findFirst({ where: { employeeId: id }, orderBy: { version: "desc" } }),
+  ]);
 
   const updateWithId = updateEmployee.bind(null, employee.id);
 
@@ -21,7 +33,21 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
     <div className="max-w-lg space-y-6">
       <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
       <h1 className="text-2xl font-bold tracking-tight text-ink">Edit employee</h1>
-      <EmployeeForm orgs={orgs} employee={employee} action={updateWithId} submitLabel="Save changes" />
+      <EmployeeForm
+        orgs={orgs}
+        employee={{ ...employee, nin: employee.nin ? decryptSensitive(employee.nin) : employee.nin }}
+        action={updateWithId}
+        submitLabel="Save changes"
+      />
+      <ContractLetterPanel
+        employeeId={employee.id}
+        initialDraft={employee.contractLetterDraft}
+        templateFileName={template?.fileName ?? null}
+      />
+      <OnboardingQuestionsManager employeeId={employee.id} questions={onboardingQuestions} />
+      <DocumentManager employeeId={employee.id} documents={documents} />
+      <CompanyAssetPanel employeeId={employee.id} assets={assets} />
+      <DataPrivacyPanel employeeId={employee.id} latestOnboardingRecord={latestOnboardingRecord} />
     </div>
   );
 }

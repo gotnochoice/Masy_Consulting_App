@@ -1,0 +1,69 @@
+name: E2E tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: masy_consulting_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/masy_consulting_test?schema=public
+      AUTH_SECRET: test-secret-not-used-in-production
+      EMAIL_FROM: noreply@masyconsulting.example
+      OPS_NOTIFICATION_EMAIL: ops@masyconsulting.example
+      # A random 32-byte key, not used anywhere real -- it only needs to exist so CI exercises
+      # the real encryption path instead of the fail-open (no-key) fallback.
+      NIN_ENCRYPTION_KEY: SWVj2ik1V7ynRu4g9zBIQ09BJC2OaxnMvft/72iaEho=
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright's browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run migrations and seed
+        run: |
+          npx prisma migrate deploy
+          npm run db:seed
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

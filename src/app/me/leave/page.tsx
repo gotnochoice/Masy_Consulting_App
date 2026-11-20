@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/rbac";
+import { requireOnboardingComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { leaveDaysBetween, formatDateShort } from "@/lib/leave";
 import { LeaveStatusBadge } from "@/components/leave-status-badge";
@@ -9,9 +10,10 @@ import { requestLeave } from "./actions";
 export default async function MyLeavePage() {
   const session = await requireRole("EMPLOYEE");
   const employeeId = session.user.employeeId;
+  await requireOnboardingComplete(employeeId);
 
   if (!employeeId) {
-    return <p className="text-sm text-slate">No profile found yet. Contact your Masy HR contact.</p>;
+    return <p className="text-sm text-slate">No profile found yet. Contact your Masy team.</p>;
   }
 
   const [employee, requests] = await Promise.all([
@@ -63,23 +65,23 @@ export default async function MyLeavePage() {
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-paper-2">
             <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Type</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Dates</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Days</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Reason</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Type</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Dates</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Days</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Reason</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-light">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {requests.map((r) => (
               <tr key={r.id}>
-                <td className="px-4 py-3 font-medium capitalize text-ink">{r.type.toLowerCase()}</td>
-                <td className="px-4 py-3 text-xs text-slate">
+                <td className="px-3 py-2.5 font-medium capitalize text-ink">{r.type.toLowerCase()}</td>
+                <td className="px-3 py-2.5 text-xs text-slate">
                   {formatDateShort(r.startDate)} – {formatDateShort(r.endDate)}
                 </td>
-                <td className="px-4 py-3 text-slate">{leaveDaysBetween(r.startDate, r.endDate)}</td>
-                <td className="px-4 py-3 text-slate">{r.reason || "-"}</td>
-                <td className="px-4 py-3"><LeaveStatusBadge status={r.status} /></td>
+                <td className="px-3 py-2.5 text-slate">{leaveDaysBetween(r.startDate, r.endDate)}</td>
+                <td className="px-3 py-2.5 text-slate">{r.reason || "-"}</td>
+                <td className="px-3 py-2.5"><LeaveStatusBadge status={r.status} /></td>
               </tr>
             ))}
             {requests.length === 0 && (

@@ -39,15 +39,22 @@ export async function createAttendanceRecord(formData: FormData) {
   }
 
   const { employeeId, date, clockIn, clockInNote, clockOut, clockOutNote } = parsed.data;
+  const clockInAt = new Date(`${date}T${clockIn}`);
+  const clockOutAt = clockOut ? new Date(`${date}T${clockOut}`) : null;
 
+  // Also creates a matching session, so this manually-entered day sums into hours totals
+  // the same way a self-serve clock in/out would.
   const record = await db.attendanceRecord.create({
     data: {
       employeeId,
       date: new Date(date),
-      clockIn: new Date(`${date}T${clockIn}`),
+      clockIn: clockInAt,
       clockInNote: clockInNote || null,
-      clockOut: clockOut ? new Date(`${date}T${clockOut}`) : null,
+      clockOut: clockOutAt,
       clockOutNote: clockOutNote || null,
+      sessions: {
+        create: { clockIn: clockInAt, clockInNote: clockInNote || null, clockOut: clockOutAt, clockOutNote: clockOutNote || null },
+      },
     },
   });
 
@@ -63,8 +70,7 @@ export async function createAttendanceRecord(formData: FormData) {
   revalidatePath("/ops/attendance");
 }
 
-export async function updateAttendanceRecord(recordId: string, formData: FormData) {
-  const session = await requireRole("MASY_OPS");
+export async function updateAttendanceRecord(recordId: string, formData: FormData) {  const session = await requireRole("MASY_OPS");
 
   const parsed = updateSchema.safeParse({
     date: formData.get("date"),
@@ -78,17 +84,28 @@ export async function updateAttendanceRecord(recordId: string, formData: FormDat
   }
 
   const { date, clockIn, clockInNote, clockOut, clockOutNote } = parsed.data;
+  const clockInAt = new Date(`${date}T${clockIn}`);
+  const clockOutAt = clockOut ? new Date(`${date}T${clockOut}`) : null;
 
-  await db.attendanceRecord.update({
-    where: { id: recordId },
-    data: {
-      date: new Date(date),
-      clockIn: new Date(`${date}T${clockIn}`),
-      clockInNote: clockInNote || null,
-      clockOut: clockOut ? new Date(`${date}T${clockOut}`) : null,
-      clockOutNote: clockOutNote || null,
-    },
-  });
+  // A manual correction replaces the day's sessions with exactly one spanning the edited
+  // range, rather than trying to reconcile against whatever self-serve sessions existed --
+  // keeps the hours total matching exactly what Ops just entered.
+  await db.$transaction([
+    db.attendanceSession.deleteMany({ where: { attendanceRecordId: recordId } }),
+    db.attendanceRecord.update({
+      where: { id: recordId },
+      data: {
+        date: new Date(date),
+        clockIn: clockInAt,
+        clockInNote: clockInNote || null,
+        clockOut: clockOutAt,
+        clockOutNote: clockOutNote || null,
+        sessions: {
+          create: { clockIn: clockInAt, clockInNote: clockInNote || null, clockOut: clockOutAt, clockOutNote: clockOutNote || null },
+        },
+      },
+    }),
+  ]);
 
   await db.auditLog.create({
     data: {
@@ -101,4 +118,24 @@ export async function updateAttendanceRecord(recordId: string, formData: FormDat
 
   revalidatePath("/ops/attendance");
   redirect("/ops/attendance");
+}
+
+export async function clearEmployeeAttendance(employeeId: string) {
+  const session = await requireRole("MASY_OPS");
+
+  await db.attendanceRecord.deleteMany({ where: { employeeId } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: session.user.id,
+      action: "attendance.clear_employee",
+      targetType: "Employee",
+      targetId: employeeId,
+    },
+  });
+
+  revalidatePath("/ops/attendance");
+  revalidatePath(`/ops/attendance/employee/${employeeId}`);
+  revalidatePath("/client/attendance");
+  revalidatePath(`/client/attendance/employee/${employeeId}`);
 }

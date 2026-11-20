@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/rbac";
+import { notifyAnnouncementCreated } from "@/lib/notify-announcement";
 
 const createSchema = z.object({
   clientOrgId: z.string().optional(),
@@ -41,6 +42,8 @@ export async function createAnnouncement(formData: FormData) {
       targetId: announcement.id,
     },
   });
+
+  await notifyAnnouncementCreated(announcement);
 
   revalidatePath("/ops/announcements");
 }
