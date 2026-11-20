@@ -60,6 +60,61 @@ export async function saveKeyTerms(_prevState: SaveKeyTermsState, formData: Form
   revalidatePath(PATH);
 }
 
+async function submitAcknowledgmentsStep(employeeId: string) {
+  const process = await db.onboardingProcess.findUnique({ where: { employeeId } });
+  if (process) {
+    await db.onboardingStep.update({
+      where: { onboardingProcessId_stepType: { onboardingProcessId: process.id, stepType: "ACKNOWLEDGMENTS" } },
+      data: { status: "SUBMITTED", submittedAt: new Date(), correctionReason: null },
+    });
+  }
+}
+
+export type CompleteWithoutQuizState = { error: string } | undefined;
+
+// The agreement, handbook, and quiz are all optional for a client to set up -- when there's no
+// quiz, the key-terms panel is the last step instead, and this takes the quiz's place in
+// marking ACKNOWLEDGMENTS SUBMITTED. Re-checks everything that was actually shown server-side,
+// the same "never trust the client reached this honestly" discipline as every other step here.
+export async function completeAcknowledgmentsWithoutQuiz(): Promise<CompleteWithoutQuizState> {
+  const session = await requireRole("EMPLOYEE");
+  const employeeId = session.user.employeeId;
+  if (!employeeId) return { error: "No employee record found for this login." };
+
+  const employee = await getEmployeeAndOrg(employeeId);
+  const quizCount = await db.comprehensionQuestion.count({ where: { clientOrgId: employee.clientOrgId, active: true } });
+  if (quizCount > 0) return { error: "A quiz is set up for this step -- go back and complete it." };
+
+  const keyTermCount = await db.keyTermAcknowledgment.count({ where: { employeeId } });
+  if (keyTermCount < KEY_TERM_ITEMS.length + 1) return { error: "Confirm the key terms first." };
+
+  const { clientOrg } = employee;
+  // Same skip logic as the UI (AcknowledgmentsFlow's availableDocs): a doc the client never
+  // saved -- privacy notice included, it has no app-wide fallback on the employee side, only a
+  // pre-fill suggestion on the client's own settings page -- was never shown, so it's not
+  // required here either.
+  const required: { type: "EMPLOYMENT_AGREEMENT" | "HANDBOOK" | "PRIVACY_NOTICE"; version: string }[] = [];
+  if (clientOrg.employmentAgreementTemplate?.trim()) {
+    required.push({ type: "EMPLOYMENT_AGREEMENT", version: clientOrg.employmentAgreementVersion || "1.0" });
+  }
+  if (clientOrg.handbookText?.trim()) {
+    required.push({ type: "HANDBOOK", version: clientOrg.handbookVersion || "1.0" });
+  }
+  if (clientOrg.privacyNoticeText?.trim()) {
+    required.push({ type: "PRIVACY_NOTICE", version: clientOrg.privacyNoticeVersion || "1.0" });
+  }
+
+  const acks = await db.documentAcknowledgment.findMany({ where: { employeeId } });
+  const unacknowledged = required.find(
+    (r) => !acks.some((a) => a.documentType === r.type && a.version === r.version && a.acknowledgedAt),
+  );
+  if (unacknowledged) return { error: "Please read every document above first." };
+
+  await submitAcknowledgmentsStep(employeeId);
+  revalidatePath(PATH);
+  revalidatePath("/me/onboarding");
+}
+
 export type QuizAttemptState =
   | { passed: true }
   | { passed: false; wrongQuestionIds: string[]; explanations: Record<string, string> }
@@ -97,13 +152,7 @@ export async function submitQuizAttempt(_prevState: QuizAttemptState, formData: 
   });
 
   if (passed) {
-    const process = await db.onboardingProcess.findUnique({ where: { employeeId } });
-    if (process) {
-      await db.onboardingStep.update({
-        where: { onboardingProcessId_stepType: { onboardingProcessId: process.id, stepType: "ACKNOWLEDGMENTS" } },
-        data: { status: "SUBMITTED", submittedAt: new Date(), correctionReason: null },
-      });
-    }
+    await submitAcknowledgmentsStep(employeeId);
     revalidatePath(PATH);
     revalidatePath("/me/onboarding");
     return { passed: true };

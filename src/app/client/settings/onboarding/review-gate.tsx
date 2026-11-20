@@ -39,21 +39,23 @@ export function ReviewGate({
       <div>
         <p className="text-sm font-medium text-orange">Not reviewed yet -- new hires can&rsquo;t start onboarding.</p>
         <p className="mt-1 text-xs text-orange/80">
-          Any AI-drafted or uploaded content below is a starting point, not a finished legal document. Have it
-          checked (by you, or ideally a professional) before confirming it&rsquo;s ready for real employees.
+          None of the items below are required -- use whichever fit how you already do this (just the agreement,
+          just a handbook, none of them). Whatever you skip is simply left out of what new hires see. Anything
+          AI-drafted or uploaded is a starting point, not a finished legal document -- have it checked (by you, or
+          ideally a professional) before confirming it&rsquo;s ready for real employees.
         </p>
       </div>
       <ul className="space-y-1 text-xs text-slate">
-        <li>{hasAgreement ? "✓" : "○"} Employment agreement saved</li>
-        <li>{hasHandbook ? "✓" : "○"} Handbook saved</li>
-        <li>{hasQuiz ? "✓" : "○"} Comprehension quiz generated</li>
+        <li>{hasAgreement ? "✓" : "○"} Employment agreement saved (optional)</li>
+        <li>{hasHandbook ? "✓" : "○"} Handbook saved (optional)</li>
+        <li>{hasQuiz ? "✓" : "○"} Comprehension quiz generated (optional)</li>
       </ul>
       <form
         action={formAction}
         onSubmit={(e) => {
           if (
             !confirm(
-              "Confirm you (or a professional) have reviewed the agreement, handbook, and quiz below, and they're ready for real employees to sign?",
+              "Confirm whatever's saved above (if anything) is ready for real employees -- new hires will see exactly that, nothing more?",
             )
           ) {
             e.preventDefault();

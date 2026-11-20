@@ -79,7 +79,7 @@ test("AI draft and quiz generation fail visibly, not by crashing, when no API ke
   await expect(page.getByText(/ai suggestions aren.t set up|something went wrong drafting/i)).toBeVisible();
 });
 
-test("marking content reviewed is blocked until agreement, handbook, and quiz all exist", async ({ page }) => {
+test("marking content reviewed works with nothing saved -- agreement, handbook, and quiz are all optional", async ({ page }) => {
   await loginAsClient(page);
   await page.goto("/client/settings/onboarding");
   await page.waitForLoadState("networkidle");
@@ -88,13 +88,11 @@ test("marking content reviewed is blocked until agreement, handbook, and quiz al
   await page.getByRole("button", { name: /reviewed this, mark it ready/i }).click();
   await page.waitForTimeout(1000);
 
-  // Nothing's saved yet, so the server-side guard should reject this -- check it didn't crash
-  // and didn't silently mark it reviewed either.
   await expect(page.getByText("This page couldn't load")).toHaveCount(0);
   const { rows } = await pool.query<{ onboardingContentReviewedAt: Date | null }>(
     `SELECT "onboardingContentReviewedAt" FROM "ClientOrg" WHERE slug = 'lagos-bites-catering'`,
   );
-  expect(rows[0].onboardingContentReviewedAt).toBeNull();
+  expect(rows[0].onboardingContentReviewedAt).not.toBeNull();
 });
 
 test("client can add an optional additional document, and the employee sees it on the acknowledgments step", async ({ page }) => {

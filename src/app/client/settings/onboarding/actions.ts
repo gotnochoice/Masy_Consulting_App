@@ -164,6 +164,27 @@ export async function uploadAgreementDocument(
   }
 }
 
+// Mirrors uploadAgreementDocument -- a client's handbook is often already its own Word/PDF
+// doc, not something they want to retype into this editor. Same review-before-save flow.
+export async function uploadHandbookDocument(
+  _prevState: UploadDocumentState,
+  formData: FormData,
+): Promise<UploadDocumentState> {
+  await requireRole("CLIENT");
+
+  const file = formData.get("document");
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose a document to upload first." };
+  if (file.size > MAX_TEMPLATE_FILE_BYTES) return { error: `That file is too large. Please keep it under ${MAX_TEMPLATE_FILE_LABEL}.` };
+
+  try {
+    const text = await extractTextFromUpload(file);
+    if (!text.trim()) return { error: "Couldn't find any text in that document." };
+    return { draft: text };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Something went wrong reading that document." };
+  }
+}
+
 export type HandbookDraftState = { draft: string } | { error: string } | undefined;
 
 export async function draftHandbookWithAi(
@@ -307,28 +328,23 @@ export async function deleteQuizQuestion(questionId: string) {
 
 export type MarkReviewedState = { error: string } | undefined;
 
-// A missing prerequisite here is an everyday, likely outcome (someone clicks this before
-// finishing setup), not a rare edge case -- so this returns state instead of throwing, the
-// same fix applied earlier this session to other foreseeable validation failures.
+// Agreement, handbook, and quiz are all optional -- a client may only want to use the app for
+// one of them (e.g. just the agreement, with their own separate handbook process), or may have
+// their own documents that don't fit typing into this editor at all. Whatever exists is what
+// the employee-facing acknowledgments flow shows; missing pieces are skipped there, not treated
+// as blockers here.
 export async function markOnboardingContentReviewed(
   _prevState: MarkReviewedState,
 ): Promise<MarkReviewedState> {
   const session = await requireRole("CLIENT");
   const clientOrgId = session.user.clientOrgId!;
 
-  const [org, quizCount] = await Promise.all([
-    db.clientOrg.findUnique({ where: { id: clientOrgId }, select: { employmentAgreementTemplate: true, handbookText: true } }),
-    db.comprehensionQuestion.count({ where: { clientOrgId } }),
-  ]);
-  if (!org?.employmentAgreementTemplate || !org?.handbookText || quizCount === 0) {
-    return { error: "Save the employment agreement, handbook, and comprehension quiz before marking this ready." };
-  }
-
   await db.clientOrg.update({
     where: { id: clientOrgId },
     data: { onboardingContentReviewedAt: new Date(), onboardingContentReviewedById: session.user.id },
   });
   revalidatePath(PATH);
+  return undefined;
 }
 
 // Extra, entirely optional reference material -- a client names it themselves and either

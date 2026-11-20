@@ -8,6 +8,7 @@ import {
   acknowledgeDocument,
   saveKeyTerms,
   submitQuizAttempt,
+  completeAcknowledgmentsWithoutQuiz,
   type SaveKeyTermsState,
   type QuizAttemptState,
 } from "./actions";
@@ -19,6 +20,14 @@ type DocInfo = { title: string; text: string; version: string; done: boolean };
 type QuizQuestion = { id: string; question: string; choices: string[] };
 
 const DOC_ORDER: DocKey[] = ["EMPLOYMENT_AGREEMENT", "HANDBOOK", "PRIVACY_NOTICE"];
+const STEP_LABELS: Record<Section, string> = {
+  EMPLOYMENT_AGREEMENT: "Agreement",
+  HANDBOOK: "Handbook",
+  PRIVACY_NOTICE: "Privacy notice",
+  KEY_TERMS: "Key terms",
+  QUIZ: "Quiz",
+  DONE: "Done",
+};
 
 function DocumentPanel({ docKey, info, onDone }: { docKey: DocKey; info: DocInfo; onDone: () => void }) {
   const [scrolledToEnd, setScrolledToEnd] = useState(false);
@@ -210,49 +219,60 @@ export function AcknowledgmentsFlow({
   shiftDescription: string | null;
   questions: QuizQuestion[];
 }) {
-  const firstIncomplete: Section =
-    !initialDone.agreement ? "EMPLOYMENT_AGREEMENT" :
-    !initialDone.handbook ? "HANDBOOK" :
-    !initialDone.privacy ? "PRIVACY_NOTICE" :
-    !initialDone.keyTerms ? "KEY_TERMS" : "QUIZ";
+  // A client may not have set up every document, or any quiz -- skip whatever's missing
+  // entirely rather than showing an empty box or a dead-end "no quiz set up" error.
+  const availableDocs = DOC_ORDER.filter((key) => documents[key].text.trim().length > 0);
+  const hasQuiz = questions.length > 0;
+  const flow: Section[] = [...availableDocs, "KEY_TERMS", ...(hasQuiz ? (["QUIZ"] as const) : [])];
+  const doneMap: Partial<Record<Section, boolean>> = {
+    EMPLOYMENT_AGREEMENT: initialDone.agreement,
+    HANDBOOK: initialDone.handbook,
+    PRIVACY_NOTICE: initialDone.privacy,
+    KEY_TERMS: initialDone.keyTerms,
+  };
+  const firstIncomplete: Section = flow.find((s) => !doneMap[s]) ?? "DONE";
   const [section, setSection] = useState<Section>(firstIncomplete);
   const router = useRouter();
   useEffect(() => {
     if (section === "DONE") router.push(nextOnboardingStepPath("ACKNOWLEDGMENTS"));
   }, [section, router]);
 
-  const docIndex = DOC_ORDER.indexOf(section as DocKey);
-  const steps = ["Agreement", "Handbook", "Privacy notice", "Key terms", "Quiz"];
-  const currentStepIndex =
-    section === "KEY_TERMS" ? 3 : section === "QUIZ" || section === "DONE" ? 4 : docIndex;
+  const currentStepIndex = section === "DONE" ? flow.length : flow.indexOf(section);
 
-  function advanceFrom(doc: DocKey) {
-    const idx = DOC_ORDER.indexOf(doc);
-    const next = DOC_ORDER[idx + 1];
-    setSection(next ?? "KEY_TERMS");
+  async function advance(current: Section) {
+    const idx = flow.indexOf(current);
+    const next = flow[idx + 1];
+    if (!next && current !== "QUIZ") {
+      // Reached the end without a quiz (which marks the step SUBMITTED itself) -- this is
+      // what finalizes it instead. The server re-checks everything, so a failure here just
+      // leaves the step un-submitted rather than silently completing; logged for visibility.
+      const result = await completeAcknowledgmentsWithoutQuiz();
+      if (result?.error) console.error("[acknowledgments] failed to finalize without a quiz:", result.error);
+    }
+    setSection(next ?? "DONE");
   }
 
   return (
     <div className="space-y-6">
       <div className="flex gap-2 text-xs text-slate-light">
-        {steps.map((label, i) => (
-          <span key={label} className={i <= currentStepIndex ? "font-medium text-indigo" : ""}>
-            {label}{i < steps.length - 1 ? " ·" : ""}
+        {flow.map((s, i) => (
+          <span key={s} className={i <= currentStepIndex ? "font-medium text-indigo" : ""}>
+            {STEP_LABELS[s]}{i < flow.length - 1 ? " ·" : ""}
           </span>
         ))}
       </div>
 
       {section === "EMPLOYMENT_AGREEMENT" && (
-        <DocumentPanel docKey="EMPLOYMENT_AGREEMENT" info={documents.EMPLOYMENT_AGREEMENT} onDone={() => advanceFrom("EMPLOYMENT_AGREEMENT")} />
+        <DocumentPanel docKey="EMPLOYMENT_AGREEMENT" info={documents.EMPLOYMENT_AGREEMENT} onDone={() => advance("EMPLOYMENT_AGREEMENT")} />
       )}
       {section === "HANDBOOK" && (
-        <DocumentPanel docKey="HANDBOOK" info={documents.HANDBOOK} onDone={() => advanceFrom("HANDBOOK")} />
+        <DocumentPanel docKey="HANDBOOK" info={documents.HANDBOOK} onDone={() => advance("HANDBOOK")} />
       )}
       {section === "PRIVACY_NOTICE" && (
-        <DocumentPanel docKey="PRIVACY_NOTICE" info={documents.PRIVACY_NOTICE} onDone={() => advanceFrom("PRIVACY_NOTICE")} />
+        <DocumentPanel docKey="PRIVACY_NOTICE" info={documents.PRIVACY_NOTICE} onDone={() => advance("PRIVACY_NOTICE")} />
       )}
       {section === "KEY_TERMS" && (
-        <KeyTermsPanel shiftLabel={shiftLabel} shiftDescription={shiftDescription} onDone={() => setSection("QUIZ")} />
+        <KeyTermsPanel shiftLabel={shiftLabel} shiftDescription={shiftDescription} onDone={() => advance("KEY_TERMS")} />
       )}
       {section === "QUIZ" && <QuizPanel questions={questions} onPassed={() => setSection("DONE")} />}
       {section === "DONE" && (

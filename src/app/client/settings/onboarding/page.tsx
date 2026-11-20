@@ -7,6 +7,7 @@ import {
   uploadAgreementDocument,
   saveHandbookText,
   draftHandbookWithAi,
+  uploadHandbookDocument,
   savePrivacyNotice,
   regenerateQuizFromAgreement,
   updateQuizQuestion,
@@ -99,6 +100,7 @@ export default async function ClientOnboardingSettingsPage() {
         currentText={org.handbookText}
         version={org.handbookVersion}
         saveAction={saveHandbookText}
+        uploadAction={uploadHandbookDocument}
         draftAction={draftHandbookWithAi}
         draftFields="handbook"
       />
