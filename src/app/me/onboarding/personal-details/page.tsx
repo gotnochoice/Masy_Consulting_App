@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
-import { requirePrivacyConsent, requirePriorStepsComplete } from "@/lib/onboarding-gate";
+import { requirePrivacyConsent } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { listNigerianBanks } from "@/lib/bank-verification";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
@@ -12,7 +12,6 @@ export default async function PersonalDetailsStepPage() {
   const employeeId = session.user.employeeId;
   if (!employeeId) redirect("/me/profile");
   await requirePrivacyConsent(employeeId);
-  await requirePriorStepsComplete(employeeId, "PERSONAL_DETAILS");
 
   const [employee, process] = await Promise.all([
     db.employee.findUnique({ where: { id: employeeId }, include: { clientOrg: { select: { name: true } } } }),
@@ -29,7 +28,7 @@ export default async function PersonalDetailsStepPage() {
 
   return (
     <div className="max-w-lg space-y-6">
-      <OnboardingStepNav current="PERSONAL_DETAILS" currentStatus={step.status} />
+      <OnboardingStepNav current="PERSONAL_DETAILS" />
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />

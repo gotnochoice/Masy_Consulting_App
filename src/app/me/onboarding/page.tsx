@@ -80,24 +80,16 @@ export default async function MyOnboardingPage() {
       )}
 
       <div className="space-y-2">
-        {orderedSteps.map((step, i) => {
-          const locked = i > 0 && orderedSteps[i - 1].status !== "SUBMITTED" && orderedSteps[i - 1].status !== "VERIFIED";
-          return (
-            <Link
-              key={step.id}
-              href={locked ? "#" : `/me/onboarding/${ONBOARDING_STEP_ROUTES[step.stepType]}`}
-              className={`flex items-center justify-between rounded-card border border-border bg-paper px-5 py-4 ${
-                locked ? "pointer-events-none opacity-50" : "hover:border-indigo/30"
-              }`}
-            >
-              <div>
-                <p className="text-sm font-medium text-ink">{i + 1}. {ONBOARDING_STEP_LABELS[step.stepType]}</p>
-                {locked && <p className="text-xs text-slate-light">Complete the previous step first</p>}
-              </div>
-              <OnboardingStepStatusBadge status={step.status} />
-            </Link>
-          );
-        })}
+        {orderedSteps.map((step, i) => (
+          <Link
+            key={step.id}
+            href={`/me/onboarding/${ONBOARDING_STEP_ROUTES[step.stepType]}`}
+            className="flex items-center justify-between rounded-card border border-border bg-paper px-5 py-4 hover:border-indigo/30"
+          >
+            <p className="text-sm font-medium text-ink">{i + 1}. {ONBOARDING_STEP_LABELS[step.stepType]}</p>
+            <OnboardingStepStatusBadge status={step.status} />
+          </Link>
+        ))}
       </div>
     </div>
   );

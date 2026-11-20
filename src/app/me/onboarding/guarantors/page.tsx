@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
-import { requirePrivacyConsent, requirePriorStepsComplete } from "@/lib/onboarding-gate";
+import { requirePrivacyConsent } from "@/lib/onboarding-gate";
 import { requiredGuarantorCount } from "@/lib/onboarding-process";
 import { db } from "@/lib/db";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
@@ -12,7 +12,6 @@ export default async function GuarantorsStepPage() {
   const employeeId = session.user.employeeId;
   if (!employeeId) redirect("/me/profile");
   await requirePrivacyConsent(employeeId);
-  await requirePriorStepsComplete(employeeId, "GUARANTORS");
 
   const [process, guarantors, required] = await Promise.all([
     db.onboardingProcess.findUnique({ where: { employeeId }, include: { steps: true } }),
@@ -31,7 +30,7 @@ export default async function GuarantorsStepPage() {
 
   return (
     <div className="max-w-lg space-y-6">
-      <OnboardingStepNav current="GUARANTORS" currentStatus={step.status} />
+      <OnboardingStepNav current="GUARANTORS" />
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />

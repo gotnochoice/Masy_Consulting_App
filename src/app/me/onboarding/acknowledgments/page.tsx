@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
-import { requirePrivacyConsent, requirePriorStepsComplete } from "@/lib/onboarding-gate";
+import { requirePrivacyConsent } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
 import { OnboardingStepNav } from "@/components/onboarding-step-nav";
@@ -11,7 +11,6 @@ export default async function AcknowledgmentsStepPage() {
   const employeeId = session.user.employeeId;
   if (!employeeId) redirect("/me/profile");
   await requirePrivacyConsent(employeeId);
-  await requirePriorStepsComplete(employeeId, "ACKNOWLEDGMENTS");
 
   const employee = await db.employee.findUnique({ where: { id: employeeId }, include: { clientOrg: true } });
   if (!employee) redirect("/me/profile");
@@ -28,7 +27,7 @@ export default async function AcknowledgmentsStepPage() {
     if (!clientOrg.onboardingContentReviewedAt) {
       return (
         <div className="max-w-lg space-y-6">
-          <OnboardingStepNav current="ACKNOWLEDGMENTS" currentStatus={step.status} />
+          <OnboardingStepNav current="ACKNOWLEDGMENTS" />
           <div>
             <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
             <h1 className="text-2xl font-bold tracking-tight text-ink">Agreement, handbook & quiz</h1>
@@ -53,7 +52,7 @@ export default async function AcknowledgmentsStepPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <OnboardingStepNav current="ACKNOWLEDGMENTS" currentStatus={step.status} />
+      <OnboardingStepNav current="ACKNOWLEDGMENTS" />
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
