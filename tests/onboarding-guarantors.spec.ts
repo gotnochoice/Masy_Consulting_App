@@ -5,7 +5,7 @@ test.afterEach(cleanupOnboardingTestEmployees);
 
 test("guarantors step rejects a duplicate second guarantor, then succeeds with two distinct ones", async ({ page }) => {
   const email = "zztest.guarantors@example.com";
-  const employeeId = await createOnboardingTestEmployee(email);
+  const employeeId = await createOnboardingTestEmployee(email, { PERSONAL_DETAILS: "SUBMITTED", IDENTITY_DOCUMENTS: "SUBMITTED" });
 
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
@@ -61,7 +61,7 @@ test("guarantors step rejects a duplicate second guarantor, then succeeds with t
 
 test("only one next-of-kin contact is required when no equipment is being issued", async ({ page }) => {
   const email = "zztest.guarantors.noequip@example.com";
-  const employeeId = await createOnboardingTestEmployee(email);
+  const employeeId = await createOnboardingTestEmployee(email, { PERSONAL_DETAILS: "SUBMITTED", IDENTITY_DOCUMENTS: "SUBMITTED" });
   await pool.query(
     `INSERT INTO "CompanyAsset" (id, "employeeId", "itemType", status, "createdById", "createdAt", "updatedAt")
      VALUES (gen_random_uuid()::text, $1, 'NO_EQUIPMENT_ISSUED', 'ISSUED', (SELECT id FROM "User" WHERE email = $2), now(), now())`,

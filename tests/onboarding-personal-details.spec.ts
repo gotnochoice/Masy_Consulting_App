@@ -29,7 +29,7 @@ test("personal details: save draft, verify bank, and submit all route correctly 
   // onboarding must not be blocked on that: the form falls back to manual bank-name and
   // account-holder-name entry instead of Paystack's verify flow. Native HTML validation blocks
   // ANY submission (including "Save draft") while these required fields are empty.
-  await expect(page.getByText(/still setting up automatic bank verification/i)).toBeVisible();
+  await expect(page.getByText(/we.ll confirm the account before your first payment/i)).toBeVisible();
   await page.locator("#bankNameManual").fill("ZZTEST Bank");
   await page.locator("#accountHolderNameManual").fill("ZZTEST Personal Details");
   await page.locator("input[name='confirmWillUpdate']").check();

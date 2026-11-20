@@ -56,8 +56,8 @@ export function BankFields({
     <div className="space-y-3 rounded-btn border border-border p-4">
       <p className="text-xs font-medium text-slate-light">Bank details</p>
       {banksError && (
-        <p className="rounded-btn border border-orange/30 bg-orange/5 px-3.5 py-2.5 text-sm text-orange">
-          {banksError} You can still enter your bank details below -- HR will confirm them manually.
+        <p className="rounded-btn border border-border bg-paper-2 px-3.5 py-2.5 text-sm text-slate">
+          Enter your bank details below. We&rsquo;ll confirm the account before your first payment.
         </p>
       )}
       <div className="grid grid-cols-2 gap-3">

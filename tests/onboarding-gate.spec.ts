@@ -73,11 +73,11 @@ test("a brand-new employee is gated to /me/onboarding until steps are verified; 
   await page.waitForURL(/\/me\/onboarding/);
   await expect(page.getByText("This page couldn't load")).toHaveCount(0);
 
-  // Personal details step renders, and the bank-verify path fails visibly (no PAYSTACK key in
-  // this sandbox) instead of crashing -- same bug class as the AI/blob integrations.
+  // Personal details step renders, and falls back to manual bank entry visibly (no PAYSTACK
+  // key in this sandbox) instead of crashing -- same bug class as the AI/blob integrations.
   await page.goto("/me/onboarding/personal-details");
   await expect(page.getByRole("heading", { name: "Personal details" })).toBeVisible();
-  await expect(page.getByText(/still setting up automatic bank verification/i)).toBeVisible();
+  await expect(page.getByText(/we.ll confirm the account before your first payment/i)).toBeVisible();
 
   // A pre-existing seeded employee (no OnboardingProcess row) must not be gated at all.
   await page.goto("/login");

@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
-import { requirePrivacyConsent } from "@/lib/onboarding-gate";
+import { requirePrivacyConsent, requirePriorStepsComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
+import { OnboardingStepNav } from "@/components/onboarding-step-nav";
 import { PropertyHandoverFlow } from "./property-handover-flow";
 
 export default async function PropertyHandoverStepPage() {
@@ -10,6 +11,7 @@ export default async function PropertyHandoverStepPage() {
   const employeeId = session.user.employeeId;
   if (!employeeId) redirect("/me/profile");
   await requirePrivacyConsent(employeeId);
+  await requirePriorStepsComplete(employeeId, "PROPERTY_HANDOVER");
 
   const process = await db.onboardingProcess.findUnique({ where: { employeeId }, include: { steps: true } });
   if (!process) redirect("/me/profile");
@@ -24,6 +26,7 @@ export default async function PropertyHandoverStepPage() {
 
   return (
     <div className="max-w-lg space-y-6">
+      <OnboardingStepNav current="PROPERTY_HANDOVER" currentStatus={step.status} />
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />

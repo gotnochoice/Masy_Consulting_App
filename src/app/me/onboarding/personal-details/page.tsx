@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
-import { requirePrivacyConsent } from "@/lib/onboarding-gate";
+import { requirePrivacyConsent, requirePriorStepsComplete } from "@/lib/onboarding-gate";
 import { db } from "@/lib/db";
 import { listNigerianBanks } from "@/lib/bank-verification";
 import { OnboardingStepStatusBadge } from "@/components/onboarding-step-status-badge";
+import { OnboardingStepNav } from "@/components/onboarding-step-nav";
 import { PersonalDetailsForm } from "./personal-details-form";
 
 export default async function PersonalDetailsStepPage() {
@@ -11,6 +12,7 @@ export default async function PersonalDetailsStepPage() {
   const employeeId = session.user.employeeId;
   if (!employeeId) redirect("/me/profile");
   await requirePrivacyConsent(employeeId);
+  await requirePriorStepsComplete(employeeId, "PERSONAL_DETAILS");
 
   const [employee, process] = await Promise.all([
     db.employee.findUnique({ where: { id: employeeId }, include: { clientOrg: { select: { name: true } } } }),
@@ -25,10 +27,9 @@ export default async function PersonalDetailsStepPage() {
   const banks = Array.isArray(banksResult) ? banksResult : [];
   const banksError = Array.isArray(banksResult) ? null : banksResult.error;
 
-  const isVerified = step.status === "VERIFIED";
-
   return (
     <div className="max-w-lg space-y-6">
+      <OnboardingStepNav current="PERSONAL_DETAILS" currentStatus={step.status} />
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="mb-2 block h-1 w-9 rounded-full bg-orange" />
@@ -44,10 +45,14 @@ export default async function PersonalDetailsStepPage() {
         </div>
       )}
 
-      {isVerified ? (
+      {step.status === "VERIFIED" ? (
         <div className="space-y-2 rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
           <p className="font-medium">Verified -- this step is locked.</p>
           <p className="text-indigo/80">If any of this changes, use &ldquo;Request a details update&rdquo; from your profile once you&rsquo;re fully onboarded.</p>
+        </div>
+      ) : step.status === "SUBMITTED" ? (
+        <div className="rounded-card border border-indigo/30 bg-indigo-tint px-5 py-4 text-sm text-indigo">
+          <p className="font-medium">Submitted -- waiting on HR to verify.</p>
         </div>
       ) : (
         <PersonalDetailsForm
